@@ -1,23 +1,15 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import Header from "./components/layout/header.jsx";
+import Footer from "./components/layout/footer.jsx";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="min-h-screen bg-white">
+      <Header />
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* Nội dung trang ở đây */}
+      </main>
+      <Footer />
     </div>
   );
 }
