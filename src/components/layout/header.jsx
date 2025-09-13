@@ -13,7 +13,7 @@ const navItems = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#00083B]">
+    <header className="sticky top-0 z-[9999] w-full border-b border-white/10 bg-[#00083B]">
       <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
         {/* Logo */}
         <a className="flex items-center gap-3" href="#" aria-label="VoltSwap">
