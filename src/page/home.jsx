@@ -1,5 +1,6 @@
 import React from "react";
 import Map from "../components/Map";
+import ServicePack from "../components/ServicePack";
 
 export default function Home() {
   return (
@@ -17,6 +18,9 @@ export default function Home() {
           Trình duyệt của bạn không hỗ trợ video.
         </video>
       </section>
+
+      {/* Gói dịch vụ đổi pin */}
+      <ServicePack />
 
       {/* Bản đồ trạm đổi pin */}
       <section className="py-16 bg-white">
@@ -41,6 +45,15 @@ export default function Home() {
                 <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
                 <span className="text-gray-700">TP.HCM (5 trạm)</span>
               </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                <span className="text-gray-700">Tổng cộng 10 trạm</span>
+              </div>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-600">
+                🗺️ Chọn thành phố và quận/huyện để xem chi tiết trạm sạc
+              </p>
             </div>
           </div>
 
