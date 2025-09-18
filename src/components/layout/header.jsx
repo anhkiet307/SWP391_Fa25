@@ -6,11 +6,8 @@ const logo = "/assets/images/voltswap_logo.png";
 
 const navItems = [
   { label: "Giới thiệu", href: "#" },
-  { label: "Ô tô", href: "#" },
-  { label: "Xe máy điện", href: "#" },
-  { label: "Dịch vụ hậu mãi", href: "#" },
+  { label: "Gói dịch vụ", href: "#" },
   { label: "Pin và trạm sạc", href: "#" },
-  { label: "Lưu trữ năng lượng", href: "#" },
 ];
 
 export default function Header() {
