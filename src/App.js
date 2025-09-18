@@ -7,6 +7,9 @@ import Home from "./page/home.jsx";
 import Login from "./page/auth/login.jsx";
 import Register from "./page/auth/register.jsx";
 import ForgotPassword from "./page/auth/forgot_password.jsx";
+import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
+import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
+import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -65,6 +68,12 @@ function App() {
               </AuthLayout>
             }
           />
+          <Route path="/staff-dashboard" element={<StaffDashboard />} />
+          <Route
+            path="/transactions-management"
+            element={<TransactionManagement />}
+          />
+          <Route path="/station-management" element={<StationManagement />} />
         </Routes>
       </Router>
     </AuthProvider>
