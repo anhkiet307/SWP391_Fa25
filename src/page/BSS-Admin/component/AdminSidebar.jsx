@@ -109,7 +109,7 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg min-h-screen">
+    <div className="w-64 bg-white shadow-lg h-screen flex flex-col fixed left-0 top-0 z-50">
       {/* Logo/Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -136,7 +136,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="mt-6">
+      <nav className="mt-6 flex-1">
         <div className="px-3">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Quản trị hệ thống
@@ -170,7 +170,7 @@ const AdminSidebar = () => {
       </nav>
 
       {/* User Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
+      <div className="p-6 border-t border-gray-200 mt-auto">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <svg

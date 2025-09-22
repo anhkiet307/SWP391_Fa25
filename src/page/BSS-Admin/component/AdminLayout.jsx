@@ -5,13 +5,13 @@ import AdminSidebar from "./AdminSidebar";
 
 const AdminLayout = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1">{children}</main>
+      <div className="ml-64">
+        <main className="min-h-screen">{children}</main>
       </div>
       
       {/* Toast Container */}
@@ -26,6 +26,7 @@ const AdminLayout = ({ children }) => {
         draggable
         pauseOnHover
         theme="light"
+        style={{ zIndex: 9999 }}
       />
     </div>
   );
