@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import AdminLayout from "./component/AdminLayout";
 import { showSuccess, showError, showConfirm } from "../../utils/toast";
 
-const AdminManageBattery = () => {
+const AdminBatteryManagement = () => {
   const [batteries, setBatteries] = useState([
     {
       id: 1,
@@ -290,72 +290,83 @@ const AdminManageBattery = () => {
             Danh sách pin ({filteredBatteries.length})
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <th className="p-4 text-left font-semibold text-base">
                     Mã pin
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Trạm
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Thông tin pin
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Trạng thái
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Sức khỏe
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Chu kỳ
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Bảo dưỡng
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-center font-semibold text-base">
                     Thao tác
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredBatteries.map((battery) => (
-                  <tr key={battery.id} className="hover:bg-gray-50">
-                    <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                      {battery.batteryId}
+                {filteredBatteries.map((battery, index) => (
+                  <tr 
+                    key={battery.id} 
+                    className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                    }`}
+                  >
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-bold text-base text-indigo-600">
+                        {battery.batteryId}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-medium">{battery.stationName}</div>
-                        <div className="text-gray-500 text-xs">
+                        <div className="font-semibold text-base text-gray-800">
+                          {battery.stationName}
+                        </div>
+                        <div className="text-gray-500 text-sm mt-1">
                           {battery.stationId}
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-medium">{battery.manufacturer} {battery.model}</div>
-                        <div className="text-gray-500 text-xs">
+                        <div className="font-semibold text-base text-gray-800">
+                          {battery.manufacturer} {battery.model}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
                           {battery.capacity}mAh, {battery.voltage}V
                         </div>
-                        <div className="text-gray-500 text-xs">
+                        <div className="text-gray-500 text-sm">
                           SN: {battery.serialNumber}
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(battery.status)}`}
+                        className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(battery.status)}`}
                       >
                         {getStatusText(battery.status)}
                       </span>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div className="flex items-center">
-                        <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-3 mr-3">
                           <div
-                            className={`h-2 rounded-full ${
+                            className={`h-3 rounded-full transition-all duration-300 ${
                               battery.health >= 80
                                 ? "bg-green-500"
                                 : battery.health >= 60
@@ -365,55 +376,92 @@ const AdminManageBattery = () => {
                             style={{ width: `${battery.health}%` }}
                           ></div>
                         </div>
-                        <span className={`text-xs font-medium ${getHealthColor(battery.health)}`}>
+                        <span className={`text-sm font-bold ${getHealthColor(battery.health)}`}>
                           {battery.health}%
                         </span>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {battery.cycleCount.toLocaleString("vi-VN")}
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-semibold text-base text-gray-800">
+                        {battery.cycleCount.toLocaleString("vi-VN")}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="text-xs text-gray-500">
-                          Cuối: {battery.lastMaintenance}
+                        <div className="text-sm text-gray-600 mb-1">
+                          <span className="font-medium">Cuối:</span> {battery.lastMaintenance}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          Tiếp: {battery.nextMaintenance}
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">Tiếp:</span> {battery.nextMaintenance}
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex gap-1">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex justify-center items-center gap-2">
+                        {/* Chi tiết */}
                         <button
-                          className="bg-blue-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
+                          className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => setSelectedBattery(battery)}
+                          title="Chi tiết"
                         >
-                          Chi tiết
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Chi tiết
+                          </div>
                         </button>
+
+                        {/* Sửa */}
                         <button
-                          className="bg-green-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
+                          className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => {
                             setSelectedBattery(battery);
                             setShowEditForm(true);
                           }}
+                          title="Sửa"
                         >
-                          Sửa
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Chỉnh sửa
+                          </div>
                         </button>
-                        <select
-                          value={battery.status}
-                          onChange={(e) => handleStatusChange(battery.id, e.target.value)}
-                          className="bg-yellow-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-yellow-600"
-                        >
-                          <option value="active">Hoạt động</option>
-                          <option value="charging">Đang sạc</option>
-                          <option value="maintenance">Bảo dưỡng</option>
-                        </select>
+
+                        {/* Đổi trạng thái */}
+                        <div className="group relative">
+                          <select
+                            value={battery.status}
+                            onChange={(e) => handleStatusChange(battery.id, e.target.value)}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm font-medium border-0 appearance-none pr-8"
+                            title="Đổi trạng thái"
+                          >
+                            <option value="active">🟢</option>
+                            <option value="charging">🔵</option>
+                            <option value="maintenance">🔴</option>
+                          </select>
+                          <svg className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Đổi trạng thái
+                          </div>
+                        </div>
+
+                        {/* Xóa */}
                         <button
-                          className="bg-red-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
+                          className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => handleDeleteBattery(battery.id)}
+                          title="Xóa"
                         >
-                          Xóa
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Xóa pin
+                          </div>
                         </button>
                       </div>
                     </td>
@@ -517,4 +565,4 @@ const AdminManageBattery = () => {
   );
 };
 
-export default AdminManageBattery;
+export default AdminBatteryManagement;

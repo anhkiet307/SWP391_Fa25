@@ -23,7 +23,7 @@ import AdminTransactionManagement from "./page/BSS-Admin/TransactionManagement.j
 import AdminReportManagement from "./page/BSS-Admin/ReportManagement.jsx";
 import AdminAddStation from "./page/BSS-Admin/AddStation.jsx";
 import AdminAddBattery from "./page/BSS-Admin/AddBattery.jsx";
-import AdminManageBattery from "./page/BSS-Admin/ManageBattery.jsx";
+import AdminBatteryManagement from "./page/BSS-Admin/BatteryManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -98,7 +98,7 @@ function App() {
           <Route path="/admin-report-management" element={<AdminReportManagement />} />
           <Route path="/admin-add-station" element={<AdminAddStation />} />
           <Route path="/admin-add-battery" element={<AdminAddBattery />} />
-          <Route path="/admin-manage-battery" element={<AdminManageBattery />} />
+          <Route path="/admin-manage-battery" element={<AdminBatteryManagement />} />
         </Routes>
       </Router>
     </AuthProvider>

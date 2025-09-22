@@ -260,56 +260,67 @@ const AdminStationManagement = () => {
         {/* Danh sách trạm */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <th className="p-4 text-left font-semibold text-base">
                     Mã trạm
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Tên trạm
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Địa chỉ
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Trạng thái
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Quản lý
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Pin/Tổng
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Sức khỏe
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Giao dịch
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Doanh thu
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-center font-semibold text-base">
                     Thao tác
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {stations.map((station) => (
-                  <tr key={station.id} className="hover:bg-gray-50">
-                    <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                      {station.stationId}
+                {stations.map((station, index) => (
+                  <tr 
+                    key={station.id} 
+                    className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                    }`}
+                  >
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-bold text-base text-indigo-600">
+                        {station.stationId}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.name}
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-semibold text-base text-gray-800">
+                        {station.name}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.address}
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="text-sm text-gray-700 max-w-xs">
+                        {station.address}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
+                        className={`px-3 py-2 rounded-full text-sm font-semibold ${
                           station.status === "active"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
@@ -320,47 +331,47 @@ const AdminStationManagement = () => {
                           : "Bảo dưỡng"}
                       </span>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-medium">{station.manager}</div>
-                        <div className="text-gray-500 text-xs">
+                        <div className="font-semibold text-base text-gray-800">{station.manager}</div>
+                        <div className="text-gray-600 text-sm mt-1">
                           {station.phone}
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
                         <div className="text-center">
-                          <div className="text-green-600 font-bold">
+                          <div className="text-green-600 font-bold text-base">
                             {station.batteryFull}
                           </div>
-                          <div className="text-xs text-gray-500">Đầy</div>
+                          <div className="text-xs text-gray-500 mt-1">Đầy</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-yellow-600 font-bold">
+                          <div className="text-yellow-600 font-bold text-base">
                             {station.batteryCharging}
                           </div>
-                          <div className="text-xs text-gray-500">Sạc</div>
+                          <div className="text-xs text-gray-500 mt-1">Sạc</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-red-600 font-bold">
+                          <div className="text-red-600 font-bold text-base">
                             {station.batteryMaintenance}
                           </div>
-                          <div className="text-xs text-gray-500">Bảo dưỡng</div>
+                          <div className="text-xs text-gray-500 mt-1">Bảo dưỡng</div>
                         </div>
-                        <div className="text-center ml-2">
-                          <div className="font-bold">
+                        <div className="text-center ml-3 pl-3 border-l border-gray-300">
+                          <div className="font-bold text-base text-gray-800">
                             {station.batteryCapacity}
                           </div>
-                          <div className="text-xs text-gray-500">Tổng</div>
+                          <div className="text-xs text-gray-500 mt-1">Tổng</div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div className="flex items-center">
-                        <div className="w-12 bg-gray-200 rounded-full h-2 mr-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-3 mr-3">
                           <div
-                            className={`h-2 rounded-full ${
+                            className={`h-3 rounded-full transition-all duration-300 ${
                               station.batteryHealth >= 80
                                 ? "bg-green-500"
                                 : station.batteryHealth >= 60
@@ -370,51 +381,92 @@ const AdminStationManagement = () => {
                             style={{ width: `${station.batteryHealth}%` }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium">
+                        <span className="text-sm font-bold text-gray-800">
                           {station.batteryHealth}%
                         </span>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.totalTransactions.toLocaleString("vi-VN")}
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-semibold text-base text-gray-800">
+                        {station.totalTransactions.toLocaleString("vi-VN")}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-bold text-base text-green-600">
+                        {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex gap-1">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex justify-center items-center gap-2">
+                        {/* Chi tiết */}
                         <button
-                          className="bg-blue-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
+                          className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => setSelectedStation(station)}
+                          title="Chi tiết"
                         >
-                          Chi tiết
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Chi tiết
+                          </div>
                         </button>
+
+                        {/* Sửa */}
                         <button
-                          className="bg-green-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
+                          className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => {
                             setSelectedStation(station);
                             setShowEditForm(true);
                           }}
+                          title="Sửa"
                         >
-                          Sửa
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Chỉnh sửa
+                          </div>
                         </button>
+
+                        {/* Toggle Status */}
                         <button
-                          className={`border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors ${
+                          className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
                             station.status === "active"
-                              ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                              : "bg-green-500 text-white hover:bg-green-600"
+                              ? "bg-yellow-500 hover:bg-yellow-600"
+                              : "bg-green-500 hover:bg-green-600"
                           }`}
                           onClick={() => toggleStationStatus(station.id)}
+                          title={station.status === "active" ? "Chuyển sang bảo dưỡng" : "Kích hoạt trạm"}
                         >
-                          {station.status === "active"
-                            ? "Bảo dưỡng"
-                            : "Kích hoạt"}
+                          {station.status === "active" ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          )}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            {station.status === "active" ? "Bảo dưỡng" : "Kích hoạt"}
+                          </div>
                         </button>
+
+                        {/* Xóa */}
                         <button
-                          className="bg-red-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
+                          className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => handleDeleteStation(station.id)}
+                          title="Xóa"
                         >
-                          Xóa
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Xóa trạm
+                          </div>
                         </button>
                       </div>
                     </td>
