@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const [isStationMenuOpen, setIsStationMenuOpen] = useState(false);
 
   const menuItems = [
     {
@@ -33,6 +34,7 @@ const AdminSidebar = () => {
     {
       path: "/admin-station-management",
       label: "Quản lý Trạm",
+      hasSubmenu: true,
       icon: (
         <svg
           className="w-5 h-5"
@@ -48,6 +50,24 @@ const AdminSidebar = () => {
           />
         </svg>
       ),
+      submenu: [
+        {
+          path: "/admin-station-management",
+          label: "Danh sách trạm",
+        },
+        {
+          path: "/admin-add-station",
+          label: "Thêm trạm mới",
+        },
+        {
+          path: "/admin-add-battery",
+          label: "Thêm pin mới",
+        },
+        {
+          path: "/admin-manage-battery",
+          label: "Quản lý pin",
+        },
+      ],
     },
     {
       path: "/admin-user-management",
@@ -145,25 +165,88 @@ const AdminSidebar = () => {
         <div className="space-y-1">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const hasActiveSubmenu = item.submenu?.some(subItem => location.pathname === subItem.path);
+            
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
-                  isActive
-                    ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                }`}
-              >
-                <span
-                  className={`mr-3 ${
-                    isActive ? "text-indigo-500" : "text-gray-400"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-                {item.label}
-              </Link>
+              <div key={item.path}>
+                {item.hasSubmenu ? (
+                  <div>
+                    <button
+                      onClick={() => setIsStationMenuOpen(!isStationMenuOpen)}
+                      className={`w-full flex items-center justify-between px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                        isActive || hasActiveSubmenu
+                          ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <span
+                          className={`mr-3 ${
+                            isActive || hasActiveSubmenu ? "text-indigo-500" : "text-gray-400"
+                          }`}
+                        >
+                          {item.icon}
+                        </span>
+                        {item.label}
+                      </div>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isStationMenuOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    
+                    {isStationMenuOpen && (
+                      <div className="ml-6 space-y-1">
+                        {item.submenu.map((subItem) => {
+                          const isSubActive = location.pathname === subItem.path;
+                          return (
+                            <Link
+                              key={subItem.path}
+                              to={subItem.path}
+                              className={`block px-4 py-2 text-sm transition-colors duration-200 rounded-md ${
+                                isSubActive
+                                  ? "bg-indigo-100 text-indigo-700"
+                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                              }`}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to={item.path}
+                    className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                      isActive
+                        ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <span
+                      className={`mr-3 ${
+                        isActive ? "text-indigo-500" : "text-gray-400"
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </Link>
+                )}
+              </div>
             );
           })}
         </div>
