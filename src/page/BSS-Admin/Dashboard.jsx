@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "./component/AdminLayout";
+import { showSuccess, showInfo } from "../../utils/toast";
 
 const AdminDashboard = () => {
   // State cho thống kê tổng quan hệ thống
@@ -93,12 +94,12 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
             <h1 className="text-3xl font-semibold m-0">
               Dashboard Quản trị Hệ thống
             </h1>
-            <p className="text-red-100 mt-2">
+            <p className="text-indigo-100 mt-2">
               Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin
             </p>
           </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AdminLayout from "./component/AdminLayout";
+import { showConfirm, showSuccess, showError } from "../../utils/toast";
 
 const UserManagement = () => {
   // State cho quản lý người dùng
@@ -178,9 +179,13 @@ const UserManagement = () => {
 
   // Hàm xóa người dùng
   const handleDeleteUser = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
-      setUsers(users.filter((user) => user.id !== id));
-    }
+    showConfirm(
+      "Bạn có chắc chắn muốn xóa người dùng này?",
+      () => {
+        setUsers(users.filter((user) => user.id !== id));
+        showSuccess("Đã xóa người dùng thành công!");
+      }
+    );
   };
 
   // Hàm thay đổi trạng thái người dùng
@@ -222,10 +227,10 @@ const UserManagement = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
             <h1 className="text-3xl font-semibold m-0">Quản lý Người dùng</h1>
-            <p className="text-red-100 mt-2">
+            <p className="text-indigo-100 mt-2">
               Quản lý khách hàng, nhân viên và phân quyền hệ thống
             </p>
           </div>
@@ -324,7 +329,7 @@ const UserManagement = () => {
           <div className="flex gap-3">
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-gradient-to-r from-red-500 to-orange-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm {activeTab === "users" ? "khách hàng" : "nhân viên"}
             </button>
@@ -663,7 +668,7 @@ const UserManagement = () => {
               <div className="flex gap-2 mt-6">
                 <button
                   onClick={handleAddUser}
-                  className="flex-1 bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
+                  className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
                 >
                   Thêm
                 </button>

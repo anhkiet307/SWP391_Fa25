@@ -113,7 +113,7 @@ const AdminSidebar = () => {
       {/* Logo/Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-orange-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
             <svg
               className="w-6 h-6 text-white"
               fill="none"
@@ -151,13 +151,13 @@ const AdminSidebar = () => {
                 to={item.path}
                 className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
                   isActive
-                    ? "bg-red-50 text-red-700 border-r-2 border-red-500"
+                    ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
               >
                 <span
                   className={`mr-3 ${
-                    isActive ? "text-red-500" : "text-gray-400"
+                    isActive ? "text-indigo-500" : "text-gray-400"
                   }`}
                 >
                   {item.icon}

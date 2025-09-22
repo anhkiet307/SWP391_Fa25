@@ -19,6 +19,8 @@ import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 import AdminDashboard from "./page/BSS-Admin/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/StationManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/UserManagement.jsx";
+import AdminTransactionManagement from "./page/BSS-Admin/TransactionManagement.jsx";
+import AdminReportManagement from "./page/BSS-Admin/ReportManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -89,6 +91,8 @@ function App() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-station-management" element={<AdminStationManagement />} />
           <Route path="/admin-user-management" element={<AdminUserManagement />} />
+          <Route path="/admin-transaction-management" element={<AdminTransactionManagement />} />
+          <Route path="/admin-report-management" element={<AdminReportManagement />} />
         </Routes>
       </Router>
     </AuthProvider>
