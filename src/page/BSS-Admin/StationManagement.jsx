@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "./component/AdminLayout";
 import { showConfirm, showSuccess, showError } from "../../utils/toast";
 
 const AdminStationManagement = () => {
+  const navigate = useNavigate();
+  
   // State cho quản lý trạm
   const [stations, setStations] = useState([
     {
@@ -65,16 +68,7 @@ const AdminStationManagement = () => {
   ]);
 
   const [selectedStation, setSelectedStation] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [newStation, setNewStation] = useState({
-    stationId: "",
-    name: "",
-    address: "",
-    manager: "",
-    phone: "",
-    batteryCapacity: 0,
-  });
 
   // Tính tổng thống kê
   const totalStats = {
@@ -93,36 +87,9 @@ const AdminStationManagement = () => {
     ),
   };
 
-  // Hàm thêm trạm mới
+  // Hàm chuyển đến trang thêm trạm mới
   const handleAddStation = () => {
-    if (newStation.stationId && newStation.name && newStation.address) {
-      const station = {
-        ...newStation,
-        id: stations.length + 1,
-        status: "active",
-        batteryFull: Math.floor(newStation.batteryCapacity * 0.75),
-        batteryCharging: Math.floor(newStation.batteryCapacity * 0.2),
-        batteryMaintenance: Math.floor(newStation.batteryCapacity * 0.05),
-        totalTransactions: 0,
-        monthlyRevenue: 0,
-        lastMaintenance: new Date().toISOString().split("T")[0],
-        nextMaintenance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        batteryHealth: 90,
-        location: { lat: 10.7769, lng: 106.7009 },
-      };
-      setStations([...stations, station]);
-      setNewStation({
-        stationId: "",
-        name: "",
-        address: "",
-        manager: "",
-        phone: "",
-        batteryCapacity: 0,
-      });
-      setShowAddForm(false);
-    }
+    navigate('/admin-add-station');
   };
 
   // Hàm cập nhật trạm
@@ -277,7 +244,7 @@ const AdminStationManagement = () => {
           </h2>
           <div className="flex gap-3">
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={handleAddStation}
               className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm trạm mới
@@ -458,120 +425,6 @@ const AdminStationManagement = () => {
           </div>
         </div>
 
-        {/* Modal thêm trạm mới */}
-        {showAddForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4">Thêm trạm mới</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mã trạm:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.stationId}
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        stationId: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="BSS-004"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên trạm:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.name}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, name: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Trạm Đổi Pin Quận 4"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Địa chỉ:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.address}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, address: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="123 Đường ABC, Quận 4, TP.HCM"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quản lý:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.manager}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, manager: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Nguyễn Văn Manager"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.phone}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, phone: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="0901234567"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sức chứa pin:
-                  </label>
-                  <input
-                    type="number"
-                    value={newStation.batteryCapacity}
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        batteryCapacity: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="60"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-6">
-                <button
-                  onClick={handleAddStation}
-                  className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
-                >
-                  Thêm
-                </button>
-                <button
-                  onClick={() => setShowAddForm(false)}
-                  className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
-                >
-                  Hủy
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Modal chi tiết trạm */}
         {selectedStation && !showEditForm && (

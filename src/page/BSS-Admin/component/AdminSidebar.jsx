@@ -1,9 +1,24 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isStationMenuOpen, setIsStationMenuOpen] = useState(false);
+
+  // Auto-open station menu if current path is a station submenu
+  useEffect(() => {
+    const stationPaths = [
+      "/admin-station-management",
+      "/admin-add-station", 
+      "/admin-add-battery",
+      "/admin-manage-battery"
+    ];
+    
+    if (stationPaths.includes(location.pathname)) {
+      setIsStationMenuOpen(true);
+    }
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -129,13 +144,13 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg h-screen flex flex-col fixed left-0 top-0 z-50">
+    <div className="w-64 bg-white shadow-xl h-screen flex flex-col fixed left-0 top-0 z-50 border-r border-gray-100">
       {/* Logo/Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
             <svg
-              className="w-6 h-6 text-white"
+              className="w-7 h-7 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -149,20 +164,20 @@ const AdminSidebar = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">VoltSwap</h2>
-            <p className="text-sm text-gray-500">Admin Portal</p>
+            <h2 className="text-xl font-bold text-gray-800">VoltSwap</h2>
+            <p className="text-sm text-indigo-600 font-medium">Admin Portal</p>
           </div>
         </div>
       </div>
 
       {/* Navigation Menu */}
-      <nav className="mt-6 flex-1">
-        <div className="px-3">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      <nav className="mt-6 flex-1 px-3">
+        <div className="mb-6">
+          <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 px-3">
             Quản trị hệ thống
           </p>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-2">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             const hasActiveSubmenu = item.submenu?.some(subItem => location.pathname === subItem.path);
@@ -172,17 +187,20 @@ const AdminSidebar = () => {
                 {item.hasSubmenu ? (
                   <div>
                     <button
-                      onClick={() => setIsStationMenuOpen(!isStationMenuOpen)}
-                      className={`w-full flex items-center justify-between px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                      onClick={() => {
+                        setIsStationMenuOpen(!isStationMenuOpen);
+                        navigate('/admin-station-management');
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                         isActive || hasActiveSubmenu
-                          ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
+                          : "text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700"
                       }`}
                     >
                       <div className="flex items-center">
                         <span
                           className={`mr-3 ${
-                            isActive || hasActiveSubmenu ? "text-indigo-500" : "text-gray-400"
+                            isActive || hasActiveSubmenu ? "text-white" : "text-gray-400"
                           }`}
                         >
                           {item.icon}
@@ -190,7 +208,7 @@ const AdminSidebar = () => {
                         {item.label}
                       </div>
                       <svg
-                        className={`w-4 h-4 transition-transform duration-200 ${
+                        className={`w-4 h-4 transition-transform duration-300 ${
                           isStationMenuOpen ? "rotate-180" : ""
                         }`}
                         fill="none"
@@ -207,17 +225,17 @@ const AdminSidebar = () => {
                     </button>
                     
                     {isStationMenuOpen && (
-                      <div className="ml-6 space-y-1">
+                      <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
                         {item.submenu.map((subItem) => {
                           const isSubActive = location.pathname === subItem.path;
                           return (
                             <Link
                               key={subItem.path}
                               to={subItem.path}
-                              className={`block px-4 py-2 text-sm transition-colors duration-200 rounded-md ${
+                              className={`block px-4 py-2.5 text-sm transition-all duration-200 rounded-lg ${
                                 isSubActive
-                                  ? "bg-indigo-100 text-indigo-700"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                  ? "bg-indigo-100 text-indigo-700 font-medium shadow-sm border-l-2 border-indigo-500"
+                                  : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:font-medium"
                               }`}
                             >
                               {subItem.label}
@@ -230,15 +248,15 @@ const AdminSidebar = () => {
                 ) : (
                   <Link
                     to={item.path}
-                    className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+                    className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                       isActive
-                        ? "bg-indigo-50 text-indigo-700 border-r-2 border-indigo-500"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
+                        : "text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700"
                     }`}
                   >
                     <span
                       className={`mr-3 ${
-                        isActive ? "text-indigo-500" : "text-gray-400"
+                        isActive ? "text-white" : "text-gray-400"
                       }`}
                     >
                       {item.icon}
@@ -253,11 +271,11 @@ const AdminSidebar = () => {
       </nav>
 
       {/* User Info */}
-      <div className="p-6 border-t border-gray-200 mt-auto">
+      <div className="p-6 border-t border-gray-200 mt-auto bg-gradient-to-r from-gray-50 to-indigo-50">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
             <svg
-              className="w-5 h-5 text-gray-600"
+              className="w-5 h-5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -271,10 +289,10 @@ const AdminSidebar = () => {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">
+            <p className="text-sm font-semibold text-gray-800 truncate">
               Admin System
             </p>
-            <p className="text-xs text-gray-500 truncate">Quản trị viên</p>
+            <p className="text-xs text-indigo-600 font-medium truncate">Quản trị viên</p>
           </div>
         </div>
       </div>
