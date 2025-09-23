@@ -17,13 +17,13 @@ import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/Dashboard.jsx";
-import AdminStationManagement from "./page/BSS-Admin/StationManagement.jsx";
-import AdminUserManagement from "./page/BSS-Admin/UserManagement.jsx";
+import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
+import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
 import AdminTransactionManagement from "./page/BSS-Admin/TransactionManagement.jsx";
 import AdminReportManagement from "./page/BSS-Admin/ReportManagement.jsx";
-import AdminAddStation from "./page/BSS-Admin/AddStation.jsx";
-import AdminAddBattery from "./page/BSS-Admin/AddBattery.jsx";
-import AdminBatteryManagement from "./page/BSS-Admin/BatteryManagement.jsx";
+import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
+import AdminAddBattery from "./page/BSS-Admin/stationdashboard/AddBattery.jsx";
+import AdminBatteryManagement from "./page/BSS-Admin/stationdashboard/BatteryManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {

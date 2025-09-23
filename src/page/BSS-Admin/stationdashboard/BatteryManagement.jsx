@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import AdminLayout from "./component/AdminLayout";
-import { showSuccess, showError, showConfirm } from "../../utils/toast";
+import AdminLayout from "../component/AdminLayout";
+import { showSuccess, showError, showConfirm } from "../../../utils/toast";
 
 const AdminBatteryManagement = () => {
   const [batteries, setBatteries] = useState([

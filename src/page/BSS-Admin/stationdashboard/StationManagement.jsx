@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "./component/AdminLayout";
-import { showConfirm, showSuccess, showError } from "../../utils/toast";
+import AdminLayout from "../component/AdminLayout";
+import { showConfirm, showSuccess, showError } from "../../../utils/toast";
 
 const AdminStationManagement = () => {
   const navigate = useNavigate();
