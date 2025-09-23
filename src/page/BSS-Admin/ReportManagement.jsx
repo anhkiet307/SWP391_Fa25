@@ -249,40 +249,51 @@ const AdminReportManagement = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Top trạm doanh thu</h2>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                   <thead>
-                    <tr>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                    <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                      <th className="p-4 text-left font-semibold text-base">
                         Trạm
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Doanh thu
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Giao dịch
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Trung bình/GD
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {revenueData.topStations.map((station, index) => (
-                      <tr key={station.stationId}>
-                        <td className="p-3 text-left border-b border-gray-200">
+                      <tr 
+                        key={station.stationId}
+                        className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                        }`}
+                      >
+                        <td className="p-4 border-b border-gray-200">
                           <div>
-                            <div className="font-medium">{station.stationId}</div>
-                            <div className="text-sm text-gray-500">{station.name}</div>
+                            <div className="font-bold text-base text-indigo-600">{station.stationId}</div>
+                            <div className="text-sm text-gray-600 mt-1">{station.name}</div>
                           </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200 font-bold text-green-600">
-                          {(station.revenue / 1000000).toFixed(1)}M VNĐ
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-bold text-base text-green-600">
+                            {(station.revenue / 1000000).toFixed(1)}M VNĐ
+                          </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200">
-                          {station.transactions.toLocaleString("vi-VN")}
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-semibold text-base text-gray-800">
+                            {station.transactions.toLocaleString("vi-VN")}
+                          </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200">
-                          {(station.revenue / station.transactions).toLocaleString("vi-VN")} VNĐ
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-semibold text-base text-gray-800">
+                            {(station.revenue / station.transactions).toLocaleString("vi-VN")} VNĐ
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -469,37 +480,50 @@ const AdminReportManagement = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Top khách hàng</h2>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                   <thead>
-                    <tr>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                    <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                      <th className="p-4 text-left font-semibold text-base">
                         Khách hàng
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Giao dịch
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Tổng chi tiêu
                       </th>
-                      <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800">
+                      <th className="p-4 text-left font-semibold text-base">
                         Chi tiêu TB
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {customerData.topCustomers.map((customer, index) => (
-                      <tr key={index}>
-                        <td className="p-3 text-left border-b border-gray-200 font-medium">
-                          {customer.name}
+                      <tr 
+                        key={index}
+                        className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                        }`}
+                      >
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-bold text-base text-gray-800">
+                            {customer.name}
+                          </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200">
-                          {customer.transactions}
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-semibold text-base text-gray-800">
+                            {customer.transactions}
+                          </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200 font-bold text-green-600">
-                          {(customer.spending / 1000000).toFixed(1)}M VNĐ
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-bold text-base text-green-600">
+                            {(customer.spending / 1000000).toFixed(1)}M VNĐ
+                          </div>
                         </td>
-                        <td className="p-3 text-left border-b border-gray-200">
-                          {(customer.spending / customer.transactions).toLocaleString("vi-VN")} VNĐ
+                        <td className="p-4 border-b border-gray-200">
+                          <div className="font-semibold text-base text-gray-800">
+                            {(customer.spending / customer.transactions).toLocaleString("vi-VN")} VNĐ
+                          </div>
                         </td>
                       </tr>
                     ))}

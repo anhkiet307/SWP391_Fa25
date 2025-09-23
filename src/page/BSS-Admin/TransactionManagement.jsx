@@ -351,84 +351,93 @@ const AdminTransactionManagement = () => {
         {/* Danh sách giao dịch */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <th className="p-4 text-left font-semibold text-base">
                     Mã GD
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Khách hàng
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Trạm
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Pin trao đổi
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Sức khỏe
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Trạng thái
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Thanh toán
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Nhân viên
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-left font-semibold text-base">
                     Thời gian
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-4 text-center font-semibold text-base">
                     Thao tác
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                      {transaction.transactionId}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div>
-                        <div className="font-medium">{transaction.customerName}</div>
-                        <div className="text-gray-500 text-xs">{transaction.customerId}</div>
+                {filteredTransactions.map((transaction, index) => (
+                  <tr 
+                    key={transaction.id} 
+                    className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                    }`}
+                  >
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-bold text-base text-indigo-600">
+                        {transaction.transactionId}
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-medium">{transaction.stationId}</div>
-                        <div className="text-gray-500 text-xs">{transaction.stationName}</div>
+                        <div className="font-semibold text-base text-gray-800">{transaction.customerName}</div>
+                        <div className="text-gray-600 text-sm mt-1">{transaction.customerId}</div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="text-sm">
-                          <span className="text-red-600">↓</span> {transaction.batteryIn}
+                        <div className="font-semibold text-base text-gray-800">{transaction.stationId}</div>
+                        <div className="text-gray-600 text-sm mt-1">{transaction.stationName}</div>
+                      </div>
+                    </td>
+                    <td className="p-4 border-b border-gray-200">
+                      <div>
+                        <div className="text-sm mb-1 flex items-center">
+                          <span className="text-red-600 font-bold mr-1">↓</span> 
+                          <span className="text-gray-800">{transaction.batteryIn}</span>
                         </div>
-                        <div className="text-sm">
-                          <span className="text-green-600">↑</span> {transaction.batteryOut}
+                        <div className="text-sm flex items-center">
+                          <span className="text-green-600 font-bold mr-1">↑</span> 
+                          <span className="text-gray-800">{transaction.batteryOut}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex items-center gap-3">
                         <div className="text-center">
-                          <div className="text-xs text-red-600">{transaction.batteryHealthIn}%</div>
-                          <div className="text-xs text-gray-500">Trả về</div>
+                          <div className="text-sm font-bold text-red-600">{transaction.batteryHealthIn}%</div>
+                          <div className="text-xs text-gray-500 mt-1">Trả về</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xs text-green-600">{transaction.batteryHealthOut}%</div>
-                          <div className="text-xs text-gray-500">Nhận về</div>
+                          <div className="text-sm font-bold text-green-600">{transaction.batteryHealthOut}%</div>
+                          <div className="text-xs text-gray-500 mt-1">Nhận về</div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
+                        className={`px-3 py-2 rounded-full text-sm font-semibold ${
                           transaction.status === "completed"
                             ? "bg-green-100 text-green-800"
                             : transaction.status === "pending"
@@ -447,50 +456,83 @@ const AdminTransactionManagement = () => {
                           : "Khiếu nại"}
                       </span>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="font-bold text-green-600">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="font-bold text-base text-green-600">
                         {transaction.payment.toLocaleString("vi-VN")} VNĐ
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+                    <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-medium">{transaction.staffName}</div>
-                        <div className="text-gray-500 text-xs">{transaction.staffId}</div>
+                        <div className="font-semibold text-base text-gray-800">{transaction.staffName}</div>
+                        <div className="text-gray-600 text-sm mt-1">{transaction.staffId}</div>
                       </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {transaction.timestamp}
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="text-sm text-gray-800">
+                        {transaction.timestamp}
+                      </div>
                     </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex gap-1">
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex justify-center items-center gap-2">
+                        {/* Chi tiết */}
                         <button
-                          className="bg-blue-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
+                          className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => setSelectedTransaction(transaction)}
+                          title="Chi tiết"
                         >
-                          Chi tiết
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Chi tiết
+                          </div>
                         </button>
+
                         {transaction.status === "pending" && (
                           <>
+                            {/* Xác nhận */}
                             <button
-                              className="bg-green-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
+                              className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                               onClick={() => confirmTransaction(transaction.id)}
+                              title="Xác nhận"
                             >
-                              Xác nhận
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                Xác nhận
+                              </div>
                             </button>
+
+                            {/* Hủy */}
                             <button
-                              className="bg-red-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
+                              className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                               onClick={() => cancelTransaction(transaction.id)}
+                              title="Hủy"
                             >
-                              Hủy
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                Hủy giao dịch
+                              </div>
                             </button>
                           </>
                         )}
+
                         {transaction.status === "failed" && (
                           <button
-                            className="bg-yellow-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-yellow-600"
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => handleComplaint(transaction.id, "Xử lý khiếu nại")}
+                            title="Khiếu nại"
                           >
-                            Khiếu nại
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Xử lý khiếu nại
+                            </div>
                           </button>
                         )}
                       </div>

@@ -345,58 +345,65 @@ const UserManagement = () => {
         {activeTab === "users" && (
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                 <thead>
-                  <tr>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <th className="p-4 text-left font-semibold text-base">
                       Mã KH
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Tên
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Liên hệ
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Trạng thái
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Phương tiện
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Gói thuê
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Thống kê
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-center font-semibold text-base">
                       Thao tác
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                        {user.userId}
+                  {users.map((user, index) => (
+                    <tr 
+                      key={user.id} 
+                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                        index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                      }`}
+                    >
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="font-bold text-base text-indigo-600">
+                          {user.userId}
+                        </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-gray-500 text-xs">
+                          <div className="font-semibold text-base text-gray-800">{user.name}</div>
+                          <div className="text-gray-600 text-sm mt-1">
                             Đăng ký: {user.registrationDate}
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-sm">{user.email}</div>
-                          <div className="text-gray-500 text-xs">{user.phone}</div>
+                          <div className="text-sm text-gray-800 mb-1">{user.email}</div>
+                          <div className="text-gray-600 text-sm">{user.phone}</div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
+                          className={`px-3 py-2 rounded-full text-sm font-semibold ${
                             user.status === "active"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
@@ -405,70 +412,108 @@ const UserManagement = () => {
                           {user.status === "active" ? "Hoạt động" : "Tạm khóa"}
                         </span>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-xs font-medium">VIN: {user.vehicleInfo.vin}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm font-semibold text-gray-800 mb-1">VIN: {user.vehicleInfo.vin}</div>
+                          <div className="text-sm text-gray-600 mb-1">
                             {user.vehicleInfo.batteryType}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             Lần cuối: {user.vehicleInfo.lastSwap}
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-medium">{user.subscription.plan}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="font-semibold text-base text-gray-800">{user.subscription.plan}</div>
+                          <div className="text-sm text-gray-600 mt-1">
                             {user.subscription.type}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             Còn lại: {user.subscription.remainingSwaps} lần
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-medium">
+                          <div className="font-semibold text-base text-gray-800">
                             {user.totalTransactions} giao dịch
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-green-600 font-medium mt-1">
                             {user.totalSpent.toLocaleString("vi-VN")} VNĐ
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        <div className="flex gap-1">
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center items-center gap-2">
+                          {/* Chi tiết */}
                           <button
-                            className="bg-blue-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
+                            className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => setSelectedUser(user)}
+                            title="Chi tiết"
                           >
-                            Chi tiết
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chi tiết
+                            </div>
                           </button>
+
+                          {/* Sửa */}
                           <button
-                            className="bg-green-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
+                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => {
                               setSelectedUser(user);
                               setShowEditForm(true);
                             }}
+                            title="Sửa"
                           >
-                            Sửa
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chỉnh sửa
+                            </div>
                           </button>
+
+                          {/* Toggle Status */}
                           <button
-                            className={`border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors ${
+                            className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
                               user.status === "active"
-                                ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                                : "bg-green-500 text-white hover:bg-green-600"
+                                ? "bg-yellow-500 hover:bg-yellow-600"
+                                : "bg-green-500 hover:bg-green-600"
                             }`}
                             onClick={() => toggleUserStatus(user.id)}
+                            title={user.status === "active" ? "Khóa tài khoản" : "Mở khóa tài khoản"}
                           >
-                            {user.status === "active" ? "Khóa" : "Mở khóa"}
+                            {user.status === "active" ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              {user.status === "active" ? "Khóa" : "Mở khóa"}
+                            </div>
                           </button>
+
+                          {/* Xóa */}
                           <button
-                            className="bg-red-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
+                            className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => handleDeleteUser(user.id)}
+                            title="Xóa"
                           >
-                            Xóa
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Xóa người dùng
+                            </div>
                           </button>
                         </div>
                       </td>
@@ -484,92 +529,136 @@ const UserManagement = () => {
         {activeTab === "staff" && (
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                 <thead>
-                  <tr>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <th className="p-4 text-left font-semibold text-base">
                       Mã NV
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Tên
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Liên hệ
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Vai trò
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Trạm
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-left font-semibold text-base">
                       Quyền hạn
                     </th>
-                    <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                    <th className="p-4 text-center font-semibold text-base">
                       Thao tác
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {staff.map((staffMember) => (
-                    <tr key={staffMember.id} className="hover:bg-gray-50">
-                      <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                        {staffMember.staffId}
+                  {staff.map((staffMember, index) => (
+                    <tr 
+                      key={staffMember.id} 
+                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                        index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                      }`}
+                    >
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="font-bold text-base text-indigo-600">
+                          {staffMember.staffId}
+                        </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-medium">{staffMember.name}</div>
-                          <div className="text-gray-500 text-xs">
+                          <div className="font-semibold text-base text-gray-800">{staffMember.name}</div>
+                          <div className="text-gray-600 text-sm mt-1">
                             Tuyển: {staffMember.hireDate}
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-sm">{staffMember.email}</div>
-                          <div className="text-gray-500 text-xs">{staffMember.phone}</div>
+                          <div className="text-sm text-gray-800 mb-1">{staffMember.email}</div>
+                          <div className="text-gray-600 text-sm">{staffMember.phone}</div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <td className="p-4 border-b border-gray-200">
+                        <span className="px-3 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
                           {staffMember.role === "station_manager" ? "Quản lý trạm" : "Nhân viên"}
                         </span>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                      <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-medium">{staffMember.stationId}</div>
-                          <div className="text-xs text-gray-500">{staffMember.stationName}</div>
+                          <div className="font-semibold text-base text-gray-800">{staffMember.stationId}</div>
+                          <div className="text-sm text-gray-600 mt-1">{staffMember.stationName}</div>
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        <div className="flex flex-wrap gap-1">
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex flex-wrap gap-2">
                           {staffMember.permissions.map((permission, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
                             >
                               {permission.replace("_", " ")}
                             </span>
                           ))}
                         </div>
                       </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        <div className="flex gap-1">
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center items-center gap-2">
+                          {/* Chi tiết */}
                           <button
-                            className="bg-blue-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
+                            className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => setSelectedUser(staffMember)}
+                            title="Chi tiết"
                           >
-                            Chi tiết
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chi tiết
+                            </div>
                           </button>
+
+                          {/* Sửa */}
                           <button
-                            className="bg-green-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
+                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            title="Sửa"
                           >
-                            Sửa
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chỉnh sửa
+                            </div>
                           </button>
+
+                          {/* Phân quyền */}
                           <button
-                            className="bg-red-500 text-white border-0 py-1.5 px-2 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
+                            className="group relative bg-purple-500 hover:bg-purple-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            title="Phân quyền"
                           >
-                            Xóa
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Phân quyền
+                            </div>
+                          </button>
+
+                          {/* Xóa */}
+                          <button
+                            className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            title="Xóa"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Xóa nhân viên
+                            </div>
                           </button>
                         </div>
                       </td>
