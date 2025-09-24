@@ -69,6 +69,8 @@ const AdminStationManagement = () => {
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [stationToDelete, setStationToDelete] = useState(null);
 
   // Tính tổng thống kê
   const totalStats = {
@@ -103,15 +105,26 @@ const AdminStationManagement = () => {
     setSelectedStation(null);
   };
 
+  // Hàm mở modal xác nhận xóa
+  const openDeleteModal = (station) => {
+    setStationToDelete(station);
+    setShowDeleteModal(true);
+  };
+
   // Hàm xóa trạm
-  const handleDeleteStation = (id) => {
-    showConfirm(
-      "Bạn có chắc chắn muốn xóa trạm này?",
-      () => {
-        setStations(stations.filter((station) => station.id !== id));
-        showSuccess("Đã xóa trạm thành công!");
-      }
-    );
+  const handleDeleteStation = () => {
+    if (stationToDelete) {
+      setStations(stations.filter((station) => station.id !== stationToDelete.id));
+      showSuccess("Đã xóa trạm thành công!");
+      setShowDeleteModal(false);
+      setStationToDelete(null);
+    }
+  };
+
+  // Hàm hủy xóa
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setStationToDelete(null);
   };
 
   // Hàm thay đổi trạng thái trạm
@@ -458,7 +471,7 @@ const AdminStationManagement = () => {
                         {/* Xóa */}
                         <button
                           className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                          onClick={() => handleDeleteStation(station.id)}
+                          onClick={() => openDeleteModal(station)}
                           title="Xóa"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -587,6 +600,145 @@ const AdminStationManagement = () => {
                 >
                   Đóng
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Delete Confirmation Modal */}
+        {showDeleteModal && stationToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-red-100 rounded-full mb-4">
+                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                  Xác nhận xóa trạm
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Bạn có chắc chắn muốn xóa trạm này không?
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 bg-gray-50">
+                <div className="bg-white rounded-lg p-5 border border-gray-200 shadow-sm">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Cột trái - Thông tin trạm */}
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <p className="text-xs font-medium text-blue-600 mb-2">Thông tin trạm</p>
+                          <h4 className="text-lg font-bold text-gray-900 mb-2">
+                            {stationToDelete.name}
+                          </h4>
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              {stationToDelete.stationId}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              stationToDelete.status === "active" 
+                                ? "bg-green-100 text-green-800" 
+                                : "bg-red-100 text-red-800"
+                            }`}>
+                              {stationToDelete.status === "active" ? "🟢 Hoạt động" : "🔴 Bảo dưỡng"}
+                            </span>
+                          </div>
+                          <div className="border-t border-blue-200 pt-2 mt-2">
+                            <p className="text-xs font-medium text-gray-500 mb-1">Địa chỉ</p>
+                            <p className="text-xs text-gray-600">📍 {stationToDelete.address}</p>
+                          </div>
+                        </div>
+
+                        {/* Cột phải - Thông tin staff */}
+                        <div className="bg-green-50 rounded-lg p-3">
+                          <p className="text-xs font-medium text-green-600 mb-2">Quản lý trạm</p>
+                          <p className="text-sm font-semibold text-gray-900 mb-1">{stationToDelete.manager}</p>
+                          <p className="text-xs text-gray-600 mb-3">📞 {stationToDelete.phone}</p>
+                          <div className="border-t border-green-200 pt-2">
+                            <p className="text-xs font-medium text-gray-500 mb-1">Sức khỏe pin</p>
+                            <p className="text-sm font-bold text-yellow-600">{stationToDelete.batteryHealth}%</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mt-4 mb-3">
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs font-medium text-gray-500 mb-1">Tình trạng pin</p>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className="text-green-600 font-semibold">🔋 {stationToDelete.batteryFull}</span>
+                            <span className="text-yellow-600 font-semibold">⚡ {stationToDelete.batteryCharging}</span>
+                            <span className="text-red-600 font-semibold">🔧 {stationToDelete.batteryMaintenance}</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">Tổng: {stationToDelete.batteryCapacity} pin</p>
+                        </div>
+                        <div className="text-center bg-blue-50 rounded-lg p-3">
+                          <p className="text-lg font-bold text-blue-600">
+                            {stationToDelete.totalTransactions.toLocaleString("vi-VN")}
+                          </p>
+                          <p className="text-xs font-medium text-blue-800">Tổng giao dịch</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="text-center bg-green-50 rounded-lg p-3">
+                          <p className="text-lg font-bold text-green-600">
+                            {(stationToDelete.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
+                          </p>
+                          <p className="text-xs font-medium text-green-800">Doanh thu tháng</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-start">
+                    <svg className="w-6 h-6 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-base font-bold text-red-800 mb-2">⚠️ Cảnh báo quan trọng!</p>
+                      <p className="text-sm font-semibold text-red-700 leading-relaxed">
+                        <strong>Hành động này không thể hoàn tác.</strong> Tất cả dữ liệu liên quan đến trạm sẽ bị <strong>xóa vĩnh viễn</strong>, bao gồm:
+                      </p>
+                      <ul className="mt-2 text-sm font-medium text-red-700 list-disc list-inside space-y-1">
+                        <li><strong>Lịch sử giao dịch</strong> và dữ liệu khách hàng</li>
+                        <li><strong>Thông tin pin</strong> và trạng thái thiết bị</li>
+                        <li><strong>Báo cáo doanh thu</strong> và thống kê</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={handleDeleteStation}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    Xóa trạm
+                  </button>
+                </div>
               </div>
             </div>
           </div>

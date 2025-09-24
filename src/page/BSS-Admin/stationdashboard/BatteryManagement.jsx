@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
 import { showSuccess, showError, showConfirm } from "../../../utils/toast";
 
 const AdminBatteryManagement = () => {
+  const navigate = useNavigate();
   const [batteries, setBatteries] = useState([
     {
       id: 1,
@@ -219,11 +221,22 @@ const AdminBatteryManagement = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters and Actions */}
         <div className="mb-6 bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-gray-800 text-2xl font-semibold mb-4">
-            Bộ lọc và tìm kiếm
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-gray-800 text-2xl font-semibold">
+              Bộ lọc và tìm kiếm
+            </h2>
+            <button
+              onClick={() => navigate('/admin-add-battery')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Thêm Pin mới
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

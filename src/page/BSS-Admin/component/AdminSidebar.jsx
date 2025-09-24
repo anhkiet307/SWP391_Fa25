@@ -4,21 +4,28 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isStationMenuOpen, setIsStationMenuOpen] = useState(false);
-
-  // Auto-open station menu if current path is a station submenu
-  useEffect(() => {
+  
+  // Khởi tạo state từ localStorage hoặc auto-open nếu đang ở station paths
+  const [isStationMenuOpen, setIsStationMenuOpen] = useState(() => {
+    const savedState = localStorage.getItem('stationMenuOpen');
+    if (savedState !== null) {
+      return JSON.parse(savedState);
+    }
+    
+    // Auto-open nếu đang ở station paths (chỉ lần đầu)
     const stationPaths = [
       "/admin-station-management",
       "/admin-add-station", 
       "/admin-add-battery",
       "/admin-manage-battery"
     ];
-    
-    if (stationPaths.includes(location.pathname)) {
-      setIsStationMenuOpen(true);
-    }
-  }, [location.pathname]);
+    return stationPaths.includes(window.location.pathname);
+  });
+
+  // Lưu trạng thái menu vào localStorage khi thay đổi
+  useEffect(() => {
+    localStorage.setItem('stationMenuOpen', JSON.stringify(isStationMenuOpen));
+  }, [isStationMenuOpen]);
 
   const menuItems = [
     {
@@ -189,6 +196,7 @@ const AdminSidebar = () => {
                     <button
                       onClick={() => {
                         setIsStationMenuOpen(!isStationMenuOpen);
+                        // Navigate to first submenu item (Danh sách trạm)
                         navigate('/admin-station-management');
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
@@ -270,9 +278,10 @@ const AdminSidebar = () => {
         </div>
       </nav>
 
-      {/* User Info */}
+      {/* User Info & Logout */}
       <div className="p-6 border-t border-gray-200 mt-auto bg-gradient-to-r from-gray-50 to-indigo-50">
-        <div className="flex items-center space-x-3">
+        {/* User Info */}
+        <div className="flex items-center space-x-3 mb-4">
           <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
             <svg
               className="w-5 h-5 text-white"
@@ -295,6 +304,32 @@ const AdminSidebar = () => {
             <p className="text-xs text-indigo-600 font-medium truncate">Quản trị viên</p>
           </div>
         </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={() => {
+            // Clear localStorage
+            localStorage.removeItem('stationMenuOpen');
+            // Add logout logic here (clear auth tokens, redirect, etc.)
+            navigate('/login');
+          }}
+          className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group"
+        >
+          <svg
+            className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span className="font-semibold">Đăng xuất</span>
+        </button>
       </div>
     </div>
   );
