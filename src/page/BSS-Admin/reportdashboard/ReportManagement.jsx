@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import AdminLayout from "./component/AdminLayout";
-import { showSuccess, showInfo, showWarning } from "../../utils/toast";
+import AdminLayout from "../component/AdminLayout";
+import { showSuccess, showInfo, showWarning } from "../../../utils/toast";
 
 const AdminReportManagement = () => {
   // State cho báo cáo
