@@ -5,12 +5,9 @@ import { useAuth } from "../../contexts/AuthContext";
 const logo = "/assets/images/voltswap_logo.png";
 
 const navItems = [
-  { label: "Giới thiệu", href: "#" },
-  { label: "Ô tô", href: "#" },
-  { label: "Xe máy điện", href: "#" },
-  { label: "Dịch vụ hậu mãi", href: "#" },
-  { label: "Pin và trạm sạc", href: "#" },
-  { label: "Lưu trữ năng lượng", href: "#" },
+  { label: "Trang chủ", to: "/", active: true, icon: "⚡" },
+  { label: "Trạm", href: "/#map-section", icon: "◦" },
+  { label: "Phân tích", href: "#", icon: "📊" },
 ];
 
 export default function Header() {
@@ -31,16 +28,36 @@ export default function Header() {
         </Link>
 
         {/* Center nav */}
-        <nav className="hidden items-center space-x-8 lg:flex">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="text-[15px] font-medium text-white/90 hover:text-white transition-colors"
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav className="hidden items-center space-x-6 lg:flex">
+          {navItems.map((item) =>
+            item.to ? (
+              <Link
+                key={item.label}
+                to={item.to}
+                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition-colors border ${
+                  item.active
+                    ? "bg-cyan-700/60 text-white border-cyan-500 shadow-lg shadow-cyan-500/20"
+                    : "bg-transparent text-white/80 border-transparent hover:bg-white/5"
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ) : (
+              <a
+                key={item.label}
+                href={item.href}
+                className={`inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold transition-colors border ${
+                  item.active
+                    ? "bg-cyan-700/60 text-white border-cyan-500 shadow-lg shadow-cyan-500/20"
+                    : "bg-transparent text-white/80 border-transparent hover:bg-white/5"
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </a>
+            )
+          )}
         </nav>
 
         {/* Right actions */}
@@ -50,16 +67,16 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 text-sm font-semibold text-blue-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 text-sm font-semibold text-blue-300 hover:text-white transition-colors"
               >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
+                <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">
                     {user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
                 <span className="hidden lg:inline">{user?.name || "User"}</span>
                 <svg
-                  className={`w-4 h-4 transition-transform ${
+                  className={`w-3 h-3 transition-transform ${
                     showUserMenu ? "rotate-180" : ""
                   }`}
                   fill="none"
@@ -77,35 +94,35 @@ export default function Header() {
 
               {/* Dropdown Menu */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                  <div className="px-4 py-2 border-b border-gray-200">
-                    <p className="text-sm font-medium text-gray-900">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#0b1448] py-2 z-50 shadow-xl shadow-black/30">
+                  <div className="px-4 pb-2 mb-2 border-b border-white/10">
+                    <p className="text-sm font-semibold text-white">
                       {user?.name || "User"}
                     </p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-white/60">{user?.email}</p>
                   </div>
                   <a
                     href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Thông tin tài khoản
                   </a>
                   <a
                     href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Lịch sử giao dịch
                   </a>
                   <a
                     href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Cài đặt
                   </a>
-                  <div className="border-t border-gray-200">
+                  <div className="mt-2 pt-2 border-t border-white/10">
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/10"
                     >
                       Đăng xuất
                     </button>
@@ -117,7 +134,7 @@ export default function Header() {
             /* Login Button */
             <Link
               to="/login"
-              className="hidden text-sm font-semibold text-blue-300 hover:text-white lg:inline transition-colors"
+              className="hidden rounded-xl border border-cyan-500/40 bg-transparent px-4 py-2 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/10 lg:inline transition-colors"
             >
               TÀI KHOẢN
             </Link>
