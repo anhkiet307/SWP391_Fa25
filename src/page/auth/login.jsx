@@ -44,8 +44,20 @@ export default function Login() {
               battery: "Pin 60V 30Ah",
             },
           ],
+          role: "user",
         });
         navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
+      } else if (
+        formData.username === "admin" &&
+        formData.password === "admin"
+      ) {
+        await login({
+          username: formData.username,
+          name: "Admin System",
+          email: "admin@voltswap.com",
+          role: "admin",
+        });
+        navigate("/admin-dashboard"); // Chuyển về trang admin sau khi đăng nhập thành công
       } else {
         setError("Tên đăng nhập hoặc mật khẩu không đúng");
       }
@@ -222,21 +234,45 @@ export default function Login() {
             </div>
 
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-white/20 backdrop-blur-sm">
-              <p className="text-sm text-blue-200 font-semibold mb-2">
+              <p className="text-sm text-blue-200 font-semibold mb-3">
                 🔑 Tài khoản test:
               </p>
-              <p className="text-xs text-blue-100">
-                Username:{" "}
-                <span className="font-mono bg-blue-600/50 px-2 py-1 rounded text-white">
-                  user
-                </span>
-              </p>
-              <p className="text-xs text-blue-100">
-                Password:{" "}
-                <span className="font-mono bg-blue-600/50 px-2 py-1 rounded text-white">
-                  user
-                </span>
-              </p>
+
+              {/* User Account */}
+              <div className="mb-3 p-2 bg-green-500/20 rounded border border-green-400/30">
+                <p className="text-xs text-green-200 font-medium mb-1">
+                  👤 Người dùng:
+                </p>
+                <p className="text-xs text-green-100">
+                  Username:{" "}
+                  <span className="font-mono bg-green-600/50 px-2 py-1 rounded text-white">
+                    user
+                  </span>
+                  {" | "}
+                  Password:{" "}
+                  <span className="font-mono bg-green-600/50 px-2 py-1 rounded text-white">
+                    user
+                  </span>
+                </p>
+              </div>
+
+              {/* Admin Account */}
+              <div className="p-2 bg-red-500/20 rounded border border-red-400/30">
+                <p className="text-xs text-red-200 font-medium mb-1">
+                  ⚡ Quản trị viên:
+                </p>
+                <p className="text-xs text-red-100">
+                  Username:{" "}
+                  <span className="font-mono bg-red-600/50 px-2 py-1 rounded text-white">
+                    admin
+                  </span>
+                  {" | "}
+                  Password:{" "}
+                  <span className="font-mono bg-red-600/50 px-2 py-1 rounded text-white">
+                    admin
+                  </span>
+                </p>
+              </div>
             </div>
           </form>
         </div>
