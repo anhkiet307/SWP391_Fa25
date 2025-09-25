@@ -355,17 +355,19 @@ const AdminStationManagement = () => {
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <span
-                        className={`px-3 py-2 rounded-full text-sm font-semibold ${
-                          station.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {station.status === "active"
-                          ? "Hoạt động"
-                          : "Bảo dưỡng"}
-                      </span>
+                      <div className="flex justify-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            station.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {station.status === "active"
+                            ? "Hoạt động"
+                            : "Bảo dưỡng"}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div>

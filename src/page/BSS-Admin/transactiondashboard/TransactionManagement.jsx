@@ -16,7 +16,7 @@ const AdminTransactionManagement = () => {
       batteryOut: "Battery B - 3000mAh",
       status: "completed",
       payment: 50000,
-      timestamp: "2024-01-15 14:30:00",
+      timestamp: "15/01/2024 14:30:00",
       batteryHealthIn: 85,
       batteryHealthOut: 92,
       staffId: "STAFF001",
@@ -33,7 +33,7 @@ const AdminTransactionManagement = () => {
       batteryOut: "Battery A - 5000mAh",
       status: "completed",
       payment: 75000,
-      timestamp: "2024-01-15 15:15:00",
+      timestamp: "15/01/2024 15:15:00",
       batteryHealthIn: 78,
       batteryHealthOut: 88,
       staffId: "STAFF002",
@@ -50,7 +50,7 @@ const AdminTransactionManagement = () => {
       batteryOut: "Battery C - 7000mAh",
       status: "pending",
       payment: 100000,
-      timestamp: "2024-01-15 16:00:00",
+      timestamp: "15/01/2024 16:00:00",
       batteryHealthIn: 90,
       batteryHealthOut: 85,
       staffId: "STAFF001",
@@ -67,7 +67,7 @@ const AdminTransactionManagement = () => {
       batteryOut: "Battery B - 3000mAh",
       status: "failed",
       payment: 0,
-      timestamp: "2024-01-15 17:30:00",
+      timestamp: "15/01/2024 17:30:00",
       batteryHealthIn: 45,
       batteryHealthOut: 0,
       staffId: "STAFF003",
@@ -436,25 +436,27 @@ const AdminTransactionManagement = () => {
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <span
-                        className={`px-3 py-2 rounded-full text-sm font-semibold ${
-                          transaction.status === "completed"
-                            ? "bg-green-100 text-green-800"
+                      <div className="flex justify-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            transaction.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : transaction.status === "pending"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : transaction.status === "failed"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {transaction.status === "completed"
+                            ? "Hoàn thành"
                             : transaction.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
+                            ? "Chờ xử lý"
                             : transaction.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {transaction.status === "completed"
-                          ? "Hoàn thành"
-                          : transaction.status === "pending"
-                          ? "Chờ xử lý"
-                          : transaction.status === "failed"
-                          ? "Thất bại"
-                          : "Khiếu nại"}
-                      </span>
+                            ? "Thất bại"
+                            : "Khiếu nại"}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div className="font-bold text-base text-green-600">

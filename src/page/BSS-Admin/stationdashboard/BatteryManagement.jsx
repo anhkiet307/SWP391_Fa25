@@ -22,8 +22,8 @@ const AdminBatteryManagement = () => {
       cycleCount: 150,
       lastMaintenance: "15/01/2024",
       nextMaintenance: "15/02/2024",
-      purchaseDate: "2023-06-01",
-      warrantyExpiry: "2025-06-01",
+      purchaseDate: "01/06/2023",
+      warrantyExpiry: "01/06/2025",
     },
     {
       id: 2,
@@ -41,8 +41,8 @@ const AdminBatteryManagement = () => {
       cycleCount: 200,
       lastMaintenance: "10/01/2024",
       nextMaintenance: "10/02/2024",
-      purchaseDate: "2023-05-15",
-      warrantyExpiry: "2025-05-15",
+      purchaseDate: "15/05/2023",
+      warrantyExpiry: "15/05/2025",
     },
     {
       id: 3,
@@ -60,8 +60,8 @@ const AdminBatteryManagement = () => {
       cycleCount: 300,
       lastMaintenance: "20/01/2024",
       nextMaintenance: "25/01/2024",
-      purchaseDate: "2023-04-01",
-      warrantyExpiry: "2025-04-01",
+      purchaseDate: "01/04/2023",
+      warrantyExpiry: "01/04/2025",
     },
   ]);
 
@@ -72,6 +72,9 @@ const AdminBatteryManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [batteryToDelete, setBatteryToDelete] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [batteryToChangeStatus, setBatteryToChangeStatus] = useState(null);
+  const [selectedNewStatus, setSelectedNewStatus] = useState(null);
 
   // Mock data for stations
   const stations = [
@@ -103,21 +106,45 @@ const AdminBatteryManagement = () => {
     totalCycles: batteries.reduce((sum, b) => sum + b.cycleCount, 0),
   };
 
-  // Hàm thay đổi trạng thái pin
-  const handleStatusChange = (id, newStatus) => {
-    setBatteries(
-      batteries.map((battery) =>
-        battery.id === id ? { ...battery, status: newStatus } : battery
-      )
-    );
-    
-    const statusText = {
-      active: "hoạt động",
-      charging: "đang sạc", 
-      maintenance: "bảo dưỡng"
-    };
-    
-    showSuccess(`Đã cập nhật trạng thái pin thành ${statusText[newStatus]}`);
+  // Hàm mở modal thay đổi trạng thái
+  const openStatusModal = (battery) => {
+    setBatteryToChangeStatus(battery);
+    setSelectedNewStatus(battery.status); // Set trạng thái hiện tại làm mặc định
+    setShowStatusModal(true);
+  };
+
+  // Hàm chọn trạng thái mới
+  const selectNewStatus = (newStatus) => {
+    setSelectedNewStatus(newStatus);
+  };
+
+  // Hàm xác nhận thay đổi trạng thái pin
+  const confirmStatusChange = () => {
+    if (batteryToChangeStatus && selectedNewStatus) {
+      setBatteries(
+        batteries.map((battery) =>
+          battery.id === batteryToChangeStatus.id ? { ...battery, status: selectedNewStatus } : battery
+        )
+      );
+      
+      const statusText = {
+        active: "hoạt động",
+        charging: "đang sạc", 
+        maintenance: "bảo dưỡng"
+      };
+      
+      showSuccess(`Đã cập nhật trạng thái pin thành ${statusText[selectedNewStatus]}`);
+      setShowStatusModal(false);
+      setBatteryToChangeStatus(null);
+      setSelectedNewStatus(null);
+    }
+  };
+
+  // Hàm hủy thay đổi trạng thái
+  const cancelStatusChange = () => {
+    setShowStatusModal(false);
+    setBatteryToChangeStatus(null);
+    setSelectedNewStatus(null);
   };
 
   // Hàm mở modal xác nhận xóa
@@ -392,11 +419,13 @@ const AdminBatteryManagement = () => {
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <span
-                        className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(battery.status)}`}
-                      >
-                        {getStatusText(battery.status)}
-                      </span>
+                      <div className="flex justify-center">
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusColor(battery.status)}`}
+                        >
+                          {getStatusText(battery.status)}
+                        </span>
+                      </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div className="flex items-center">
@@ -467,24 +496,18 @@ const AdminBatteryManagement = () => {
                         </button>
 
                         {/* Đổi trạng thái */}
-                        <div className="group relative">
-                          <select
-                            value={battery.status}
-                            onChange={(e) => handleStatusChange(battery.id, e.target.value)}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm font-medium border-0 appearance-none pr-8"
-                            title="Đổi trạng thái"
-                          >
-                            <option value="active">🟢 Hoạt động</option>
-                            <option value="charging">🔵 Đang sạc</option>
-                            <option value="maintenance">🔴 Bảo dưỡng</option>
-                          </select>
-                          <svg className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <button
+                          className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                          onClick={() => openStatusModal(battery)}
+                          title="Đổi trạng thái"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Đổi trạng thái
                           </div>
-                        </div>
+                        </button>
 
                         {/* Xóa */}
                         <button
@@ -558,22 +581,22 @@ const AdminBatteryManagement = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {/* Thông tin cơ bản */}
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
-                    <h4 className="text-lg font-bold text-blue-800 mb-4 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h4 className="text-base font-bold text-blue-800 mb-3 flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Thông tin cơ bản
                     </h4>
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-start space-x-2">
                         <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
                           <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Mã pin</div>
-                          <div className="text-base text-gray-700">{selectedBattery.batteryId}</div>
+                          <div className="text-sm font-medium text-blue-600">Mã pin</div>
+                          <div className="text-sm text-gray-700 mt-1">{selectedBattery.batteryId}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -583,19 +606,8 @@ const AdminBatteryManagement = () => {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Trạm</div>
-                          <div className="text-base text-gray-700">{selectedBattery.stationName}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Nhà SX</div>
-                          <div className="text-base text-gray-700">{selectedBattery.manufacturer}</div>
+                          <div className="text-sm font-medium text-blue-600">Trạm</div>
+                          <div className="text-sm text-gray-700">{selectedBattery.stationName}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -605,8 +617,19 @@ const AdminBatteryManagement = () => {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Model</div>
-                          <div className="text-base text-gray-700">{selectedBattery.model}</div>
+                          <div className="text-sm font-medium text-blue-600">Nhà SX</div>
+                          <div className="text-sm text-gray-700">{selectedBattery.manufacturer}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-blue-600">Model</div>
+                          <div className="text-sm text-gray-700">{selectedBattery.model}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -616,8 +639,8 @@ const AdminBatteryManagement = () => {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Số serial</div>
-                          <div className="text-base text-gray-700">{selectedBattery.serialNumber}</div>
+                          <div className="text-sm font-medium text-blue-600">Số serial</div>
+                          <div className="text-sm text-gray-700">{selectedBattery.serialNumber}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -627,24 +650,56 @@ const AdminBatteryManagement = () => {
                           </svg>
                         </div>
                         <div className="flex-1">
-                          <div className="text-base font-medium text-blue-600">Chu kỳ sạc</div>
-                          <div className="text-base text-gray-700">{selectedBattery.cycleCount.toLocaleString("vi-VN")}</div>
+                          <div className="text-sm font-medium text-blue-600">Chu kỳ sạc</div>
+                          <div className="text-sm text-gray-700">{selectedBattery.cycleCount.toLocaleString("vi-VN")}</div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Sử dụng</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Chu kỳ sạc:</span> {selectedBattery.cycleCount.toLocaleString("vi-VN")}
+
+                  {/* Thông tin kỹ thuật */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
+                    <h4 className="text-base font-bold text-green-800 mb-3 flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
+                      Thông tin kỹ thuật
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
+                        <div className="text-lg font-bold text-green-600">{selectedBattery.capacity}mAh</div>
+                        <div className="text-sm text-gray-600">Dung lượng</div>
+                      </div>
+                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
+                        <div className="text-lg font-bold text-blue-600">{selectedBattery.voltage}V</div>
+                        <div className="text-sm text-gray-600">Điện áp</div>
+                      </div>
+                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
+                        <div className="text-lg font-bold text-purple-600">{selectedBattery.batteryType}</div>
+                        <div className="text-sm text-gray-600">Loại pin</div>
+                      </div>
+                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
+                        <div className="text-lg font-bold text-yellow-600">{selectedBattery.health}%</div>
+                        <div className="text-sm text-gray-600">Sức khỏe</div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-medium">Ngày mua:</span> {selectedBattery.purchaseDate}
-                    </div>
-                    <div>
-                      <span className="font-medium">Hết bảo hành:</span> {selectedBattery.warrantyExpiry}
+                    <div className="bg-white rounded-lg p-2 shadow-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-gray-700">Sức khỏe pin</span>
+                        <span className="text-sm font-bold text-gray-900">{selectedBattery.health}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            selectedBattery.health >= 80
+                              ? "bg-gradient-to-r from-green-400 to-green-500"
+                              : selectedBattery.health >= 60
+                              ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
+                              : "bg-gradient-to-r from-red-400 to-red-500"
+                          }`}
+                          style={{ width: `${selectedBattery.health}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
 
@@ -800,6 +855,154 @@ const AdminBatteryManagement = () => {
                     className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
                   >
                     Xóa pin
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal thay đổi trạng thái pin */}
+        {showStatusModal && batteryToChangeStatus && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-yellow-100 rounded-full mb-4">
+                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                  Thay đổi trạng thái pin
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Chọn trạng thái mới cho pin này
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                {/* Thông tin pin */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900">{batteryToChangeStatus.batteryId}</h4>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {batteryToChangeStatus.manufacturer} {batteryToChangeStatus.model}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          batteryToChangeStatus.status === "active" 
+                            ? "bg-green-100 text-green-800" 
+                            : batteryToChangeStatus.status === "charging"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {batteryToChangeStatus.status === "active" ? " Hoạt động" : 
+                           batteryToChangeStatus.status === "charging" ? " Đang sạc" : " Bảo dưỡng"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3 tùy chọn trạng thái */}
+                <div className="space-y-3">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">Chọn trạng thái mới:</h4>
+                  
+                  {/* Hoạt động */}
+                  <button
+                    onClick={() => selectNewStatus("active")}
+                    className={`w-full p-4 rounded-lg border-2 transition-all duration-200 ${
+                      selectedNewStatus === "active"
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-green-300 hover:bg-green-50"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="mr-4 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-semibold text-gray-900"> Hoạt động</div>
+                        <div className="text-sm text-gray-600">Pin sẵn sàng sử dụng và đang hoạt động bình thường</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Đang sạc */}
+                  <button
+                    onClick={() => selectNewStatus("charging")}
+                    className={`w-full p-4 rounded-lg border-2 transition-all duration-200 ${
+                      selectedNewStatus === "charging"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="mr-4 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-semibold text-gray-900"> Đang sạc</div>
+                        <div className="text-sm text-gray-600">Pin đang được sạc và sẽ sẵn sàng sau khi hoàn thành</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Bảo dưỡng */}
+                  <button
+                    onClick={() => selectNewStatus("maintenance")}
+                    className={`w-full p-4 rounded-lg border-2 transition-all duration-200 ${
+                      selectedNewStatus === "maintenance"
+                        ? "border-red-500 bg-red-50"
+                        : "border-gray-200 hover:border-red-300 hover:bg-red-50"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="mr-4 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-semibold text-gray-900"> Bảo dưỡng</div>
+                        <div className="text-sm text-gray-600">Pin cần được bảo dưỡng và không sẵn sàng sử dụng</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelStatusChange}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={confirmStatusChange}
+                    disabled={!selectedNewStatus || selectedNewStatus === batteryToChangeStatus?.status}
+                    className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 ${
+                      !selectedNewStatus || selectedNewStatus === batteryToChangeStatus?.status
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-lg hover:shadow-xl"
+                    }`}
+                  >
+                    Xác nhận
                   </button>
                 </div>
               </div>
