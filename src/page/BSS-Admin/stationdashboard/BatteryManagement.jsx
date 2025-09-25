@@ -70,6 +70,8 @@ const AdminBatteryManagement = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterStation, setFilterStation] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [batteryToDelete, setBatteryToDelete] = useState(null);
 
   // Mock data for stations
   const stations = [
@@ -101,22 +103,43 @@ const AdminBatteryManagement = () => {
     totalCycles: batteries.reduce((sum, b) => sum + b.cycleCount, 0),
   };
 
+  // Hàm thay đổi trạng thái pin
   const handleStatusChange = (id, newStatus) => {
-    setBatteries(batteries.map(battery => 
-      battery.id === id ? { ...battery, status: newStatus } : battery
-    ));
-    showSuccess(`Đã cập nhật trạng thái pin thành ${newStatus === "active" ? "hoạt động" : 
-      newStatus === "charging" ? "đang sạc" : "bảo dưỡng"}`);
+    setBatteries(
+      batteries.map((battery) =>
+        battery.id === id ? { ...battery, status: newStatus } : battery
+      )
+    );
+    
+    const statusText = {
+      active: "hoạt động",
+      charging: "đang sạc", 
+      maintenance: "bảo dưỡng"
+    };
+    
+    showSuccess(`Đã cập nhật trạng thái pin thành ${statusText[newStatus]}`);
   };
 
-  const handleDeleteBattery = (id) => {
-    showConfirm(
-      "Bạn có chắc chắn muốn xóa pin này?",
-      () => {
-        setBatteries(batteries.filter(battery => battery.id !== id));
-        showSuccess("Đã xóa pin thành công!");
-      }
-    );
+  // Hàm mở modal xác nhận xóa
+  const openDeleteModal = (battery) => {
+    setBatteryToDelete(battery);
+    setShowDeleteModal(true);
+  };
+
+  // Hàm xóa pin
+  const handleDeleteBattery = () => {
+    if (batteryToDelete) {
+      setBatteries(batteries.filter((battery) => battery.id !== batteryToDelete.id));
+      showSuccess("Đã xóa pin thành công!");
+      setShowDeleteModal(false);
+      setBatteryToDelete(null);
+    }
+  };
+
+  // Hàm hủy xóa
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setBatteryToDelete(null);
   };
 
   const getStatusColor = (status) => {
@@ -451,9 +474,9 @@ const AdminBatteryManagement = () => {
                             className="bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm font-medium border-0 appearance-none pr-8"
                             title="Đổi trạng thái"
                           >
-                            <option value="active">🟢</option>
-                            <option value="charging">🔵</option>
-                            <option value="maintenance">🔴</option>
+                            <option value="active">🟢 Hoạt động</option>
+                            <option value="charging">🔵 Đang sạc</option>
+                            <option value="maintenance">🔴 Bảo dưỡng</option>
                           </select>
                           <svg className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -466,7 +489,7 @@ const AdminBatteryManagement = () => {
                         {/* Xóa */}
                         <button
                           className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                          onClick={() => handleDeleteBattery(battery.id)}
+                          onClick={() => openDeleteModal(battery)}
                           title="Xóa"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -610,50 +633,18 @@ const AdminBatteryManagement = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Thông số kỹ thuật */}
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
-                    <h4 className="text-lg font-bold text-green-800 mb-4 flex items-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                      </svg>
-                      Thông số kỹ thuật
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xl font-bold text-green-600 mb-1">
-                          {selectedBattery.capacity} mAh
-                        </div>
-                        <div className="text-xs text-gray-600">Dung lượng</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xl font-bold text-blue-600 mb-1">
-                          {selectedBattery.voltage} V
-                        </div>
-                        <div className="text-xs text-gray-600">Điện áp</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-2 shadow-sm">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-semibold text-gray-700">Sức khỏe</span>
-                          <span className="text-sm font-bold text-gray-900">{selectedBattery.health}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              selectedBattery.health >= 80
-                                ? "bg-gradient-to-r from-green-400 to-green-500"
-                                : selectedBattery.health >= 60
-                                ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
-                                : "bg-gradient-to-r from-red-400 to-red-500"
-                            }`}
-                            style={{ width: `${selectedBattery.health}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="bg-white rounded-lg p-2 text-center shadow-sm">
-                        <div className="text-sm font-semibold text-gray-600 mb-1">Loại pin</div>
-                        <div className="text-sm font-bold text-gray-900">{selectedBattery.batteryType}</div>
-                      </div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-700">Sử dụng</h4>
+                  <div className="space-y-2 mt-2">
+                    <div>
+                      <span className="font-medium">Chu kỳ sạc:</span> {selectedBattery.cycleCount.toLocaleString("vi-VN")}
+                    </div>
+                    <div>
+                      <span className="font-medium">Ngày mua:</span> {selectedBattery.purchaseDate}
+                    </div>
+                    <div>
+                      <span className="font-medium">Hết bảo hành:</span> {selectedBattery.warrantyExpiry}
                     </div>
                   </div>
 
@@ -701,6 +692,121 @@ const AdminBatteryManagement = () => {
             </div>
           </div>
         )}
+
+        {/* Modal xác nhận xóa pin */}
+        {showDeleteModal && batteryToDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-2 sm:mx-4 max-h-[85vh] flex flex-col transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-4 sm:p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-red-100 rounded-full mb-3 sm:mb-4">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 text-center mb-2">
+                  Xác nhận xóa pin
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 text-center">
+                  Bạn có chắc chắn muốn xóa pin này không?
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-3 sm:p-6 bg-gray-50 flex-1 overflow-y-auto">
+                {/* Cảnh báo quan trọng - Hiển thị đầu tiên */}
+                <div className="mb-4 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm sm:text-base font-bold text-red-800 mb-2">⚠️ Cảnh báo quan trọng!</p>
+                      <p className="text-xs sm:text-sm font-semibold text-red-700 leading-relaxed">
+                        <strong>Hành động này không thể hoàn tác.</strong> Tất cả dữ liệu liên quan đến pin sẽ bị <strong>xóa vĩnh viễn</strong>, bao gồm:
+                      </p>
+                      <ul className="mt-2 text-xs sm:text-sm font-medium text-red-700 list-disc list-inside space-y-1">
+                        <li><strong>Lịch sử sử dụng</strong> và dữ liệu chu kỳ sạc</li>
+                        <li><strong>Thông tin bảo dưỡng</strong> và lịch sử thay thế</li>
+                        <li><strong>Dữ liệu sức khỏe pin</strong> và thống kê</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Thông tin pin - Tinh gọn */}
+                <div className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900">{batteryToDelete.batteryId}</h4>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {batteryToDelete.manufacturer} {batteryToDelete.model}
+                          </span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                            batteryToDelete.status === "active" 
+                              ? "bg-green-100 text-green-800" 
+                              : batteryToDelete.status === "charging"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-red-100 text-red-800"
+                          }`}>
+                            {batteryToDelete.status === "active" ? "🟢 Hoạt động" : 
+                             batteryToDelete.status === "charging" ? "🔵 Đang sạc" : "🔴 Bảo dưỡng"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Thông tin tóm tắt */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div className="bg-blue-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-blue-600 mb-1">Trạm</p>
+                      <p className="text-xs font-semibold text-gray-900">{batteryToDelete.stationName}</p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-green-600 mb-1">Sức khỏe</p>
+                      <p className="text-xs font-bold text-yellow-600">{batteryToDelete.health}%</p>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-purple-600 mb-1">Chu kỳ</p>
+                      <p className="text-xs font-bold text-purple-600">{batteryToDelete.cycleCount.toLocaleString("vi-VN")}</p>
+                    </div>
+                    <div className="bg-orange-50 rounded-lg p-2">
+                      <p className="text-xs font-medium text-orange-600 mb-1">Dung lượng</p>
+                      <p className="text-xs font-bold text-orange-600">{batteryToDelete.capacity}mAh</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer - Fixed at bottom */}
+              <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl flex-shrink-0">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={handleDeleteBattery}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    Xóa pin
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </AdminLayout>
   );
