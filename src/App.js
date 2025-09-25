@@ -16,7 +16,7 @@ import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 
 // Admin pages
-import AdminDashboard from "./page/BSS-Admin/Dashboard.jsx";
+import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
 import AdminTransactionManagement from "./page/BSS-Admin/transactiondashboard/TransactionManagement.jsx";
