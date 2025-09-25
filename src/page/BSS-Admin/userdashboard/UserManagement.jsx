@@ -13,18 +13,18 @@ const UserManagement = () => {
       phone: "0901234567",
       role: "driver",
       status: "active",
-      registrationDate: "2024-01-01",
+      registrationDate: "01/01/2024",
       totalTransactions: 25,
       totalSpent: 1250000,
       vehicleInfo: {
         vin: "VIN123456789",
         batteryType: "Battery A - 5000mAh",
-        lastSwap: "2024-01-15 14:30:00",
+        lastSwap: "15/01/2024 14:30:00",
       },
       subscription: {
         type: "monthly",
         plan: "Premium",
-        expiryDate: "2024-02-01",
+        expiryDate: "01/02/2024",
         remainingSwaps: 15,
       },
     },
@@ -36,13 +36,13 @@ const UserManagement = () => {
       phone: "0907654321",
       role: "driver",
       status: "active",
-      registrationDate: "2024-01-05",
+      registrationDate: "05/01/2024",
       totalTransactions: 18,
       totalSpent: 900000,
       vehicleInfo: {
         vin: "VIN987654321",
         batteryType: "Battery B - 3000mAh",
-        lastSwap: "2024-01-14 16:20:00",
+        lastSwap: "14/01/2024 16:20:00",
       },
       subscription: {
         type: "pay-per-use",
@@ -59,18 +59,18 @@ const UserManagement = () => {
       phone: "0909876543",
       role: "driver",
       status: "suspended",
-      registrationDate: "2023-12-15",
+      registrationDate: "15/12/2023",
       totalTransactions: 45,
       totalSpent: 2250000,
       vehicleInfo: {
         vin: "VIN456789123",
         batteryType: "Battery C - 7000mAh",
-        lastSwap: "2024-01-10 10:15:00",
+        lastSwap: "10/01/2024 10:15:00",
       },
       subscription: {
         type: "yearly",
         plan: "Enterprise",
-        expiryDate: "2024-12-15",
+        expiryDate: "15/12/2024",
         remainingSwaps: 120,
       },
     },
@@ -87,7 +87,7 @@ const UserManagement = () => {
       status: "active",
       stationId: "BSS-001",
       stationName: "Trạm Quận 1",
-      hireDate: "2023-06-01",
+      hireDate: "01/06/2023",
       permissions: ["station_management", "transaction_processing"],
     },
     {
@@ -100,7 +100,7 @@ const UserManagement = () => {
       status: "active",
       stationId: "BSS-002",
       stationName: "Trạm Quận 2",
-      hireDate: "2023-08-15",
+      hireDate: "15/08/2023",
       permissions: [
         "station_management",
         "transaction_processing",
@@ -412,15 +412,19 @@ const UserManagement = () => {
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
-                        <span
-                          className={`px-3 py-2 rounded-full text-sm font-semibold ${
-                            user.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {user.status === "active" ? "Hoạt động" : "Tạm khóa"}
-                        </span>
+                        <div className="flex justify-center">
+                          <span
+                            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                              user.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {user.status === "active"
+                              ? "Hoạt động"
+                              : "Tạm khóa"}
+                          </span>
+                        </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>

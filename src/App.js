@@ -94,16 +94,31 @@ function App() {
             element={<TransactionManagement />}
           />
           <Route path="/station-management" element={<StationManagement />} />
-          
+
           {/* Admin Routes */}
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-station-management" element={<AdminStationManagement />} />
-          <Route path="/admin-user-management" element={<AdminUserManagement />} />
-          <Route path="/admin-transaction-management" element={<AdminTransactionManagement />} />
-          <Route path="/admin-report-management" element={<AdminReportManagement />} />
+          <Route
+            path="/admin-station-management"
+            element={<AdminStationManagement />}
+          />
+          <Route
+            path="/admin-user-management"
+            element={<AdminUserManagement />}
+          />
+          <Route
+            path="/admin-transaction-management"
+            element={<AdminTransactionManagement />}
+          />
+          <Route
+            path="/admin-report-management"
+            element={<AdminReportManagement />}
+          />
           <Route path="/admin-add-station" element={<AdminAddStation />} />
           <Route path="/admin-add-battery" element={<AdminAddBattery />} />
-          <Route path="/admin-manage-battery" element={<AdminBatteryManagement />} />
+          <Route
+            path="/admin-manage-battery"
+            element={<AdminBatteryManagement />}
+          />
         </Routes>
       </Router>
     </AuthProvider>

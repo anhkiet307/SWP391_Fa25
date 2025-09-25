@@ -6,8 +6,8 @@ const AdminReportManagement = () => {
   // State cho báo cáo
   const [selectedReport, setSelectedReport] = useState("revenue");
   const [dateRange, setDateRange] = useState({
-    from: "2024-01-01",
-    to: "2024-01-31",
+    from: "01/01/2024",
+    to: "31/01/2024",
   });
 
   // Dữ liệu báo cáo doanh thu
@@ -36,11 +36,11 @@ const AdminReportManagement = () => {
       },
     ],
     dailyRevenue: [
-      { date: "2024-01-01", revenue: 7500000, transactions: 150 },
-      { date: "2024-01-02", revenue: 8200000, transactions: 164 },
-      { date: "2024-01-03", revenue: 9100000, transactions: 182 },
-      { date: "2024-01-04", revenue: 8800000, transactions: 176 },
-      { date: "2024-01-05", revenue: 9500000, transactions: 190 },
+      { date: "01/01/2024", revenue: 7500000, transactions: 150 },
+      { date: "02/01/2024", revenue: 8200000, transactions: 164 },
+      { date: "03/01/2024", revenue: 9100000, transactions: 182 },
+      { date: "04/01/2024", revenue: 8800000, transactions: 176 },
+      { date: "05/01/2024", revenue: 9500000, transactions: 190 },
     ],
   };
 

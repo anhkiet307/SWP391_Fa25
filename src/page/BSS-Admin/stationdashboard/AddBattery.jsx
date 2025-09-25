@@ -2,37 +2,18 @@ import React, { useState } from "react";
 import AdminLayout from "../component/AdminLayout";
 import { showSuccess, showError } from "../../../utils/toast";
 
-const AdminAddBattery = () => {
+const AdminAddStation = () => {
   const [formData, setFormData] = useState({
-    batteryId: "",
     stationId: "",
-    batteryType: "",
-    capacity: "",
-    voltage: "",
-    manufacturer: "",
-    model: "",
-    serialNumber: "",
-    purchaseDate: "",
-    warrantyExpiry: "",
-    status: "new",
-    notes: "",
+    name: "",
+    address: "",
+    manager: "",
+    phone: "",
+    batteryCapacity: 0,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Mock data for stations
-  const stations = [
-    { id: "BSS-001", name: "Trạm Đổi Pin Quận 1" },
-    { id: "BSS-002", name: "Trạm Đổi Pin Quận 2" },
-    { id: "BSS-003", name: "Trạm Đổi Pin Quận 3" },
-  ];
-
-  const batteryTypes = [
-    { value: "lithium-ion", label: "Lithium-ion" },
-    { value: "lithium-polymer", label: "Lithium-polymer" },
-    { value: "lead-acid", label: "Lead-acid" },
-    { value: "nickel-cadmium", label: "Nickel-cadmium" },
-  ];
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,36 +23,39 @@ const AdminAddBattery = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handlePreview = (e) => {
     e.preventDefault();
+    setShowPreview(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     setIsSubmitting(true);
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      showSuccess("Thêm pin mới thành công!");
+      showSuccess("Thêm trạm mới thành công!");
 
       // Reset form
       setFormData({
-        batteryId: "",
         stationId: "",
-        batteryType: "",
-        capacity: "",
-        voltage: "",
-        manufacturer: "",
-        model: "",
-        serialNumber: "",
-        purchaseDate: "",
-        warrantyExpiry: "",
-        status: "new",
-        notes: "",
+        name: "",
+        address: "",
+        manager: "",
+        phone: "",
+        batteryCapacity: 0,
       });
+      setShowPreview(false);
     } catch (error) {
-      showError("Có lỗi xảy ra khi thêm pin mới!");
+      showError("Có lỗi xảy ra khi thêm trạm mới!");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditForm = () => {
+    setShowPreview(false);
   };
 
   return (
@@ -80,9 +64,11 @@ const AdminAddBattery = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
-            <h1 className="text-3xl font-semibold m-0">Thêm Pin Mới</h1>
+            <h1 className="text-3xl font-semibold m-0">
+              Thêm Trạm Đổi Pin Mới
+            </h1>
             <p className="text-indigo-100 mt-2">
-              Thêm pin mới vào hệ thống trạm đổi pin
+              Tạo trạm đổi pin mới trong hệ thống
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -90,214 +76,109 @@ const AdminAddBattery = () => {
               Admin: Quản trị hệ thống
             </span>
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Thêm pin mới
+              Thêm trạm mới
             </span>
           </div>
         </div>
 
         {/* Form */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handlePreview} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mã pin */}
+              {/* Mã trạm */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã pin <span className="text-red-500">*</span>
+                  Mã trạm <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  name="batteryId"
-                  value={formData.batteryId}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="BAT-001"
-                  required
-                />
-              </div>
-
-              {/* Trạm */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Trạm <span className="text-red-500">*</span>
-                </label>
-                <select
                   name="stationId"
                   value={formData.stationId}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="BSS-001"
                   required
-                >
-                  <option value="">Chọn trạm</option>
-                  {stations.map((station) => (
-                    <option key={station.id} value={station.id}>
-                      {station.name} ({station.id})
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
-              {/* Loại pin */}
+              {/* Tên trạm */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại pin <span className="text-red-500">*</span>
+                  Tên trạm <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="batteryType"
-                  value={formData.batteryType}
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Trạm Đổi Pin Quận 1"
                   required
-                >
-                  <option value="">Chọn loại pin</option>
-                  {batteryTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
-              {/* Dung lượng */}
+              {/* Địa chỉ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dung lượng (mAh) <span className="text-red-500">*</span>
+                  Địa chỉ <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="123 Nguyễn Huệ, Quận 1, TP.HCM"
+                  required
+                />
+              </div>
+
+              {/* Quản lý */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quản lý trạm <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="manager"
+                  value={formData.manager}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Nguyễn Văn Manager"
+                  required
+                />
+              </div>
+
+              {/* Số điện thoại */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Số điện thoại <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="0901234567"
+                  required
+                />
+              </div>
+
+              {/* Sức chứa pin */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sức chứa pin <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
-                  name="capacity"
-                  value={formData.capacity}
+                  name="batteryCapacity"
+                  value={formData.batteryCapacity}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="5000"
+                  placeholder="60"
                   min="1"
                   required
-                />
-              </div>
-
-              {/* Điện áp */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Điện áp (V) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="voltage"
-                  value={formData.voltage}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="3.7"
-                  step="0.1"
-                  min="0"
-                  required
-                />
-              </div>
-
-              {/* Nhà sản xuất */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nhà sản xuất <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="manufacturer"
-                  value={formData.manufacturer}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Samsung, LG, Panasonic..."
-                  required
-                />
-              </div>
-
-              {/* Model */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Model <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="INR18650-25R"
-                  required
-                />
-              </div>
-
-              {/* Số serial */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Số serial <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="serialNumber"
-                  value={formData.serialNumber}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="SN123456789"
-                  required
-                />
-              </div>
-
-              {/* Ngày mua */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ngày mua <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="purchaseDate"
-                  value={formData.purchaseDate}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-
-              {/* Bảo hành */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hết bảo hành
-                </label>
-                <input
-                  type="date"
-                  name="warrantyExpiry"
-                  value={formData.warrantyExpiry}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
-              {/* Trạng thái */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Trạng thái
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="new">Mới</option>
-                  <option value="used">Đã sử dụng</option>
-                  <option value="refurbished">Tân trang</option>
-                </select>
-              </div>
-
-              {/* Ghi chú */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ghi chú
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Ghi chú về pin..."
                 />
               </div>
             </div>
@@ -312,96 +193,253 @@ const AdminAddBattery = () => {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md hover:from-indigo-600 hover:to-purple-700 transition-all"
               >
-                {isSubmitting ? "Đang thêm..." : "Thêm pin"}
+                Xem trước
               </button>
             </div>
           </form>
         </div>
 
-        {/* Preview Card */}
-        <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Xem trước thông tin pin
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">Mã pin:</div>
-              <div className="font-medium">
-                {formData.batteryId || "Chưa nhập"}
+        {/* Preview Modal - Only show when showPreview is true */}
+        {showPreview && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="p-4 border-b border-gray-100 rounded-t-3xl">
+                <div className="flex items-center justify-center relative">
+                  <h2 className="text-xl font-bold text-gray-900 text-center">
+                    Xác nhận thông tin trạm
+                  </h2>
+                  <button
+                    onClick={handleEditForm}
+                    className="absolute right-0 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                {/* Station Icon & Status */}
+                <div className="text-center mb-4">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+                    <svg
+                      className="w-8 h-8 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {formData.stationId || "Chưa có mã trạm"}
+                  </div>
+                </div>
+
+                {/* Station Info Cards */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  {/* Mã trạm */}
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-blue-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-blue-600">
+                        Mã trạm
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.stationId || "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* Tên trạm */}
+                  <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-green-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-green-600">
+                        Tên trạm
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.name || "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* Địa chỉ */}
+                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-purple-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-purple-600">
+                        Địa chỉ
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.address || "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* Quản lý */}
+                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-orange-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-orange-600">
+                        Quản lý
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.manager || "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* SĐT */}
+                  <div className="bg-cyan-50 rounded-lg p-3 border border-cyan-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-cyan-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-cyan-600">
+                        SĐT
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.phone || "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* Sức chứa */}
+                  <div className="bg-pink-50 rounded-lg p-3 border border-pink-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-pink-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-pink-600">
+                        Sức chứa
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.batteryCapacity || 0} pin
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-3xl">
+                <div className="flex justify-center gap-6">
+                  <button
+                    onClick={handleEditForm}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-lg"
+                  >
+                    Chỉnh sửa
+                  </button>
+                  <button
+                    onClick={handleConfirmSubmit}
+                    disabled={isSubmitting}
+                    className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+                  >
+                    {isSubmitting ? "Đang tạo..." : "Tạo trạm"}
+                  </button>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600">Trạm:</div>
-              <div className="font-medium">
-                {stations.find((s) => s.id === formData.stationId)?.name ||
-                  "Chưa chọn"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Loại pin:</div>
-              <div className="font-medium">
-                {batteryTypes.find((t) => t.value === formData.batteryType)
-                  ?.label || "Chưa chọn"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Dung lượng:</div>
-              <div className="font-medium">
-                {formData.capacity || "Chưa nhập"} mAh
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Điện áp:</div>
-              <div className="font-medium">
-                {formData.voltage || "Chưa nhập"} V
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Nhà sản xuất:</div>
-              <div className="font-medium">
-                {formData.manufacturer || "Chưa nhập"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Model:</div>
-              <div className="font-medium">{formData.model || "Chưa nhập"}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Số serial:</div>
-              <div className="font-medium">
-                {formData.serialNumber || "Chưa nhập"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Ngày mua:</div>
-              <div className="font-medium">
-                {formData.purchaseDate || "Chưa nhập"}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Trạng thái:</div>
-              <div className="font-medium">
-                {formData.status === "new"
-                  ? "Mới"
-                  : formData.status === "used"
-                  ? "Đã sử dụng"
-                  : "Tân trang"}
-              </div>
-            </div>
-            {formData.notes && (
-              <div className="md:col-span-2">
-                <div className="text-sm text-gray-600">Ghi chú:</div>
-                <div className="font-medium">{formData.notes}</div>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
     </AdminLayout>
   );
 };
 
-export default AdminAddBattery;
+export default AdminAddStation;
