@@ -89,9 +89,12 @@ const AdminTransactionManagement = () => {
   // Tính tổng thống kê
   const totalStats = {
     totalTransactions: transactions.length,
-    completedTransactions: transactions.filter((t) => t.status === "completed").length,
-    pendingTransactions: transactions.filter((t) => t.status === "pending").length,
-    failedTransactions: transactions.filter((t) => t.status === "failed").length,
+    completedTransactions: transactions.filter((t) => t.status === "completed")
+      .length,
+    pendingTransactions: transactions.filter((t) => t.status === "pending")
+      .length,
+    failedTransactions: transactions.filter((t) => t.status === "failed")
+      .length,
     totalRevenue: transactions.reduce((sum, t) => sum + t.payment, 0),
     averageTransactionValue: Math.round(
       transactions.reduce((sum, t) => sum + t.payment, 0) / transactions.length
@@ -103,10 +106,18 @@ const AdminTransactionManagement = () => {
     if (filters.status !== "all" && transaction.status !== filters.status) {
       return false;
     }
-    if (filters.station !== "all" && transaction.stationId !== filters.station) {
+    if (
+      filters.station !== "all" &&
+      transaction.stationId !== filters.station
+    ) {
       return false;
     }
-    if (filters.customer && !transaction.customerName.toLowerCase().includes(filters.customer.toLowerCase())) {
+    if (
+      filters.customer &&
+      !transaction.customerName
+        .toLowerCase()
+        .includes(filters.customer.toLowerCase())
+    ) {
       return false;
     }
     if (filters.dateFrom && transaction.timestamp < filters.dateFrom) {
@@ -144,16 +155,14 @@ const AdminTransactionManagement = () => {
   const handleComplaint = (id, complaint) => {
     setTransactions(
       transactions.map((t) =>
-        t.id === id
-          ? { ...t, status: "complaint", complaint: complaint }
-          : t
+        t.id === id ? { ...t, status: "complaint", complaint: complaint } : t
       )
     );
     showInfo("Đã ghi nhận khiếu nại và chuyển xử lý!");
   };
 
   // Lấy danh sách trạm unique
-  const stations = [...new Set(transactions.map(t => t.stationId))];
+  const stations = [...new Set(transactions.map((t) => t.stationId))];
 
   return (
     <AdminLayout>
@@ -264,7 +273,9 @@ const AdminTransactionManagement = () => {
                 </label>
                 <select
                   value={filters.status}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, status: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="all">Tất cả</option>
@@ -279,7 +290,9 @@ const AdminTransactionManagement = () => {
                 </label>
                 <select
                   value={filters.station}
-                  onChange={(e) => setFilters({ ...filters, station: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, station: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="all">Tất cả trạm</option>
@@ -297,7 +310,9 @@ const AdminTransactionManagement = () => {
                 <input
                   type="date"
                   value={filters.dateFrom}
-                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, dateFrom: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -308,7 +323,9 @@ const AdminTransactionManagement = () => {
                 <input
                   type="date"
                   value={filters.dateTo}
-                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, dateTo: e.target.value })
+                  }
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -319,7 +336,9 @@ const AdminTransactionManagement = () => {
                 <input
                   type="text"
                   value={filters.customer}
-                  onChange={(e) => setFilters({ ...filters, customer: e.target.value })}
+                  onChange={(e) =>
+                    setFilters({ ...filters, customer: e.target.value })
+                  }
                   placeholder="Nhập tên khách hàng"
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
@@ -327,13 +346,15 @@ const AdminTransactionManagement = () => {
             </div>
             <div className="flex gap-2 mt-4">
               <button
-                onClick={() => setFilters({
-                  status: "all",
-                  station: "all",
-                  dateFrom: "",
-                  dateTo: "",
-                  customer: "",
-                })}
+                onClick={() =>
+                  setFilters({
+                    status: "all",
+                    station: "all",
+                    dateFrom: "",
+                    dateTo: "",
+                    customer: "",
+                  })
+                }
                 className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
               >
                 Xóa bộ lọc
@@ -388,10 +409,10 @@ const AdminTransactionManagement = () => {
               </thead>
               <tbody>
                 {filteredTransactions.map((transaction, index) => (
-                  <tr 
-                    key={transaction.id} 
+                  <tr
+                    key={transaction.id}
                     className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                   >
                     <td className="p-4 border-b border-gray-200">
@@ -401,37 +422,59 @@ const AdminTransactionManagement = () => {
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-semibold text-base text-gray-800">{transaction.customerName}</div>
-                        <div className="text-gray-600 text-sm mt-1">{transaction.customerId}</div>
+                        <div className="font-semibold text-base text-gray-800">
+                          {transaction.customerName}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
+                          {transaction.customerId}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-semibold text-base text-gray-800">{transaction.stationId}</div>
-                        <div className="text-gray-600 text-sm mt-1">{transaction.stationName}</div>
+                        <div className="font-semibold text-base text-gray-800">
+                          {transaction.stationId}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
+                          {transaction.stationName}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div>
                         <div className="text-sm mb-1 flex items-center">
-                          <span className="text-red-600 font-bold mr-1">↓</span> 
-                          <span className="text-gray-800">{transaction.batteryIn}</span>
+                          <span className="text-red-600 font-bold mr-1">↓</span>
+                          <span className="text-gray-800">
+                            {transaction.batteryIn}
+                          </span>
                         </div>
                         <div className="text-sm flex items-center">
-                          <span className="text-green-600 font-bold mr-1">↑</span> 
-                          <span className="text-gray-800">{transaction.batteryOut}</span>
+                          <span className="text-green-600 font-bold mr-1">
+                            ↑
+                          </span>
+                          <span className="text-gray-800">
+                            {transaction.batteryOut}
+                          </span>
                         </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div className="flex items-center gap-3">
                         <div className="text-center">
-                          <div className="text-sm font-bold text-red-600">{transaction.batteryHealthIn}%</div>
-                          <div className="text-xs text-gray-500 mt-1">Trả về</div>
+                          <div className="text-sm font-bold text-red-600">
+                            {transaction.batteryHealthIn}%
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Trả về
+                          </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-sm font-bold text-green-600">{transaction.batteryHealthOut}%</div>
-                          <div className="text-xs text-gray-500 mt-1">Nhận về</div>
+                          <div className="text-sm font-bold text-green-600">
+                            {transaction.batteryHealthOut}%
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Nhận về
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -463,8 +506,12 @@ const AdminTransactionManagement = () => {
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <div>
-                        <div className="font-semibold text-base text-gray-800">{transaction.staffName}</div>
-                        <div className="text-gray-600 text-sm mt-1">{transaction.staffId}</div>
+                        <div className="font-semibold text-base text-gray-800">
+                          {transaction.staffName}
+                        </div>
+                        <div className="text-gray-600 text-sm mt-1">
+                          {transaction.staffId}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
@@ -480,9 +527,24 @@ const AdminTransactionManagement = () => {
                           onClick={() => setSelectedTransaction(transaction)}
                           title="Chi tiết"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Chi tiết
@@ -497,8 +559,18 @@ const AdminTransactionManagement = () => {
                               onClick={() => confirmTransaction(transaction.id)}
                               title="Xác nhận"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                                 Xác nhận
@@ -511,8 +583,18 @@ const AdminTransactionManagement = () => {
                               onClick={() => cancelTransaction(transaction.id)}
                               title="Hủy"
                             >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
                               </svg>
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                                 Hủy giao dịch
@@ -524,11 +606,23 @@ const AdminTransactionManagement = () => {
                         {transaction.status === "failed" && (
                           <button
                             className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                            onClick={() => handleComplaint(transaction.id, "Xử lý khiếu nại")}
+                            onClick={() =>
+                              handleComplaint(transaction.id, "Xử lý khiếu nại")
+                            }
                             title="Khiếu nại"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Xử lý khiếu nại
@@ -585,16 +679,20 @@ const AdminTransactionManagement = () => {
                   <div className="space-y-2 mt-2">
                     <div>
                       <span className="font-medium">Pin trả về:</span>{" "}
-                      {selectedTransaction.batteryIn} ({selectedTransaction.batteryHealthIn}%)
+                      {selectedTransaction.batteryIn} (
+                      {selectedTransaction.batteryHealthIn}%)
                     </div>
                     <div>
                       <span className="font-medium">Pin nhận về:</span>{" "}
-                      {selectedTransaction.batteryOut} ({selectedTransaction.batteryHealthOut}%)
+                      {selectedTransaction.batteryOut} (
+                      {selectedTransaction.batteryHealthOut}%)
                     </div>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Thông tin giao dịch</h4>
+                  <h4 className="font-medium text-gray-700">
+                    Thông tin giao dịch
+                  </h4>
                   <div className="space-y-2 mt-2">
                     <div>
                       <span className="font-medium">Trạng thái:</span>
@@ -624,15 +722,20 @@ const AdminTransactionManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Nhân viên:</span>{" "}
-                      {selectedTransaction.staffName} ({selectedTransaction.staffId})
+                      {selectedTransaction.staffName} (
+                      {selectedTransaction.staffId})
                     </div>
                   </div>
                 </div>
                 {selectedTransaction.failureReason && (
                   <div className="col-span-2">
-                    <h4 className="font-medium text-gray-700">Lý do thất bại</h4>
+                    <h4 className="font-medium text-gray-700">
+                      Lý do thất bại
+                    </h4>
                     <div className="mt-2 p-3 bg-red-50 rounded-md">
-                      <p className="text-red-800">{selectedTransaction.failureReason}</p>
+                      <p className="text-red-800">
+                        {selectedTransaction.failureReason}
+                      </p>
                     </div>
                   </div>
                 )}

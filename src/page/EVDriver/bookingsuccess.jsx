@@ -32,7 +32,6 @@ export default function BookingSuccess() {
   const location = useLocation();
   const bookingData = location.state?.bookingData;
 
-  // Debug: Log booking data to see what we're working with
   console.log("BookingSuccess - bookingData:", bookingData);
   console.log("BookingSuccess - bookingData.date:", bookingData?.date);
   console.log(
@@ -196,19 +195,12 @@ export default function BookingSuccess() {
                     }}
                   >
                     {bookingData.date
-                      ? typeof bookingData.date.format === "function"
-                        ? bookingData.date.format("DD/MM/YYYY")
-                        : (() => {
-                            try {
-                              const parsedDate = dayjs(bookingData.date);
-                              return parsedDate.isValid()
-                                ? parsedDate.format("DD/MM/YYYY")
-                                : "Ngày không hợp lệ";
-                            } catch (error) {
-                              console.error("Date parsing error:", error);
-                              return "Ngày không hợp lệ";
-                            }
-                          })()
+                      ? (() => {
+                          const parsed = dayjs(bookingData.date);
+                          return parsed.isValid()
+                            ? parsed.format("DD/MM/YYYY")
+                            : "Chưa chọn ngày";
+                        })()
                       : "Chưa chọn ngày"}
                   </Text>
                 </Space>
@@ -468,119 +460,6 @@ export default function BookingSuccess() {
               </Link>
             </Space>
           </div>
-        </Card>
-
-        {/* Additional Info Card */}
-        <Card
-          style={{
-            borderRadius: "20px",
-            background:
-              "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-            border: "1px solid rgba(0, 8, 59, 0.1)",
-          }}
-          bodyStyle={{ padding: "24px" }}
-        >
-          <Title level={4} style={{ color: "#00083B", marginBottom: "16px" }}>
-            📱 Thông tin bổ sung
-          </Title>
-          <Row gutter={[24, 16]}>
-            <Col xs={24} md={8}>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 12px",
-                  }}
-                >
-                  <span style={{ fontSize: "20px" }}>📧</span>
-                </div>
-                <Text
-                  strong
-                  style={{
-                    color: "#00083B",
-                    display: "block",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Email xác nhận
-                </Text>
-                <Text style={{ color: "#64748b", fontSize: "13px" }}>
-                  Đã gửi thông tin chi tiết đến email của bạn
-                </Text>
-              </div>
-            </Col>
-            <Col xs={24} md={8}>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 12px",
-                  }}
-                >
-                  <span style={{ fontSize: "20px" }}>⏰</span>
-                </div>
-                <Text
-                  strong
-                  style={{
-                    color: "#00083B",
-                    display: "block",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Nhắc nhở tự động
-                </Text>
-                <Text style={{ color: "#64748b", fontSize: "13px" }}>
-                  Nhận thông báo nhắc nhở trước 30 phút
-                </Text>
-              </div>
-            </Col>
-            <Col xs={24} md={8}>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 12px",
-                  }}
-                >
-                  <span style={{ fontSize: "20px" }}>🔄</span>
-                </div>
-                <Text
-                  strong
-                  style={{
-                    color: "#00083B",
-                    display: "block",
-                    marginBottom: "4px",
-                  }}
-                >
-                  Hỗ trợ 24/7
-                </Text>
-                <Text style={{ color: "#64748b", fontSize: "13px" }}>
-                  Liên hệ khi cần hỗ trợ bất cứ lúc nào
-                </Text>
-              </div>
-            </Col>
-          </Row>
         </Card>
       </div>
     </div>

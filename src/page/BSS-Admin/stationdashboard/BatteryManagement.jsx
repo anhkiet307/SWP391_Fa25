@@ -80,60 +80,78 @@ const AdminBatteryManagement = () => {
 
   // Filter batteries
   const filteredBatteries = batteries.filter((battery) => {
-    const matchesStatus = filterStatus === "all" || battery.status === filterStatus;
-    const matchesStation = filterStation === "all" || battery.stationId === filterStation;
-    const matchesSearch = 
+    const matchesStatus =
+      filterStatus === "all" || battery.status === filterStatus;
+    const matchesStation =
+      filterStation === "all" || battery.stationId === filterStation;
+    const matchesSearch =
       battery.batteryId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       battery.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       battery.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
       battery.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     return matchesStatus && matchesStation && matchesSearch;
   });
 
   // Calculate statistics
   const stats = {
     total: batteries.length,
-    active: batteries.filter(b => b.status === "active").length,
-    charging: batteries.filter(b => b.status === "charging").length,
-    maintenance: batteries.filter(b => b.status === "maintenance").length,
-    averageHealth: Math.round(batteries.reduce((sum, b) => sum + b.health, 0) / batteries.length),
+    active: batteries.filter((b) => b.status === "active").length,
+    charging: batteries.filter((b) => b.status === "charging").length,
+    maintenance: batteries.filter((b) => b.status === "maintenance").length,
+    averageHealth: Math.round(
+      batteries.reduce((sum, b) => sum + b.health, 0) / batteries.length
+    ),
     totalCycles: batteries.reduce((sum, b) => sum + b.cycleCount, 0),
   };
 
   const handleStatusChange = (id, newStatus) => {
-    setBatteries(batteries.map(battery => 
-      battery.id === id ? { ...battery, status: newStatus } : battery
-    ));
-    showSuccess(`Đã cập nhật trạng thái pin thành ${newStatus === "active" ? "hoạt động" : 
-      newStatus === "charging" ? "đang sạc" : "bảo dưỡng"}`);
+    setBatteries(
+      batteries.map((battery) =>
+        battery.id === id ? { ...battery, status: newStatus } : battery
+      )
+    );
+    showSuccess(
+      `Đã cập nhật trạng thái pin thành ${
+        newStatus === "active"
+          ? "hoạt động"
+          : newStatus === "charging"
+          ? "đang sạc"
+          : "bảo dưỡng"
+      }`
+    );
   };
 
   const handleDeleteBattery = (id) => {
-    showConfirm(
-      "Bạn có chắc chắn muốn xóa pin này?",
-      () => {
-        setBatteries(batteries.filter(battery => battery.id !== id));
-        showSuccess("Đã xóa pin thành công!");
-      }
-    );
+    showConfirm("Bạn có chắc chắn muốn xóa pin này?", () => {
+      setBatteries(batteries.filter((battery) => battery.id !== id));
+      showSuccess("Đã xóa pin thành công!");
+    });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "active": return "bg-green-100 text-green-800";
-      case "charging": return "bg-blue-100 text-blue-800";
-      case "maintenance": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "charging":
+        return "bg-blue-100 text-blue-800";
+      case "maintenance":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case "active": return "Hoạt động";
-      case "charging": return "Đang sạc";
-      case "maintenance": return "Bảo dưỡng";
-      default: return "Không xác định";
+      case "active":
+        return "Hoạt động";
+      case "charging":
+        return "Đang sạc";
+      case "maintenance":
+        return "Bảo dưỡng";
+      default:
+        return "Không xác định";
     }
   };
 
@@ -228,11 +246,21 @@ const AdminBatteryManagement = () => {
               Bộ lọc và tìm kiếm
             </h2>
             <button
-              onClick={() => navigate('/admin-add-battery')}
+              onClick={() => navigate("/admin-add-battery")}
               className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
               </svg>
               Thêm Pin mới
             </button>
@@ -334,10 +362,10 @@ const AdminBatteryManagement = () => {
               </thead>
               <tbody>
                 {filteredBatteries.map((battery, index) => (
-                  <tr 
-                    key={battery.id} 
+                  <tr
+                    key={battery.id}
                     className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                      index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                   >
                     <td className="p-4 border-b border-gray-200">
@@ -370,7 +398,9 @@ const AdminBatteryManagement = () => {
                     </td>
                     <td className="p-4 border-b border-gray-200">
                       <span
-                        className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(battery.status)}`}
+                        className={`px-3 py-2 rounded-full text-sm font-semibold ${getStatusColor(
+                          battery.status
+                        )}`}
                       >
                         {getStatusText(battery.status)}
                       </span>
@@ -389,7 +419,11 @@ const AdminBatteryManagement = () => {
                             style={{ width: `${battery.health}%` }}
                           ></div>
                         </div>
-                        <span className={`text-sm font-bold ${getHealthColor(battery.health)}`}>
+                        <span
+                          className={`text-sm font-bold ${getHealthColor(
+                            battery.health
+                          )}`}
+                        >
                           {battery.health}%
                         </span>
                       </div>
@@ -402,10 +436,12 @@ const AdminBatteryManagement = () => {
                     <td className="p-4 border-b border-gray-200">
                       <div>
                         <div className="text-sm text-gray-600 mb-1">
-                          <span className="font-medium">Cuối:</span> {battery.lastMaintenance}
+                          <span className="font-medium">Cuối:</span>{" "}
+                          {battery.lastMaintenance}
                         </div>
                         <div className="text-sm text-gray-600">
-                          <span className="font-medium">Tiếp:</span> {battery.nextMaintenance}
+                          <span className="font-medium">Tiếp:</span>{" "}
+                          {battery.nextMaintenance}
                         </div>
                       </div>
                     </td>
@@ -417,9 +453,24 @@ const AdminBatteryManagement = () => {
                           onClick={() => setSelectedBattery(battery)}
                           title="Chi tiết"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Chi tiết
@@ -435,8 +486,18 @@ const AdminBatteryManagement = () => {
                           }}
                           title="Sửa"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Chỉnh sửa
@@ -447,7 +508,9 @@ const AdminBatteryManagement = () => {
                         <div className="group relative">
                           <select
                             value={battery.status}
-                            onChange={(e) => handleStatusChange(battery.id, e.target.value)}
+                            onChange={(e) =>
+                              handleStatusChange(battery.id, e.target.value)
+                            }
                             className="bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-sm font-medium border-0 appearance-none pr-8"
                             title="Đổi trạng thái"
                           >
@@ -455,8 +518,18 @@ const AdminBatteryManagement = () => {
                             <option value="charging">🔵</option>
                             <option value="maintenance">🔴</option>
                           </select>
-                          <svg className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <svg
+                            className="w-4 h-4 absolute right-2 top-1/2 transform -translate-y-1/2 text-white pointer-events-none"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Đổi trạng thái
@@ -469,8 +542,18 @@ const AdminBatteryManagement = () => {
                           onClick={() => handleDeleteBattery(battery.id)}
                           title="Xóa"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                             Xóa pin
@@ -494,45 +577,62 @@ const AdminBatteryManagement = () => {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium text-gray-700">Thông tin cơ bản</h4>
+                  <h4 className="font-medium text-gray-700">
+                    Thông tin cơ bản
+                  </h4>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="font-medium">Mã pin:</span> {selectedBattery.batteryId}
+                      <span className="font-medium">Mã pin:</span>{" "}
+                      {selectedBattery.batteryId}
                     </div>
                     <div>
-                      <span className="font-medium">Trạm:</span> {selectedBattery.stationName}
+                      <span className="font-medium">Trạm:</span>{" "}
+                      {selectedBattery.stationName}
                     </div>
                     <div>
-                      <span className="font-medium">Nhà SX:</span> {selectedBattery.manufacturer}
+                      <span className="font-medium">Nhà SX:</span>{" "}
+                      {selectedBattery.manufacturer}
                     </div>
                     <div>
-                      <span className="font-medium">Model:</span> {selectedBattery.model}
+                      <span className="font-medium">Model:</span>{" "}
+                      {selectedBattery.model}
                     </div>
                     <div>
-                      <span className="font-medium">Số serial:</span> {selectedBattery.serialNumber}
+                      <span className="font-medium">Số serial:</span>{" "}
+                      {selectedBattery.serialNumber}
                     </div>
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-700">Thông số kỹ thuật</h4>
+                  <h4 className="font-medium text-gray-700">
+                    Thông số kỹ thuật
+                  </h4>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="font-medium">Dung lượng:</span> {selectedBattery.capacity} mAh
+                      <span className="font-medium">Dung lượng:</span>{" "}
+                      {selectedBattery.capacity} mAh
                     </div>
                     <div>
-                      <span className="font-medium">Điện áp:</span> {selectedBattery.voltage} V
+                      <span className="font-medium">Điện áp:</span>{" "}
+                      {selectedBattery.voltage} V
                     </div>
                     <div>
-                      <span className="font-medium">Loại pin:</span> {selectedBattery.batteryType}
+                      <span className="font-medium">Loại pin:</span>{" "}
+                      {selectedBattery.batteryType}
                     </div>
                     <div>
                       <span className="font-medium">Trạng thái:</span>
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(selectedBattery.status)}`}>
+                      <span
+                        className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(
+                          selectedBattery.status
+                        )}`}
+                      >
                         {getStatusText(selectedBattery.status)}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium">Sức khỏe:</span> {selectedBattery.health}%
+                      <span className="font-medium">Sức khỏe:</span>{" "}
+                      {selectedBattery.health}%
                     </div>
                   </div>
                 </div>
@@ -540,13 +640,16 @@ const AdminBatteryManagement = () => {
                   <h4 className="font-medium text-gray-700">Sử dụng</h4>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="font-medium">Chu kỳ sạc:</span> {selectedBattery.cycleCount.toLocaleString("vi-VN")}
+                      <span className="font-medium">Chu kỳ sạc:</span>{" "}
+                      {selectedBattery.cycleCount.toLocaleString("vi-VN")}
                     </div>
                     <div>
-                      <span className="font-medium">Ngày mua:</span> {selectedBattery.purchaseDate}
+                      <span className="font-medium">Ngày mua:</span>{" "}
+                      {selectedBattery.purchaseDate}
                     </div>
                     <div>
-                      <span className="font-medium">Hết bảo hành:</span> {selectedBattery.warrantyExpiry}
+                      <span className="font-medium">Hết bảo hành:</span>{" "}
+                      {selectedBattery.warrantyExpiry}
                     </div>
                   </div>
                 </div>
@@ -554,10 +657,12 @@ const AdminBatteryManagement = () => {
                   <h4 className="font-medium text-gray-700">Bảo dưỡng</h4>
                   <div className="space-y-2 mt-2">
                     <div>
-                      <span className="font-medium">Lần cuối:</span> {selectedBattery.lastMaintenance}
+                      <span className="font-medium">Lần cuối:</span>{" "}
+                      {selectedBattery.lastMaintenance}
                     </div>
                     <div>
-                      <span className="font-medium">Lần tiếp theo:</span> {selectedBattery.nextMaintenance}
+                      <span className="font-medium">Lần tiếp theo:</span>{" "}
+                      {selectedBattery.nextMaintenance}
                     </div>
                   </div>
                 </div>

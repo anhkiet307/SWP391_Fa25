@@ -49,9 +49,9 @@ const AdminAddBattery = () => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       showSuccess("Thêm pin mới thành công!");
-      
+
       // Reset form
       setFormData({
         batteryId: "",
@@ -329,31 +329,41 @@ const AdminAddBattery = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="text-sm text-gray-600">Mã pin:</div>
-              <div className="font-medium">{formData.batteryId || "Chưa nhập"}</div>
+              <div className="font-medium">
+                {formData.batteryId || "Chưa nhập"}
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Trạm:</div>
               <div className="font-medium">
-                {stations.find(s => s.id === formData.stationId)?.name || "Chưa chọn"}
+                {stations.find((s) => s.id === formData.stationId)?.name ||
+                  "Chưa chọn"}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Loại pin:</div>
               <div className="font-medium">
-                {batteryTypes.find(t => t.value === formData.batteryType)?.label || "Chưa chọn"}
+                {batteryTypes.find((t) => t.value === formData.batteryType)
+                  ?.label || "Chưa chọn"}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Dung lượng:</div>
-              <div className="font-medium">{formData.capacity || "Chưa nhập"} mAh</div>
+              <div className="font-medium">
+                {formData.capacity || "Chưa nhập"} mAh
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Điện áp:</div>
-              <div className="font-medium">{formData.voltage || "Chưa nhập"} V</div>
+              <div className="font-medium">
+                {formData.voltage || "Chưa nhập"} V
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Nhà sản xuất:</div>
-              <div className="font-medium">{formData.manufacturer || "Chưa nhập"}</div>
+              <div className="font-medium">
+                {formData.manufacturer || "Chưa nhập"}
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Model:</div>
@@ -361,17 +371,24 @@ const AdminAddBattery = () => {
             </div>
             <div>
               <div className="text-sm text-gray-600">Số serial:</div>
-              <div className="font-medium">{formData.serialNumber || "Chưa nhập"}</div>
+              <div className="font-medium">
+                {formData.serialNumber || "Chưa nhập"}
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Ngày mua:</div>
-              <div className="font-medium">{formData.purchaseDate || "Chưa nhập"}</div>
+              <div className="font-medium">
+                {formData.purchaseDate || "Chưa nhập"}
+              </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">Trạng thái:</div>
               <div className="font-medium">
-                {formData.status === "new" ? "Mới" : 
-                 formData.status === "used" ? "Đã sử dụng" : "Tân trang"}
+                {formData.status === "new"
+                  ? "Mới"
+                  : formData.status === "used"
+                  ? "Đã sử dụng"
+                  : "Tân trang"}
               </div>
             </div>
             {formData.notes && (

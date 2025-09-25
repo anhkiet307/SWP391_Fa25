@@ -16,9 +16,24 @@ const AdminReportManagement = () => {
     monthlyGrowth: 15.5,
     dailyAverage: 8064516,
     topStations: [
-      { stationId: "BSS-001", name: "Trạm Quận 1", revenue: 62500000, transactions: 1250 },
-      { stationId: "BSS-002", name: "Trạm Quận 2", revenue: 94500000, transactions: 1890 },
-      { stationId: "BSS-003", name: "Trạm Quận 3", revenue: 49000000, transactions: 980 },
+      {
+        stationId: "BSS-001",
+        name: "Trạm Quận 1",
+        revenue: 62500000,
+        transactions: 1250,
+      },
+      {
+        stationId: "BSS-002",
+        name: "Trạm Quận 2",
+        revenue: 94500000,
+        transactions: 1890,
+      },
+      {
+        stationId: "BSS-003",
+        name: "Trạm Quận 3",
+        revenue: 49000000,
+        transactions: 980,
+      },
     ],
     dailyRevenue: [
       { date: "2024-01-01", revenue: 7500000, transactions: 150 },
@@ -98,9 +113,7 @@ const AdminReportManagement = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
-            <h1 className="text-3xl font-semibold m-0">
-              Báo cáo & Thống kê
-            </h1>
+            <h1 className="text-3xl font-semibold m-0">Báo cáo & Thống kê</h1>
             <p className="text-indigo-100 mt-2">
               Phân tích và báo cáo hiệu suất hệ thống trạm đổi pin
             </p>
@@ -126,7 +139,9 @@ const AdminReportManagement = () => {
                 <input
                   type="date"
                   value={dateRange.from}
-                  onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, from: e.target.value })
+                  }
                   className="p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -137,7 +152,9 @@ const AdminReportManagement = () => {
                 <input
                   type="date"
                   value={dateRange.to}
-                  onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, to: e.target.value })
+                  }
                   className="p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -216,7 +233,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan doanh thu */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan doanh thu</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan doanh thu
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600">
@@ -268,16 +287,20 @@ const AdminReportManagement = () => {
                   </thead>
                   <tbody>
                     {revenueData.topStations.map((station, index) => (
-                      <tr 
+                      <tr
                         key={station.stationId}
                         className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
                         }`}
                       >
                         <td className="p-4 border-b border-gray-200">
                           <div>
-                            <div className="font-bold text-base text-indigo-600">{station.stationId}</div>
-                            <div className="text-sm text-gray-600 mt-1">{station.name}</div>
+                            <div className="font-bold text-base text-indigo-600">
+                              {station.stationId}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {station.name}
+                            </div>
                           </div>
                         </td>
                         <td className="p-4 border-b border-gray-200">
@@ -292,7 +315,10 @@ const AdminReportManagement = () => {
                         </td>
                         <td className="p-4 border-b border-gray-200">
                           <div className="font-semibold text-base text-gray-800">
-                            {(station.revenue / station.transactions).toLocaleString("vi-VN")} VNĐ
+                            {(
+                              station.revenue / station.transactions
+                            ).toLocaleString("vi-VN")}{" "}
+                            VNĐ
                           </div>
                         </td>
                       </tr>
@@ -304,13 +330,20 @@ const AdminReportManagement = () => {
 
             {/* Biểu đồ doanh thu theo ngày */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Doanh thu theo ngày</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Doanh thu theo ngày
+              </h2>
               <div className="space-y-3">
                 {revenueData.dailyRevenue.map((day) => (
-                  <div key={day.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={day.date}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{day.date}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{day.transactions} giao dịch</div>
+                      <div className="text-sm text-gray-600">
+                        {day.transactions} giao dịch
+                      </div>
                       <div className="font-bold text-green-600">
                         {(day.revenue / 1000000).toFixed(1)}M VNĐ
                       </div>
@@ -327,7 +360,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan tần suất */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan tần suất đổi pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan tần suất đổi pin
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
@@ -355,10 +390,15 @@ const AdminReportManagement = () => {
               <h2 className="text-xl font-semibold mb-4">Giờ cao điểm</h2>
               <div className="space-y-3">
                 {frequencyData.peakHours.map((hour, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{hour.hour}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{hour.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {hour.percentage}%
+                      </div>
                       <div className="font-bold text-blue-600">
                         {hour.swaps.toLocaleString("vi-VN")} lượt
                       </div>
@@ -373,10 +413,15 @@ const AdminReportManagement = () => {
               <h2 className="text-xl font-semibold mb-4">Loại pin phổ biến</h2>
               <div className="space-y-3">
                 {frequencyData.batteryTypes.map((battery, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{battery.type}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{battery.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {battery.percentage}%
+                      </div>
                       <div className="font-bold text-green-600">
                         {battery.swaps.toLocaleString("vi-VN")} lượt
                       </div>
@@ -393,7 +438,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan sức khỏe pin */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan sức khỏe pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan sức khỏe pin
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600">
@@ -415,7 +462,10 @@ const AdminReportManagement = () => {
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
-                    {batteryHealthData.healthDistribution.reduce((sum, item) => sum + item.count, 0)}
+                    {batteryHealthData.healthDistribution.reduce(
+                      (sum, item) => sum + item.count,
+                      0
+                    )}
                   </div>
                   <div className="text-sm text-blue-700">Tổng pin</div>
                 </div>
@@ -424,13 +474,20 @@ const AdminReportManagement = () => {
 
             {/* Phân bố sức khỏe pin */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Phân bố sức khỏe pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Phân bố sức khỏe pin
+              </h2>
               <div className="space-y-3">
                 {batteryHealthData.healthDistribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{item.range}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{item.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {item.percentage}%
+                      </div>
                       <div className="font-bold text-blue-600">
                         {item.count.toLocaleString("vi-VN")} pin
                       </div>
@@ -447,7 +504,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan khách hàng */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan khách hàng</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan khách hàng
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
@@ -499,10 +558,10 @@ const AdminReportManagement = () => {
                   </thead>
                   <tbody>
                     {customerData.topCustomers.map((customer, index) => (
-                      <tr 
+                      <tr
                         key={index}
                         className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
                         }`}
                       >
                         <td className="p-4 border-b border-gray-200">
@@ -522,7 +581,10 @@ const AdminReportManagement = () => {
                         </td>
                         <td className="p-4 border-b border-gray-200">
                           <div className="font-semibold text-base text-gray-800">
-                            {(customer.spending / customer.transactions).toLocaleString("vi-VN")} VNĐ
+                            {(
+                              customer.spending / customer.transactions
+                            ).toLocaleString("vi-VN")}{" "}
+                            VNĐ
                           </div>
                         </td>
                       </tr>
