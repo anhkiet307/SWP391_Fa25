@@ -32,6 +32,18 @@ export default function Login() {
           username: formData.username,
           name: "Người dùng",
           email: "user@voltswap.com",
+          vehicles: [
+            {
+              id: "moto-50",
+              name: "Xe máy điện 50cc",
+              battery: "Pin 48V 20Ah",
+            },
+            {
+              id: "moto-100",
+              name: "Xe máy điện 100cc",
+              battery: "Pin 60V 30Ah",
+            },
+          ],
         });
         navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
       } else {
