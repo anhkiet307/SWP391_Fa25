@@ -34,9 +34,9 @@ const AdminAddStation = () => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       showSuccess("Thêm trạm mới thành công!");
-      
+
       // Reset form
       setFormData({
         stationId: "",
@@ -64,7 +64,9 @@ const AdminAddStation = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
-            <h1 className="text-3xl font-semibold m-0">Thêm Trạm Đổi Pin Mới</h1>
+            <h1 className="text-3xl font-semibold m-0">
+              Thêm Trạm Đổi Pin Mới
+            </h1>
             <p className="text-indigo-100 mt-2">
               Tạo trạm đổi pin mới trong hệ thống
             </p>
@@ -179,7 +181,6 @@ const AdminAddStation = () => {
                   required
                 />
               </div>
-
             </div>
 
             {/* Buttons */}
@@ -214,8 +215,18 @@ const AdminAddStation = () => {
                     onClick={handleEditForm}
                     className="absolute right-0 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -226,8 +237,18 @@ const AdminAddStation = () => {
                 {/* Station Icon & Status */}
                 <div className="text-center mb-4">
                   <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
-                    <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <svg
+                      className="w-8 h-8 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      />
                     </svg>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -240,10 +261,22 @@ const AdminAddStation = () => {
                   {/* Mã trạm */}
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      <svg
+                        className="w-3 h-3 text-blue-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-blue-600">Mã trạm</span>
+                      <span className="text-base font-medium text-blue-600">
+                        Mã trạm
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.stationId || "Chưa nhập"}
@@ -253,10 +286,22 @@ const AdminAddStation = () => {
                   {/* Tên trạm */}
                   <div className="bg-green-50 rounded-lg p-3 border border-green-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-green-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg
+                        className="w-3 h-3 text-green-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-green-600">Tên trạm</span>
+                      <span className="text-base font-medium text-green-600">
+                        Tên trạm
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.name || "Chưa nhập"}
@@ -266,11 +311,28 @@ const AdminAddStation = () => {
                   {/* Địa chỉ */}
                   <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-purple-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-3 h-3 text-purple-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-purple-600">Địa chỉ</span>
+                      <span className="text-base font-medium text-purple-600">
+                        Địa chỉ
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.address || "Chưa nhập"}
@@ -280,10 +342,22 @@ const AdminAddStation = () => {
                   {/* Quản lý */}
                   <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg
+                        className="w-3 h-3 text-orange-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-orange-600">Quản lý</span>
+                      <span className="text-base font-medium text-orange-600">
+                        Quản lý
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.manager || "Chưa nhập"}
@@ -293,10 +367,22 @@ const AdminAddStation = () => {
                   {/* SĐT */}
                   <div className="bg-cyan-50 rounded-lg p-3 border border-cyan-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-cyan-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      <svg
+                        className="w-3 h-3 text-cyan-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-cyan-600">SĐT</span>
+                      <span className="text-base font-medium text-cyan-600">
+                        SĐT
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.phone || "Chưa nhập"}
@@ -306,16 +392,27 @@ const AdminAddStation = () => {
                   {/* Sức chứa */}
                   <div className="bg-pink-50 rounded-lg p-3 border border-pink-100">
                     <div className="flex items-center mb-1">
-                      <svg className="w-3 h-3 text-pink-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <svg
+                        className="w-3 h-3 text-pink-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
                       </svg>
-                      <span className="text-base font-medium text-pink-600">Sức chứa</span>
+                      <span className="text-base font-medium text-pink-600">
+                        Sức chứa
+                      </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.batteryCapacity || 0} pin
                     </div>
                   </div>
-
                 </div>
               </div>
 

@@ -11,7 +11,10 @@ import {
   CheckCircleOutlined,
   ReloadOutlined,
   RightOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
+import { batteryStations, districts } from "../data/stations";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Paragraph } = Typography;
 
@@ -165,147 +168,6 @@ const createSelectedStationIcon = (color) => {
     popupAnchor: [0, -17],
   });
 };
-
-// Dữ liệu các quận/huyện
-const districts = {
-  "Hà Nội": [
-    { name: "Ba Đình", center: [21.0333, 105.8333], zoom: 13 },
-    { name: "Hoàn Kiếm", center: [21.0333, 105.8333], zoom: 13 },
-    { name: "Tây Hồ", center: [21.0667, 105.8167], zoom: 13 },
-    { name: "Long Biên", center: [21.0333, 105.8833], zoom: 13 },
-    { name: "Cầu Giấy", center: [21.0333, 105.8], zoom: 13 },
-    { name: "Đống Đa", center: [21.0167, 105.8333], zoom: 13 },
-    { name: "Hai Bà Trưng", center: [21.0167, 105.85], zoom: 13 },
-    { name: "Hoàng Mai", center: [20.9833, 105.85], zoom: 13 },
-    { name: "Thanh Xuân", center: [21.0, 105.8], zoom: 13 },
-    { name: "Hà Đông", center: [20.9667, 105.7667], zoom: 13 },
-  ],
-  "TP.HCM": [
-    { name: "Quận 1", center: [10.7769, 106.7009], zoom: 13 },
-    { name: "Quận 2", center: [10.7833, 106.75], zoom: 13 },
-    { name: "Quận 3", center: [10.7831, 106.6967], zoom: 13 },
-    { name: "Quận 4", center: [10.75, 106.7], zoom: 13 },
-    { name: "Quận 5", center: [10.75, 106.6667], zoom: 13 },
-    { name: "Quận 6", center: [10.75, 106.6333], zoom: 13 },
-    { name: "Quận 7", center: [10.7374, 106.7226], zoom: 13 },
-    { name: "Quận 8", center: [10.75, 106.6], zoom: 13 },
-    { name: "Quận 9", center: [10.8333, 106.7667], zoom: 13 },
-    { name: "Quận 10", center: [10.7678, 106.6663], zoom: 13 },
-    { name: "Quận 11", center: [10.7667, 106.6333], zoom: 13 },
-    { name: "Quận 12", center: [10.8667, 106.65], zoom: 13 },
-    { name: "Bình Thạnh", center: [10.8106, 106.7091], zoom: 13 },
-    { name: "Tân Bình", center: [10.8, 106.65], zoom: 13 },
-    { name: "Tân Phú", center: [10.7667, 106.6], zoom: 13 },
-    { name: "Phú Nhuận", center: [10.8, 106.6833], zoom: 13 },
-    { name: "Gò Vấp", center: [10.8333, 106.6833], zoom: 13 },
-    { name: "Bình Tân", center: [10.75, 106.5667], zoom: 13 },
-    { name: "Thủ Đức", center: [10.8667, 106.7667], zoom: 13 },
-  ],
-};
-
-// Dữ liệu trạm đổi pin với vị trí chính xác hơn
-const batteryStations = [
-  // Hà Nội - Ba Đình
-  {
-    id: 1,
-    name: "Trạm đổi pin Ba Đình",
-    address: "Số 1, Phố Điện Biên Phủ, Quận Ba Đình, Hà Nội",
-    position: [21.0333, 105.8333],
-    city: "Hà Nội",
-    district: "Ba Đình",
-    icon: createBatteryIcon("#00ff00"),
-  },
-  // Hà Nội - Hoàn Kiếm
-  {
-    id: 2,
-    name: "Trạm đổi pin Hoàn Kiếm",
-    address: "Số 15, Phố Lê Thái Tổ, Quận Hoàn Kiếm, Hà Nội",
-    position: [21.0333, 105.8333],
-    city: "Hà Nội",
-    district: "Hoàn Kiếm",
-    icon: createBatteryIcon("#00ff00"),
-  },
-  // Hà Nội - Cầu Giấy
-  {
-    id: 3,
-    name: "Trạm đổi pin Cầu Giấy",
-    address: "Số 123, Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội",
-    position: [21.0333, 105.8],
-    city: "Hà Nội",
-    district: "Cầu Giấy",
-    icon: createBatteryIcon("#00ff00"),
-  },
-  // Hà Nội - Hai Bà Trưng
-  {
-    id: 4,
-    name: "Trạm đổi pin Hai Bà Trưng",
-    address: "Số 45, Phố Bạch Mai, Quận Hai Bà Trưng, Hà Nội",
-    position: [21.0167, 105.85],
-    city: "Hà Nội",
-    district: "Hai Bà Trưng",
-    icon: createBatteryIcon("#00ff00"),
-  },
-  // Hà Nội - Đống Đa
-  {
-    id: 5,
-    name: "Trạm đổi pin Đống Đa",
-    address: "Số 78, Phố Tôn Đức Thắng, Quận Đống Đa, Hà Nội",
-    position: [21.0167, 105.8333],
-    city: "Hà Nội",
-    district: "Đống Đa",
-    icon: createBatteryIcon("#00ff00"),
-  },
-  // TP.HCM - Quận 1
-  {
-    id: 6,
-    name: "Trạm đổi pin Quận 1",
-    address: "Số 12, Đường Nguyễn Huệ, Quận 1, TP.HCM",
-    position: [10.7769, 106.7009],
-    city: "TP.HCM",
-    district: "Quận 1",
-    icon: createBatteryIcon("#ff6b35"),
-  },
-  // TP.HCM - Quận 3
-  {
-    id: 7,
-    name: "Trạm đổi pin Quận 3",
-    address: "Số 34, Đường Võ Văn Tần, Quận 3, TP.HCM",
-    position: [10.7831, 106.6967],
-    city: "TP.HCM",
-    district: "Quận 3",
-    icon: createBatteryIcon("#ff6b35"),
-  },
-  // TP.HCM - Quận 7
-  {
-    id: 8,
-    name: "Trạm đổi pin Quận 7",
-    address: "Số 56, Đường Nguyễn Thị Thập, Quận 7, TP.HCM",
-    position: [10.7374, 106.7226],
-    city: "TP.HCM",
-    district: "Quận 7",
-    icon: createBatteryIcon("#ff6b35"),
-  },
-  // TP.HCM - Quận 10
-  {
-    id: 9,
-    name: "Trạm đổi pin Quận 10",
-    address: "Số 89, Đường Cách Mạng Tháng 8, Quận 10, TP.HCM",
-    position: [10.7678, 106.6663],
-    city: "TP.HCM",
-    district: "Quận 10",
-    icon: createBatteryIcon("#ff6b35"),
-  },
-  // TP.HCM - Bình Thạnh
-  {
-    id: 10,
-    name: "Trạm đổi pin Bình Thạnh",
-    address: "Số 23, Đường Xô Viết Nghệ Tĩnh, Quận Bình Thạnh, TP.HCM",
-    position: [10.8106, 106.7091],
-    city: "TP.HCM",
-    district: "Bình Thạnh",
-    icon: createBatteryIcon("#ff6b35"),
-  },
-];
 
 // Component để cập nhật vị trí người dùng
 function UserLocationMarker({ userLocation }) {
@@ -533,6 +395,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 // Component bản đồ chính
 function Map() {
+  const navigate = useNavigate();
   const [userLocation, setUserLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -642,6 +505,19 @@ function Map() {
       }
     },
     [userLocation]
+  );
+
+  // Hàm chuyển đến trang booking với trạm đã chọn
+  const goToBooking = useCallback(
+    (station) => {
+      // Chuyển đến trang booking với station ID trong URL params
+      navigate(
+        `/booking?stationId=${station.id}&stationName=${encodeURIComponent(
+          station.name
+        )}`
+      );
+    },
+    [navigate]
   );
 
   // Hàm chọn thành phố
@@ -1006,7 +882,9 @@ function Map() {
                         ? createNearestStationIcon(
                             station.city === "Hà Nội" ? "#00ff00" : "#ff6b35"
                           )
-                        : station.icon
+                        : createBatteryIcon(
+                            station.city === "Hà Nội" ? "#00ff00" : "#ff6b35"
+                          )
                     }
                   >
                     <Popup>
@@ -1326,12 +1204,19 @@ function Map() {
                           </div>
                         </div>
 
-                        {/* Nút chọn trạm và chỉ đường */}
-                        <div style={{ display: "flex", gap: "8px" }}>
+                        {/* Nút chọn trạm, đặt lịch và chỉ đường */}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "6px",
+                            flexWrap: "wrap",
+                          }}
+                        >
                           <button
                             onClick={() => selectStation(station)}
                             style={{
                               flex: 1,
+                              minWidth: "80px",
                               background:
                                 "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
                               color: "white",
@@ -1363,6 +1248,41 @@ function Map() {
                             <span>Chọn</span>
                           </button>
                           <button
+                            onClick={() => goToBooking(station)}
+                            style={{
+                              flex: 1,
+                              minWidth: "80px",
+                              background:
+                                "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                              color: "white",
+                              padding: "10px 12px",
+                              borderRadius: "12px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(245, 158, 11, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(245, 158, 11, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(245, 158, 11, 0.2)";
+                            }}
+                          >
+                            <CalendarOutlined style={{ fontSize: "12px" }} />
+                            <span>Đặt lịch</span>
+                          </button>
+                          <button
                             onClick={() => {
                               // Sử dụng địa chỉ văn bản thay vì tọa độ
                               const stationAddress = station.address
@@ -1383,6 +1303,7 @@ function Map() {
                             }}
                             style={{
                               flex: 1,
+                              minWidth: "80px",
                               background:
                                 "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                               color: "white",
