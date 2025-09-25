@@ -20,8 +20,8 @@ const AdminBatteryManagement = () => {
       status: "active",
       health: 95,
       cycleCount: 150,
-      lastMaintenance: "2024-01-15",
-      nextMaintenance: "2024-02-15",
+      lastMaintenance: "15/01/2024",
+      nextMaintenance: "15/02/2024",
       purchaseDate: "2023-06-01",
       warrantyExpiry: "2025-06-01",
     },
@@ -39,8 +39,8 @@ const AdminBatteryManagement = () => {
       status: "charging",
       health: 88,
       cycleCount: 200,
-      lastMaintenance: "2024-01-10",
-      nextMaintenance: "2024-02-10",
+      lastMaintenance: "10/01/2024",
+      nextMaintenance: "10/02/2024",
       purchaseDate: "2023-05-15",
       warrantyExpiry: "2025-05-15",
     },
@@ -58,8 +58,8 @@ const AdminBatteryManagement = () => {
       status: "maintenance",
       health: 75,
       cycleCount: 300,
-      lastMaintenance: "2024-01-20",
-      nextMaintenance: "2024-01-25",
+      lastMaintenance: "20/01/2024",
+      nextMaintenance: "25/01/2024",
       purchaseDate: "2023-04-01",
       warrantyExpiry: "2025-04-01",
     },
@@ -487,88 +487,216 @@ const AdminBatteryManagement = () => {
 
         {/* Modal chi tiết pin */}
         {selectedBattery && !showEditForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-              <h3 className="text-xl font-semibold mb-4">
-                Chi tiết pin {selectedBattery.batteryId}
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-700">Thông tin cơ bản</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Mã pin:</span> {selectedBattery.batteryId}
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-3xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
                     </div>
                     <div>
-                      <span className="font-medium">Trạm:</span> {selectedBattery.stationName}
-                    </div>
-                    <div>
-                      <span className="font-medium">Nhà SX:</span> {selectedBattery.manufacturer}
-                    </div>
-                    <div>
-                      <span className="font-medium">Model:</span> {selectedBattery.model}
-                    </div>
-                    <div>
-                      <span className="font-medium">Số serial:</span> {selectedBattery.serialNumber}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Thông số kỹ thuật</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Dung lượng:</span> {selectedBattery.capacity} mAh
-                    </div>
-                    <div>
-                      <span className="font-medium">Điện áp:</span> {selectedBattery.voltage} V
-                    </div>
-                    <div>
-                      <span className="font-medium">Loại pin:</span> {selectedBattery.batteryType}
-                    </div>
-                    <div>
-                      <span className="font-medium">Trạng thái:</span>
-                      <span className={`ml-2 px-2 py-1 rounded text-xs ${getStatusColor(selectedBattery.status)}`}>
-                        {getStatusText(selectedBattery.status)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-medium">Sức khỏe:</span> {selectedBattery.health}%
+                      <h3 className="text-2xl font-bold text-gray-900">
+                        {selectedBattery.batteryId}
+                      </h3>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                          {selectedBattery.manufacturer} {selectedBattery.model}
+                        </span>
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                          selectedBattery.status === "active" 
+                            ? "bg-green-100 text-green-800" 
+                            : selectedBattery.status === "charging"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {selectedBattery.status === "active" ? "🟢 Hoạt động" : 
+                           selectedBattery.status === "charging" ? "🔵 Đang sạc" : "🔴 Bảo dưỡng"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Sử dụng</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Chu kỳ sạc:</span> {selectedBattery.cycleCount.toLocaleString("vi-VN")}
-                    </div>
-                    <div>
-                      <span className="font-medium">Ngày mua:</span> {selectedBattery.purchaseDate}
-                    </div>
-                    <div>
-                      <span className="font-medium">Hết bảo hành:</span> {selectedBattery.warrantyExpiry}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Bảo dưỡng</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Lần cuối:</span> {selectedBattery.lastMaintenance}
-                    </div>
-                    <div>
-                      <span className="font-medium">Lần tiếp theo:</span> {selectedBattery.nextMaintenance}
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setSelectedBattery(null)}
+                    className="p-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 border border-gray-200 hover:border-red-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setSelectedBattery(null)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
-                >
-                  Đóng
-                </button>
+
+              {/* Content */}
+              <div className="p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {/* Thông tin cơ bản */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+                    <h4 className="text-lg font-bold text-blue-800 mb-4 flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Thông tin cơ bản
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Mã pin</div>
+                          <div className="text-base text-gray-700">{selectedBattery.batteryId}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Trạm</div>
+                          <div className="text-base text-gray-700">{selectedBattery.stationName}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Nhà SX</div>
+                          <div className="text-base text-gray-700">{selectedBattery.manufacturer}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Model</div>
+                          <div className="text-base text-gray-700">{selectedBattery.model}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Số serial</div>
+                          <div className="text-base text-gray-700">{selectedBattery.serialNumber}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-base font-medium text-blue-600">Chu kỳ sạc</div>
+                          <div className="text-base text-gray-700">{selectedBattery.cycleCount.toLocaleString("vi-VN")}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thông số kỹ thuật */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
+                    <h4 className="text-lg font-bold text-green-800 mb-4 flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                      </svg>
+                      Thông số kỹ thuật
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-xl font-bold text-green-600 mb-1">
+                          {selectedBattery.capacity} mAh
+                        </div>
+                        <div className="text-xs text-gray-600">Dung lượng</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-xl font-bold text-blue-600 mb-1">
+                          {selectedBattery.voltage} V
+                        </div>
+                        <div className="text-xs text-gray-600">Điện áp</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 shadow-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-semibold text-gray-700">Sức khỏe</span>
+                          <span className="text-sm font-bold text-gray-900">{selectedBattery.health}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all duration-500 ${
+                              selectedBattery.health >= 80
+                                ? "bg-gradient-to-r from-green-400 to-green-500"
+                                : selectedBattery.health >= 60
+                                ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
+                                : "bg-gradient-to-r from-red-400 to-red-500"
+                            }`}
+                            style={{ width: `${selectedBattery.health}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center shadow-sm">
+                        <div className="text-sm font-semibold text-gray-600 mb-1">Loại pin</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedBattery.batteryType}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sử dụng */}
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
+                    <h4 className="text-base font-bold text-purple-800 mb-3 flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Sử dụng
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-sm font-semibold text-gray-600 mb-1">Ngày mua</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedBattery.purchaseDate}</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-sm font-semibold text-gray-600 mb-1">Hết bảo hành</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedBattery.warrantyExpiry}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bảo dưỡng */}
+                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-100">
+                    <h4 className="text-base font-bold text-orange-800 mb-3 flex items-center">
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      </svg>
+                      Bảo dưỡng
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Lần cuối</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedBattery.lastMaintenance}</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">Lần tiếp theo</div>
+                        <div className="text-sm font-bold text-gray-900">{selectedBattery.nextMaintenance}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
