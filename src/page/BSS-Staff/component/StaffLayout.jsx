@@ -1,5 +1,6 @@
 import React from "react";
 import StaffSidebar from "./StaffSidebar";
+import StaffHeader from "./StaffHeader";
 
 const StaffLayout = ({ children }) => {
   return (
@@ -9,7 +10,11 @@ const StaffLayout = ({ children }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <main className="flex-1">{children}</main>
+        {/* Header */}
+        <StaffHeader />
+
+        {/* Main Content Area */}
+        <main className="flex-1 bg-gray-50">{children}</main>
       </div>
     </div>
   );

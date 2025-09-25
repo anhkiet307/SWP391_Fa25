@@ -14,6 +14,7 @@ import ForgotPassword from "./page/auth/forgot_password.jsx";
 import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
 import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
+import BatteryInventory from "./page/BSS-Staff/BatteryInventory.jsx";
 
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/Dashboard.jsx";
@@ -89,16 +90,31 @@ function App() {
             element={<TransactionManagement />}
           />
           <Route path="/station-management" element={<StationManagement />} />
-          
+          <Route path="/battery-inventory" element={<BatteryInventory />} />
           {/* Admin Routes */}
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-station-management" element={<AdminStationManagement />} />
-          <Route path="/admin-user-management" element={<AdminUserManagement />} />
-          <Route path="/admin-transaction-management" element={<AdminTransactionManagement />} />
-          <Route path="/admin-report-management" element={<AdminReportManagement />} />
+          <Route
+            path="/admin-station-management"
+            element={<AdminStationManagement />}
+          />
+          <Route
+            path="/admin-user-management"
+            element={<AdminUserManagement />}
+          />
+          <Route
+            path="/admin-transaction-management"
+            element={<AdminTransactionManagement />}
+          />
+          <Route
+            path="/admin-report-management"
+            element={<AdminReportManagement />}
+          />
           <Route path="/admin-add-station" element={<AdminAddStation />} />
           <Route path="/admin-add-battery" element={<AdminAddBattery />} />
-          <Route path="/admin-manage-battery" element={<AdminBatteryManagement />} />
+          <Route
+            path="/admin-manage-battery"
+            element={<AdminBatteryManagement />}
+          />
         </Routes>
       </Router>
     </AuthProvider>
