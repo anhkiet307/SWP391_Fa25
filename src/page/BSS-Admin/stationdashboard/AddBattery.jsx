@@ -18,6 +18,7 @@ const AdminAddBattery = () => {
     notes: "",
   });
 
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
