@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/layout/header.jsx";
 import dayjs from "dayjs";
-// Đưa BookingHeader vào cùng file để không còn tách riêng
 import {
   Button,
   Card,
@@ -39,14 +38,12 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { batteryStations } from "../../data/stations";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-// Bỏ BookingHeader riêng, dùng Header chung của ứng dụng
-
-// Fix cho default markers trong React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -105,7 +102,6 @@ const createUserIcon = () => {
   });
 };
 
-// Tạo icon cho trạm gần nhất (nổi bật hơn)
 const createNearestStationIcon = (color) => {
   return L.divIcon({
     className: "custom-nearest-station-icon",
@@ -132,7 +128,6 @@ const createNearestStationIcon = (color) => {
   });
 };
 
-// Tạo icon cho trạm được chọn (màu xanh dương)
 const createSelectedStationIcon = (color) => {
   return L.divIcon({
     className: "custom-selected-station-icon",
@@ -163,6 +158,7 @@ export default function Booking() {
   const [form] = Form.useForm();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
@@ -170,12 +166,13 @@ export default function Booking() {
   const [activeTab, setActiveTab] = useState("today");
   const [userLocation, setUserLocation] = useState(null);
   const [nearestStation, setNearestStation] = useState(null);
+  const [selectedCity, setSelectedCity] = useState("HN");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedCity, setSelectedCity] = useState("HN");
+  const summaryCardRef = useRef(null);
+  const [summaryCardHeight, setSummaryCardHeight] = useState(null);
 
-  // State để theo dõi form values cho summary
   const [formValues, setFormValues] = useState({
     station: null,
     date: null,
@@ -192,7 +189,6 @@ export default function Booking() {
     }
   }, [activeTab]);
 
-  // Watch form fields for summary
   const watchedStation = formValues.station;
   const watchedDate = formValues.date;
   const watchedTime = formValues.time;
@@ -202,71 +198,80 @@ export default function Booking() {
   const formatVND = (value) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
-  // Dữ liệu trạm với vị trí
-  const stations = [
-    {
-      id: 1,
-      name: "Trạm đổi pin Ba Đình - Hà Nội",
-      position: [21.0333, 105.8333],
-      address: "Số 1, Phố Điện Biên Phủ, Quận Ba Đình, Hà Nội",
-    },
-    {
-      id: 2,
-      name: "Trạm đổi pin Hoàn Kiếm - Hà Nội",
-      position: [21.0333, 105.8333],
-      address: "Số 15, Phố Lê Thái Tổ, Quận Hoàn Kiếm, Hà Nội",
-    },
-    {
-      id: 3,
-      name: "Trạm đổi pin Cầu Giấy - Hà Nội",
-      position: [21.0333, 105.8],
-      address: "Số 123, Đường Cầu Giấy, Quận Cầu Giấy, Hà Nội",
-    },
-    {
-      id: 4,
-      name: "Trạm đổi pin Hai Bà Trưng - Hà Nội",
-      position: [21.0167, 105.85],
-      address: "Số 45, Phố Bạch Mai, Quận Hai Bà Trưng, Hà Nội",
-    },
-    {
-      id: 5,
-      name: "Trạm đổi pin Đống Đa - Hà Nội",
-      position: [21.0167, 105.8333],
-      address: "Số 78, Phố Tôn Đức Thắng, Quận Đống Đa, Hà Nội",
-    },
-    {
-      id: 6,
-      name: "Trạm đổi pin Quận 1 - TP.HCM",
-      position: [10.7769, 106.7009],
-      address: "Số 12, Đường Nguyễn Huệ, Quận 1, TP.HCM",
-    },
-    {
-      id: 7,
-      name: "Trạm đổi pin Quận 3 - TP.HCM",
-      position: [10.7831, 106.6967],
-      address: "Số 34, Đường Võ Văn Tần, Quận 3, TP.HCM",
-    },
-    {
-      id: 8,
-      name: "Trạm đổi pin Quận 7 - TP.HCM",
-      position: [10.7374, 106.7226],
-      address: "Số 56, Đường Nguyễn Thị Thập, Quận 7, TP.HCM",
-    },
-    {
-      id: 9,
-      name: "Trạm đổi pin Quận 10 - TP.HCM",
-      position: [10.7678, 106.6663],
-      address: "Số 89, Đường Cách Mạng Tháng 8, Quận 10, TP.HCM",
-    },
-    {
-      id: 10,
-      name: "Trạm đổi pin Bình Thạnh - TP.HCM",
-      position: [10.8106, 106.7091],
-      address: "Số 23, Đường Xô Viết Nghệ Tĩnh, Quận Bình Thạnh, TP.HCM",
-    },
-  ];
+  const stations = batteryStations;
 
-  // Tạo time slots từ 8h đến 20h, mỗi slot 10 phút
+  const selectedStationData = stations.find(
+    (s) => s.name === formValues.station
+  );
+  const stationInventory = selectedStationData?.inventory || [];
+
+  const selectedVehicleObj = (user?.vehicles || []).find(
+    (v) => v.name === watchedVehicle
+  );
+
+  const compatibleBatteryType =
+    selectedVehicleObj?.type || selectedVehicleObj?.battery || null;
+
+  // Thống kê tổng quan toàn trạm
+  const totalBatteriesAll = stationInventory.length;
+  const countsByTypeAll = stationInventory.reduce((acc, b) => {
+    acc[b.type] = (acc[b.type] || 0) + 1;
+    return acc;
+  }, {});
+  const availableByTypeAll = stationInventory.reduce((acc, b) => {
+    if (b.status === "available") {
+      acc[b.type] = (acc[b.type] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
+  const compatibleAvailableInventory = stationInventory.filter(
+    (b) =>
+      (!compatibleBatteryType || b.type === compatibleBatteryType) &&
+      b.status === "available"
+  );
+
+  // Thống kê bổ sung: tổng khả dụng toàn trạm và danh sách tương thích đầy đủ
+  const totalAvailableAll = stationInventory.filter(
+    (b) => b.status === "available"
+  ).length;
+  const compatibleInventoryAll = stationInventory
+    .filter((b) => !compatibleBatteryType || b.type === compatibleBatteryType)
+    .slice()
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === "available" ? -1 : 1;
+      return b.soc - a.soc;
+    });
+
+  useEffect(() => {
+    const stationId = searchParams.get("stationId");
+    const stationName = searchParams.get("stationName");
+
+    if (stationId && stationName) {
+      const selectedStation = stations.find(
+        (station) => station.id === parseInt(stationId)
+      );
+
+      if (selectedStation) {
+        form.setFieldsValue({ station: selectedStation.name });
+        setFormValues((prev) => ({
+          ...prev,
+          station: selectedStation.name,
+        }));
+
+        const cityCode = selectedStation.city === "Hà Nội" ? "HN" : "HCM";
+        setSelectedCity(cityCode);
+        form.setFieldsValue({ city: cityCode });
+        setFormValues((prev) => ({
+          ...prev,
+          city: cityCode,
+        }));
+
+        navigate("/booking", { replace: true });
+      }
+    }
+  }, [searchParams, stations, form, navigate]);
+
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 8; hour < 20; hour++) {
@@ -291,13 +296,27 @@ export default function Booking() {
 
   const timeSlots = generateTimeSlots();
 
+  // Đồng bộ chiều cao: đo chiều cao card Tóm tắt để áp cho card Tồn kho
+  useEffect(() => {
+    if (summaryCardRef.current) {
+      setSummaryCardHeight(summaryCardRef.current.offsetHeight);
+    }
+  }, [
+    watchedStation,
+    watchedDate,
+    watchedTime,
+    watchedVehicle,
+    selectedTimeSlot,
+    isBooking,
+  ]);
+
   // Component hiển thị lỗi validation
   const ValidationErrorsAlert = () => {
     if (validationErrors.length === 0) return null;
 
     return (
       <Alert
-        message="❌ Thiếu thông tin bắt buộc"
+        message="⚠ Thiếu thông tin bắt buộc"
         description={
           <div>
             <div style={{ marginBottom: "8px" }}>
@@ -344,7 +363,6 @@ export default function Booking() {
     );
   };
 
-  // Component hiển thị thông báo động theo slot đã chọn
   const DynamicTimeAlert = () => {
     if (!selectedTimeSlot) return null;
 
@@ -533,7 +551,18 @@ export default function Booking() {
 
     setValidationErrors([]);
     setIsBooking(true);
-    setBookingData(values);
+
+    // Chuẩn hóa dữ liệu trước khi điều hướng (serialize date)
+    const normalizedValues = {
+      ...values,
+      date:
+        activeTab === "today"
+          ? dayjs().format("YYYY-MM-DD")
+          : values?.date
+          ? dayjs(values.date).format("YYYY-MM-DD")
+          : null,
+    };
+    setBookingData(normalizedValues);
 
     // Simulate booking process
     setTimeout(() => {
@@ -542,8 +571,13 @@ export default function Booking() {
 
       // Navigate to success page with booking data
       try {
-        console.log("Navigating to booking-success with data:", values);
-        navigate("/booking-success", { state: { bookingData: values } });
+        console.log(
+          "Navigating to booking-success with data:",
+          normalizedValues
+        );
+        navigate("/booking-success", {
+          state: { bookingData: normalizedValues },
+        });
       } catch (error) {
         console.error("Navigation error:", error);
         message.error("Có lỗi khi chuyển trang. Vui lòng thử lại!");
@@ -826,7 +860,7 @@ export default function Booking() {
           >
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative overflow-hidden"
-              style={{ flex: 1, minHeight: 560 }}
+              style={{ height: 1050 }}
             >
               {/* Simple Decorative Elements */}
               <div className="absolute -top-[30px] -right-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
@@ -1054,10 +1088,11 @@ export default function Booking() {
                               optionLabelProp="label"
                               showSearch
                               filterOption={(input, option) =>
-                                option.children
+                                (option?.value || "")
                                   .toLowerCase()
-                                  .includes(input.toLowerCase())
+                                  .includes((input || "").toLowerCase())
                               }
+                              value={form.getFieldValue("station")}
                               onChange={(value) => {
                                 // Update both form value and formValues state
                                 form.setFieldsValue({ station: value });
@@ -1071,8 +1106,8 @@ export default function Booking() {
                                 const items = stations
                                   .filter((s) =>
                                     selectedCity === "HN"
-                                      ? s.name.includes("Hà Nội")
-                                      : s.name.includes("TP.HCM")
+                                      ? s.city === "Hà Nội"
+                                      : s.city === "TP.HCM"
                                   )
                                   .map((s) => ({
                                     ...s,
@@ -1328,6 +1363,7 @@ export default function Booking() {
                               </Option>
                             ))}
                           </Select>
+                          {/* Thông tin xe hiển thị dưới Select xe, không đặt ở đây */}
                         </Form.Item>
                       </Col>
 
@@ -1384,7 +1420,9 @@ export default function Booking() {
                             placeholder="-- Chọn loại xe --"
                             size="large"
                             style={{ borderRadius: 12 }}
+                            value={form.getFieldValue("vehicle")}
                             onChange={(value) => {
+                              form.setFieldsValue({ vehicle: value });
                               setFormValues((prev) => ({
                                 ...prev,
                                 vehicle: value,
@@ -1398,18 +1436,89 @@ export default function Booking() {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
+                                    gap: 12,
                                   }}
                                 >
-                                  <span>{v.name}</span>
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {v.name} - {v.plate || "-"}
+                                  </span>
                                   <span
                                     style={{ fontSize: 12, color: "#64748b" }}
                                   >
-                                    {v.battery}
+                                    {v.type || v.battery}
                                   </span>
                                 </div>
                               </Option>
                             ))}
                           </Select>
+                          {watchedVehicle && (
+                            <Card
+                              size="small"
+                              style={{
+                                marginTop: 8,
+                                borderRadius: 12,
+                                background:
+                                  "linear-gradient(135deg, rgba(0,8,59,0.04) 0%, rgba(0,8,59,0.02) 100%)",
+                                border: "1px solid rgba(0,8,59,0.1)",
+                              }}
+                              bodyStyle={{ padding: 12 }}
+                            >
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gridTemplateColumns: "110px 1fr",
+                                  rowGap: 6,
+                                  fontSize: 13,
+                                  color: "#0f172a",
+                                }}
+                              >
+                                <span style={{ color: "#64748b" }}>Xe</span>
+                                <span style={{ fontWeight: 700 }}>
+                                  {watchedVehicle}
+                                </span>
+                                <span style={{ color: "#64748b" }}>
+                                  Biển số
+                                </span>
+                                <span>
+                                  {(() => {
+                                    const v = (user?.vehicles || []).find(
+                                      (x) => x.name === watchedVehicle
+                                    );
+                                    return v?.plate || "-";
+                                  })()}
+                                </span>
+                                <span style={{ color: "#64748b" }}>Pin xe</span>
+                                <span>
+                                  {(() => {
+                                    const v = (user?.vehicles || []).find(
+                                      (x) => x.name === watchedVehicle
+                                    );
+                                    return v?.type || v?.battery || "-";
+                                  })()}
+                                </span>
+                                <span style={{ color: "#64748b" }}>
+                                  Mã số Pin
+                                </span>
+                                <span>
+                                  {(() => {
+                                    const v = (user?.vehicles || []).find(
+                                      (x) => x.name === watchedVehicle
+                                    );
+                                    return v?.currentBattery
+                                      ? `${v.currentBattery.id}`
+                                      : "-";
+                                  })()}
+                                </span>
+                              </div>
+                            </Card>
+                          )}
                         </Form.Item>
                       </Col>
                     </Row>
@@ -1597,10 +1706,11 @@ export default function Booking() {
                               optionLabelProp="label"
                               showSearch
                               filterOption={(input, option) =>
-                                option.children
+                                (option?.value || "")
                                   .toLowerCase()
-                                  .includes(input.toLowerCase())
+                                  .includes((input || "").toLowerCase())
                               }
+                              value={form.getFieldValue("station")}
                               onChange={(value) => {
                                 // Update both form value and formValues state
                                 form.setFieldsValue({ station: value });
@@ -1614,8 +1724,8 @@ export default function Booking() {
                                 const items = stations
                                   .filter((s) =>
                                     selectedCity === "HN"
-                                      ? s.name.includes("Hà Nội")
-                                      : s.name.includes("TP.HCM")
+                                      ? s.city === "Hà Nội"
+                                      : s.city === "TP.HCM"
                                   )
                                   .map((s) => ({
                                     ...s,
@@ -1968,7 +2078,9 @@ export default function Booking() {
                             placeholder="-- Chọn loại xe --"
                             size="large"
                             style={{ borderRadius: 12 }}
+                            value={form.getFieldValue("vehicle")}
                             onChange={(value) => {
+                              form.setFieldsValue({ vehicle: value });
                               setFormValues((prev) => ({
                                 ...prev,
                                 vehicle: value,
@@ -1985,15 +2097,66 @@ export default function Booking() {
                                   }}
                                 >
                                   <span>{v.name}</span>
-                                  <span
-                                    style={{ fontSize: 12, color: "#64748b" }}
-                                  >
-                                    {v.battery}
-                                  </span>
+                                  <div style={{ display: "flex", gap: 10 }}>
+                                    <span
+                                      style={{
+                                        fontSize: 12,
+                                        color: "#64748b",
+                                      }}
+                                    >
+                                      {v.type || v.battery}
+                                    </span>
+                                    {v.currentBattery && (
+                                      <span
+                                        style={{
+                                          fontSize: 12,
+                                          color: "#059669",
+                                        }}
+                                      >
+                                        {`ID ${v.currentBattery.id}`}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </Option>
                             ))}
                           </Select>
+                          {/* Thông tin xe và pin hiện tại dưới phần chọn xe (tab hôm nay) */}
+                          {watchedVehicle && (
+                            <div style={{ marginTop: 8 }}>
+                              <div style={{ fontSize: 12, color: "#475569" }}>
+                                <strong>Xe:</strong>{" "}
+                                {(() => {
+                                  const v = (user?.vehicles || []).find(
+                                    (x) => x.name === watchedVehicle
+                                  );
+                                  return v?.plate
+                                    ? `${watchedVehicle} • ${v.plate}`
+                                    : watchedVehicle;
+                                })()}
+                              </div>
+                              <div style={{ fontSize: 12, color: "#475569" }}>
+                                <strong>Pin xe:</strong>{" "}
+                                {(() => {
+                                  const v = (user?.vehicles || []).find(
+                                    (x) => x.name === watchedVehicle
+                                  );
+                                  return v?.type || v?.battery || "-";
+                                })()}
+                              </div>
+                              <div style={{ fontSize: 12, color: "#475569" }}>
+                                <strong>Mã số Pin hiện tại:</strong>{" "}
+                                {(() => {
+                                  const v = (user?.vehicles || []).find(
+                                    (x) => x.name === watchedVehicle
+                                  );
+                                  return v?.currentBattery
+                                    ? `${v.currentBattery.id}`
+                                    : "-";
+                                })()}
+                              </div>
+                            </div>
+                          )}
                         </Form.Item>
                       </Col>
                     </Row>
@@ -2003,6 +2166,182 @@ export default function Booking() {
                 </TabPane>
               </Tabs>
             </Card>
+            {/* Inventory card moved to bottom full width */}
+            {false && selectedStationData && watchedVehicle && (
+              <Card
+                style={{
+                  marginTop: 16,
+                  borderRadius: 16,
+                  background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
+                  border: "1px solid rgba(0,8,59,0.08)",
+                  boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
+                }}
+                bodyStyle={{ padding: 20 }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      background: "#10b981",
+                    }}
+                  />
+                  <span
+                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
+                  >
+                    Tồn kho pin tại trạm đã chọn
+                  </span>
+                </div>
+                <div style={{ color: "#475569", fontSize: 14 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
+                      <div style={{ fontWeight: 700 }}>
+                        {selectedStationData.name}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        Tổng pin / Khả dụng
+                      </div>
+                      <div style={{ fontWeight: 700 }}>
+                        {totalBatteriesAll} / {totalAvailableAll}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <strong>Tổng quan theo loại:</strong>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(160px, 1fr))",
+                        gap: 8,
+                        marginTop: 8,
+                      }}
+                    >
+                      {Object.keys(countsByTypeAll).map((type) => (
+                        <div
+                          key={type}
+                          style={{
+                            border: `2px solid ${
+                              compatibleBatteryType === type
+                                ? "#06b6d4"
+                                : "rgba(0,8,59,0.1)"
+                            }`,
+                            borderRadius: 10,
+                            padding: 10,
+                            background:
+                              compatibleBatteryType === type
+                                ? "rgba(6,182,212,0.06)"
+                                : "transparent",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              color:
+                                compatibleBatteryType === type
+                                  ? "#0e7490"
+                                  : "#0f172a",
+                            }}
+                          >
+                            {type}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            Khả dụng: {availableByTypeAll[type] || 0}/
+                            {countsByTypeAll[type]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>
+                      Danh sách chi tiết
+                      {compatibleBatteryType
+                        ? ` (loại tương thích: ${compatibleBatteryType})`
+                        : ""}
+                      :
+                    </strong>
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(200px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {compatibleInventoryAll.slice().map((bat) => (
+                      <div
+                        key={bat.id}
+                        style={{
+                          border: "1px solid rgba(0,8,59,0.1)",
+                          borderRadius: 12,
+                          padding: 12,
+                          background: "rgba(0, 8, 59, 0.03)",
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                          {bat.type}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          Mã số Pin: {bat.id}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13 }}>
+                          SoH: <strong>{bat.soh}%</strong>
+                        </div>
+                        <div style={{ fontSize: 13 }}>
+                          SoC: <strong>{bat.soc}%</strong>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color:
+                              bat.status === "available"
+                                ? "#059669"
+                                : "#a16207",
+                          }}
+                        >
+                          Trạng thái:{" "}
+                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
           </Col>
 
           {/* Right Side - Map + Summary */}
@@ -2011,547 +2350,436 @@ export default function Booking() {
             lg={10}
             style={{ display: "flex", flexDirection: "column" }}
           >
-            <Card
-              className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative overflow-hidden"
-              style={{ flex: 1, minHeight: 560 }}
-            >
-              {/* Simple Decorative Elements */}
-              <div className="absolute -top-[30px] -left-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
-              <div className="absolute -bottom-[20px] -right-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
-
-              <div
-                className="text-center mb-8"
-                style={{ position: "relative", zIndex: 1 }}
+            <div>
+              <Card
+                className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative"
+                style={{ height: 1050, overflow: "hidden" }}
               >
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                    marginBottom: "16px",
-                    boxShadow: "0 8px 20px rgba(0, 8, 59, 0.15)",
-                  }}
-                >
-                  <EnvironmentOutlined
-                    style={{ fontSize: "28px", color: "white" }}
-                  />
-                </div>
-                <Title
-                  level={3}
-                  style={{
-                    margin: 0,
-                    color: "#00083B",
-                    fontSize: "24px",
-                    fontWeight: "600",
-                  }}
-                >
-                  Vị trí của bạn
-                </Title>
-                <Paragraph
-                  style={{
-                    color: "#64748b",
-                    fontSize: "14px",
-                    margin: "8px 0 0 0",
-                  }}
-                >
-                  Tìm trạm đổi pin gần nhất
-                </Paragraph>
-              </div>
+                {/* Simple Decorative Elements */}
+                <div className="absolute -top-[30px] -left-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
+                <div className="absolute -bottom-[20px] -right-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
 
-              {/* Location Info */}
-              {nearestStation && (
                 <div
-                  style={{
-                    position: "relative",
-                    zIndex: 1,
-                    marginBottom: "20px",
-                  }}
+                  className="text-center mb-8"
+                  style={{ position: "relative", zIndex: 1 }}
                 >
-                  <Card
-                    size="small"
+                  <div
                     style={{
-                      borderRadius: "18px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "64px",
+                      height: "64px",
+                      borderRadius: "50%",
                       background:
-                        "linear-gradient(135deg, rgba(0,8,59,0.65) 0%, rgba(2,12,80,0.45) 100%)",
-                      border: "1px solid rgba(56, 189, 248, 0.35)",
-                      boxShadow:
-                        "0 12px 30px rgba(2, 8, 23, 0.45), 0 6px 14px rgba(2, 8, 23, 0.25)",
-                      backdropFilter: "blur(6px)",
+                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                      marginBottom: "16px",
+                      boxShadow: "0 8px 20px rgba(0, 8, 59, 0.15)",
                     }}
-                    bodyStyle={{ padding: "16px" }}
                   >
-                    <div className="flex items-start justify-between">
-                      <Space>
+                    <EnvironmentOutlined
+                      style={{ fontSize: "28px", color: "white" }}
+                    />
+                  </div>
+                  <Title
+                    level={3}
+                    style={{
+                      margin: 0,
+                      color: "#00083B",
+                      fontSize: "18px",
+                      fontWeight: 700,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Vị trí của bạn
+                  </Title>
+                  <div
+                    style={{
+                      color: "#64748b",
+                      fontSize: "12px",
+                      marginTop: 4,
+                    }}
+                  >
+                    Tìm trạm đổi pin gần nhất
+                  </div>
+                </div>
+
+                {/* Location Info */}
+                {nearestStation && (
+                  <div
+                    style={{
+                      position: "relative",
+                      zIndex: 1,
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <Card
+                      size="small"
+                      style={{
+                        borderRadius: "18px",
+                        background:
+                          "linear-gradient(135deg, rgba(0,8,59,0.65) 0%, rgba(2,12,80,0.45) 100%)",
+                        border: "1px solid rgba(56, 189, 248, 0.35)",
+                        boxShadow:
+                          "0 12px 30px rgba(2, 8, 23, 0.45), 0 6px 14px rgba(2, 8, 23, 0.25)",
+                        backdropFilter: "blur(6px)",
+                      }}
+                      bodyStyle={{ padding: "16px" }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <Space>
+                          <div
+                            style={{
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "50%",
+                              background:
+                                "linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              boxShadow: "0 6px 14px rgba(34,211,238,0.35)",
+                            }}
+                          >
+                            <StarOutlined
+                              style={{ color: "white", fontSize: "16px" }}
+                            />
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                color: "#e2e8f0",
+                                fontSize: "12px",
+                                letterSpacing: "0.02em",
+                              }}
+                            >
+                              Trạm gần nhất
+                            </div>
+                            <div
+                              style={{
+                                color: "#ffffff",
+                                fontWeight: 700,
+                                fontSize: "16px",
+                              }}
+                            >
+                              {nearestStation.name}
+                            </div>
+                          </div>
+                        </Space>
                         <div
+                          className="px-2 py-1 rounded-md text-[10px] font-semibold border"
                           style={{
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            boxShadow: "0 6px 14px rgba(34,211,238,0.35)",
+                            color: "#22d3ee",
+                            borderColor: "rgba(34,211,238,0.4)",
+                            background: "rgba(34,211,238,0.08)",
                           }}
                         >
-                          <StarOutlined
-                            style={{ color: "white", fontSize: "16px" }}
-                          />
+                          NEARBY
                         </div>
-                        <div>
-                          <div
-                            style={{
-                              color: "#e2e8f0",
-                              fontSize: "12px",
-                              letterSpacing: "0.02em",
-                            }}
-                          >
-                            Trạm gần nhất
-                          </div>
-                          <div
-                            style={{
-                              color: "#ffffff",
-                              fontWeight: 700,
-                              fontSize: "16px",
-                            }}
-                          >
-                            {nearestStation.name}
-                          </div>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                          {nearestStation.address}
                         </div>
-                      </Space>
-                      <div
-                        className="px-2 py-1 rounded-md text-[10px] font-semibold border"
-                        style={{
-                          color: "#22d3ee",
-                          borderColor: "rgba(34,211,238,0.4)",
-                          background: "rgba(34,211,238,0.08)",
-                        }}
-                      >
-                        NEARBY
+                        <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-200 font-semibold">
+                          🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
+                        </div>
                       </div>
-                    </div>
+                    </Card>
+                  </div>
+                )}
 
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                        {nearestStation.address}
-                      </div>
-                      <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-200 font-semibold">
-                        🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              )}
+                {/* Map */}
+                <div
+                  style={{
+                    height: "560px",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    position: "relative",
+                    zIndex: 1,
+                    boxShadow:
+                      "0 8px 20px rgba(0, 8, 59, 0.1), 0 4px 8px rgba(0, 8, 59, 0.05)",
+                    border: "2px solid rgba(0, 8, 59, 0.08)",
+                  }}
+                >
+                  {userLocation ? (
+                    <MapContainer
+                      center={userLocation}
+                      zoom={13}
+                      style={{ height: "100%", width: "100%" }}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
 
-              {/* Map */}
-              <div
-                style={{
-                  height: "420px",
-                  borderRadius: "16px",
-                  overflow: "hidden",
-                  position: "relative",
-                  zIndex: 1,
-                  boxShadow:
-                    "0 8px 20px rgba(0, 8, 59, 0.1), 0 4px 8px rgba(0, 8, 59, 0.05)",
-                  border: "2px solid rgba(0, 8, 59, 0.08)",
-                }}
-              >
-                {userLocation ? (
-                  <MapContainer
-                    center={userLocation}
-                    zoom={13}
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-
-                    {/* User Location */}
-                    <Marker position={userLocation} icon={createUserIcon()}>
-                      <Popup>
-                        <div className="p-3 min-w-[240px] sm:min-w-[260px]">
-                          <div style={{ marginBottom: "16px" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                marginBottom: "8px",
-                              }}
-                            >
-                              <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
-                                Vị trí của bạn
-                              </h3>
-                              <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white px-2 py-0.5 rounded-md text-[10px] font-bold border border-blue-500 shadow">
-                                📍 HIỆN TẠI
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{ marginBottom: "16px" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                marginBottom: "12px",
-                              }}
-                            >
+                      {/* User Location */}
+                      <Marker position={userLocation} icon={createUserIcon()}>
+                        <Popup>
+                          <div className="p-3 min-w-[240px] sm:min-w-[260px]">
+                            <div style={{ marginBottom: "16px" }}>
                               <div
                                 style={{
-                                  width: "24px",
-                                  height: "24px",
-                                  borderRadius: "50%",
-                                  background:
-                                    "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
                                   display: "flex",
                                   alignItems: "center",
-                                  justifyContent: "center",
-                                  marginRight: "8px",
+                                  justifyContent: "space-between",
+                                  marginBottom: "8px",
                                 }}
                               >
-                                <span
-                                  style={{ fontSize: "12px", color: "white" }}
-                                >
-                                  🎯
-                                </span>
-                              </div>
-                              <div>
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    fontWeight: "600",
-                                    color: "#00083B",
-                                    marginBottom: "2px",
-                                  }}
-                                >
-                                  Trạng thái định vị
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: "13px",
-                                    color: "#475569",
-                                  }}
-                                >
-                                  Đã xác định vị trí thành công
+                                <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
+                                  Vị trí của bạn
+                                </h3>
+                                <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white px-2 py-0.5 rounded-md text-[10px] font-bold border border-blue-500 shadow">
+                                  📍 HIỆN TẠI
                                 </div>
                               </div>
                             </div>
 
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                marginBottom: "12px",
-                              }}
-                            >
+                            <div style={{ marginBottom: "16px" }}>
                               <div
                                 style={{
-                                  width: "24px",
-                                  height: "24px",
-                                  borderRadius: "50%",
-                                  background:
-                                    "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                   display: "flex",
                                   alignItems: "center",
-                                  justifyContent: "center",
-                                  marginRight: "8px",
+                                  marginBottom: "12px",
                                 }}
                               >
-                                <span
-                                  style={{ fontSize: "12px", color: "white" }}
-                                >
-                                  🔍
-                                </span>
-                              </div>
-                              <div>
                                 <div
                                   style={{
-                                    fontSize: "12px",
-                                    fontWeight: "600",
-                                    color: "#00083B",
-                                    marginBottom: "2px",
-                                  }}
-                                >
-                                  Độ chính xác
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: "13px",
-                                    color: "#475569",
-                                  }}
-                                >
-                                  GPS độ chính xác cao
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 text-center">
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "50%",
-                                  background:
-                                    "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  marginRight: "8px",
-                                }}
-                              >
-                                <EnvironmentOutlined
-                                  style={{ fontSize: "10px", color: "white" }}
-                                />
-                              </div>
-                              <span className="text-[12px] font-semibold text-[#00083B]">
-                                Trạm đổi pin VoltSwap
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
-
-                    {/* Battery Stations */}
-                    {stations.map((station) => {
-                      // Kiểm tra xem đây có phải trạm gần nhất không
-                      const isNearest =
-                        nearestStation && nearestStation.id === station.id;
-
-                      return (
-                        <Marker
-                          key={station.id}
-                          position={station.position}
-                          icon={
-                            isNearest
-                              ? createNearestStationIcon(
-                                  station.id <= 5 ? "#00ff00" : "#ff6b35"
-                                )
-                              : createBatteryIcon(
-                                  station.id <= 5 ? "#00ff00" : "#ff6b35"
-                                )
-                          }
-                        >
-                          <Popup>
-                            <div className="p-3 min-w-[240px] sm:min-w-[260px]">
-                              <div style={{ marginBottom: "16px" }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    marginBottom: "8px",
-                                  }}
-                                >
-                                  <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
-                                    {station.name}
-                                  </h3>
-                                  <div style={{ display: "flex", gap: "4px" }}>
-                                    {isNearest && (
-                                      <div className="bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900 px-2 py-0.5 rounded-md text-[10px] font-bold border border-amber-500 shadow">
-                                        ⭐ GẦN NHẤT
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div style={{ marginBottom: "16px" }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "flex-start",
-                                    marginBottom: "8px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: "20px",
-                                      height: "20px",
-                                      borderRadius: "50%",
-                                      background:
-                                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      marginRight: "8px",
-                                      marginTop: "2px",
-                                    }}
-                                  >
-                                    <EnvironmentOutlined
-                                      style={{
-                                        fontSize: "10px",
-                                        color: "white",
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <div
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: "#00083B",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      Địa chỉ
-                                    </div>
-                                    <div
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#475569",
-                                        lineHeight: "1.4",
-                                      }}
-                                    >
-                                      {station.address}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    marginBottom: "8px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: "20px",
-                                      height: "20px",
-                                      borderRadius: "50%",
-                                      background:
-                                        "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      marginRight: "8px",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: "10px",
-                                        color: "white",
-                                      }}
-                                    >
-                                      🏙️
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <div
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: "#00083B",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      Thành phố
-                                    </div>
-                                    <div
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#475569",
-                                      }}
-                                    >
-                                      {station.address.split(",")[1]?.trim() ||
-                                        "Hà Nội"}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    marginBottom: "12px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      width: "20px",
-                                      height: "20px",
-                                      borderRadius: "50%",
-                                      background:
-                                        "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      marginRight: "8px",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: "10px",
-                                        color: "white",
-                                      }}
-                                    >
-                                      📍
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <div
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: "600",
-                                        color: "#00083B",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      Quận/Huyện
-                                    </div>
-                                    <div
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#475569",
-                                      }}
-                                    >
-                                      {station.address.split(",")[2]?.trim() ||
-                                        "Ba Đình"}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {isNearest && (
-                                <div
-                                  style={{
+                                    width: "24px",
+                                    height: "24px",
+                                    borderRadius: "50%",
                                     background:
-                                      "linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%)",
-                                    border: "1px solid rgba(220, 38, 38, 0.1)",
-                                    borderRadius: "12px",
-                                    padding: "12px",
-                                    marginBottom: "16px",
+                                      "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginRight: "8px",
                                   }}
                                 >
+                                  <span
+                                    style={{ fontSize: "12px", color: "white" }}
+                                  >
+                                    🎯
+                                  </span>
+                                </div>
+                                <div>
+                                  <div
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: "600",
+                                      color: "#00083B",
+                                      marginBottom: "2px",
+                                    }}
+                                  >
+                                    Trạng thái định vị
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: "13px",
+                                      color: "#475569",
+                                    }}
+                                  >
+                                    Đã xác định vị trí thành công
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  marginBottom: "12px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "24px",
+                                    height: "24px",
+                                    borderRadius: "50%",
+                                    background:
+                                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginRight: "8px",
+                                  }}
+                                >
+                                  <span
+                                    style={{ fontSize: "12px", color: "white" }}
+                                  >
+                                    🔍
+                                  </span>
+                                </div>
+                                <div>
+                                  <div
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: "600",
+                                      color: "#00083B",
+                                      marginBottom: "2px",
+                                    }}
+                                  >
+                                    Độ chính xác
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: "13px",
+                                      color: "#475569",
+                                    }}
+                                  >
+                                    GPS độ chính xác cao
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 text-center">
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "20px",
+                                    height: "20px",
+                                    borderRadius: "50%",
+                                    background:
+                                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginRight: "8px",
+                                  }}
+                                >
+                                  <EnvironmentOutlined
+                                    style={{ fontSize: "10px", color: "white" }}
+                                  />
+                                </div>
+                                <span className="text-[12px] font-semibold text-[#00083B]">
+                                  Trạm đổi pin VoltSwap
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+
+                      {/* Battery Stations */}
+                      {stations.map((station) => {
+                        // Kiểm tra xem đây có phải trạm gần nhất không
+                        const isNearest =
+                          nearestStation && nearestStation.id === station.id;
+
+                        return (
+                          <Marker
+                            key={station.id}
+                            position={station.position}
+                            icon={
+                              isNearest
+                                ? createNearestStationIcon(
+                                    station.id <= 5 ? "#00ff00" : "#ff6b35"
+                                  )
+                                : createBatteryIcon(
+                                    station.id <= 5 ? "#00ff00" : "#ff6b35"
+                                  )
+                            }
+                          >
+                            <Popup>
+                              <div className="p-3 min-w-[240px] sm:min-w-[260px]">
+                                <div style={{ marginBottom: "16px" }}>
                                   <div
                                     style={{
                                       display: "flex",
                                       alignItems: "center",
+                                      justifyContent: "space-between",
+                                      marginBottom: "8px",
+                                    }}
+                                  >
+                                    <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
+                                      {station.name}
+                                    </h3>
+                                    <div
+                                      style={{ display: "flex", gap: "4px" }}
+                                    >
+                                      {isNearest && (
+                                        <div className="bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900 px-2 py-0.5 rounded-md text-[10px] font-bold border border-amber-500 shadow">
+                                          ⭐ GẦN NHẤT
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div style={{ marginBottom: "16px" }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "flex-start",
+                                      marginBottom: "8px",
                                     }}
                                   >
                                     <div
                                       style={{
-                                        width: "24px",
-                                        height: "24px",
+                                        width: "20px",
+                                        height: "20px",
                                         borderRadius: "50%",
                                         background:
-                                          "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: "8px",
+                                        marginTop: "2px",
+                                      }}
+                                    >
+                                      <EnvironmentOutlined
+                                        style={{
+                                          fontSize: "10px",
+                                          color: "white",
+                                        }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight: "600",
+                                          color: "#00083B",
+                                          marginBottom: "2px",
+                                        }}
+                                      >
+                                        Địa chỉ
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: "13px",
+                                          color: "#475569",
+                                          lineHeight: "1.4",
+                                        }}
+                                      >
+                                        {station.address}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      marginBottom: "8px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        background:
+                                          "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -2560,11 +2788,11 @@ export default function Booking() {
                                     >
                                       <span
                                         style={{
-                                          fontSize: "12px",
+                                          fontSize: "10px",
                                           color: "white",
                                         }}
                                       >
-                                        🚗
+                                        🏙️
                                       </span>
                                     </div>
                                     <div>
@@ -2576,268 +2804,751 @@ export default function Booking() {
                                           marginBottom: "2px",
                                         }}
                                       >
-                                        Khoảng cách
+                                        Thành phố
                                       </div>
                                       <div
                                         style={{
-                                          fontSize: "14px",
-                                          color: "#dc2626",
-                                          fontWeight: "700",
+                                          fontSize: "13px",
+                                          color: "#475569",
                                         }}
                                       >
-                                        {nearestStation.distance.toFixed(1)} km
+                                        {station.address
+                                          .split(",")[1]
+                                          ?.trim() || "Hà Nội"}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      marginBottom: "12px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        background:
+                                          "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: "8px",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          fontSize: "10px",
+                                          color: "white",
+                                        }}
+                                      >
+                                        📍
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <div
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight: "600",
+                                          color: "#00083B",
+                                          marginBottom: "2px",
+                                        }}
+                                      >
+                                        Quận/Huyện
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: "13px",
+                                          color: "#475569",
+                                        }}
+                                      >
+                                        {station.address
+                                          .split(",")[2]
+                                          ?.trim() || "Ba Đình"}
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              )}
 
-                              <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 mb-4 text-center">
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                  }}
-                                >
+                                {isNearest && (
                                   <div
                                     style={{
-                                      width: "20px",
-                                      height: "20px",
-                                      borderRadius: "50%",
                                       background:
-                                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                        "linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%)",
+                                      border:
+                                        "1px solid rgba(220, 38, 38, 0.1)",
+                                      borderRadius: "12px",
+                                      padding: "12px",
+                                      marginBottom: "16px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          width: "24px",
+                                          height: "24px",
+                                          borderRadius: "50%",
+                                          background:
+                                            "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          marginRight: "8px",
+                                        }}
+                                      >
+                                        <span
+                                          style={{
+                                            fontSize: "12px",
+                                            color: "white",
+                                          }}
+                                        >
+                                          🚗
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <div
+                                          style={{
+                                            fontSize: "12px",
+                                            fontWeight: "600",
+                                            color: "#00083B",
+                                            marginBottom: "2px",
+                                          }}
+                                        >
+                                          Khoảng cách
+                                        </div>
+                                        <div
+                                          style={{
+                                            fontSize: "14px",
+                                            color: "#dc2626",
+                                            fontWeight: "700",
+                                          }}
+                                        >
+                                          {nearestStation.distance.toFixed(1)}{" "}
+                                          km
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 mb-4 text-center">
+                                  <div
+                                    style={{
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      marginRight: "8px",
                                     }}
                                   >
-                                    <PoweroffOutlined
+                                    <div
                                       style={{
-                                        fontSize: "10px",
-                                        color: "white",
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        background:
+                                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: "8px",
                                       }}
-                                    />
+                                    >
+                                      <PoweroffOutlined
+                                        style={{
+                                          fontSize: "10px",
+                                          color: "white",
+                                        }}
+                                      />
+                                    </div>
+                                    <span className="text-[12px] font-semibold text-[#00083B]">
+                                      Trạm đổi pin VoltSwap
+                                    </span>
                                   </div>
-                                  <span className="text-[12px] font-semibold text-[#00083B]">
-                                    Trạm đổi pin VoltSwap
-                                  </span>
+                                </div>
+
+                                {/* Chỉ giữ nút Chỉ đường */}
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      // Sử dụng địa chỉ văn bản thay vì tọa độ
+                                      const stationAddress = station.address
+                                        .replace(/ /g, "+")
+                                        .replace(/,/g, "%2C");
+
+                                      if (userLocation) {
+                                        // Nếu có vị trí người dùng, tạo chỉ đường từ vị trí hiện tại
+                                        const userLat = userLocation[0];
+                                        const userLng = userLocation[1];
+                                        const googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${stationAddress}`;
+                                        window.open(googleMapsUrl, "_blank");
+                                      } else {
+                                        // Nếu chưa có vị trí, chỉ hiển thị vị trí trạm
+                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationAddress}`;
+                                        window.open(googleMapsUrl, "_blank");
+                                      }
+                                    }}
+                                    className="flex-1 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-3 py-2 rounded-xl text-[13px] font-semibold border-0 cursor-pointer transition-all flex items-center justify-center gap-1 shadow hover:-translate-y-0.5"
+                                  >
+                                    <EnvironmentOutlined
+                                      style={{ fontSize: "12px" }}
+                                    />
+                                    <span>Chỉ đường</span>
+                                  </button>
                                 </div>
                               </div>
-
-                              {/* Chỉ giữ nút Chỉ đường */}
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() => {
-                                    // Sử dụng địa chỉ văn bản thay vì tọa độ
-                                    const stationAddress = station.address
-                                      .replace(/ /g, "+")
-                                      .replace(/,/g, "%2C");
-
-                                    if (userLocation) {
-                                      // Nếu có vị trí người dùng, tạo chỉ đường từ vị trí hiện tại
-                                      const userLat = userLocation[0];
-                                      const userLng = userLocation[1];
-                                      const googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${stationAddress}`;
-                                      window.open(googleMapsUrl, "_blank");
-                                    } else {
-                                      // Nếu chưa có vị trí, chỉ hiển thị vị trí trạm
-                                      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationAddress}`;
-                                      window.open(googleMapsUrl, "_blank");
-                                    }
-                                  }}
-                                  className="flex-1 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-3 py-2 rounded-xl text-[13px] font-semibold border-0 cursor-pointer transition-all flex items-center justify-center gap-1 shadow hover:-translate-y-0.5"
-                                >
-                                  <EnvironmentOutlined
-                                    style={{ fontSize: "12px" }}
-                                  />
-                                  <span>Chỉ đường</span>
-                                </button>
-                              </div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      );
-                    })}
-                  </MapContainer>
-                ) : (
-                  <div
-                    style={{
-                      height: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "#f5f5f5",
-                      borderRadius: "12px",
-                    }}
-                  >
-                    <div style={{ textAlign: "center" }}>
-                      <Spin size="large" />
-                      <div style={{ marginTop: "16px", color: "#666" }}>
-                        Đang định vị vị trí của bạn...
+                            </Popup>
+                          </Marker>
+                        );
+                      })}
+                    </MapContainer>
+                  ) : (
+                    <div
+                      style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#f5f5f5",
+                        borderRadius: "12px",
+                      }}
+                    >
+                      <div style={{ textAlign: "center" }}>
+                        <Spin size="large" />
+                        <div style={{ marginTop: "16px", color: "#666" }}>
+                          Đang định vị vị trí của bạn...
+                        </div>
+                        <Button
+                          type="primary"
+                          onClick={getUserLocation}
+                          loading={isLoadingLocation}
+                          style={{ marginTop: "16px" }}
+                        >
+                          Định vị lại
+                        </Button>
                       </div>
-                      <Button
-                        type="primary"
-                        onClick={getUserLocation}
-                        loading={isLoadingLocation}
-                        style={{ marginTop: "16px" }}
-                      >
-                        Định vị lại
-                      </Button>
                     </div>
+                  )}
+                </div>
+
+                {/* Quick Info - gọn lại, không dư khoảng trống */}
+                <div style={{ marginTop: "12px" }}>
+                  <Row gutter={[16, 16]}>
+                    <Col span={8}>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          padding: "12px 10px",
+                          background:
+                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(0, 8, 59, 0.1)",
+                          transition: "all 0.3s ease",
+                        }}
+                        className="hover:shadow-md"
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 6px",
+                          }}
+                        >
+                          <ThunderboltOutlined
+                            style={{ fontSize: "16px", color: "white" }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "#00083B",
+                            fontWeight: "600",
+                          }}
+                        >
+                          5 phút
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#64748b" }}>
+                          Nhanh chóng
+                        </div>
+                      </div>
+                    </Col>
+                    <Col span={8}>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          padding: "12px 10px",
+                          background:
+                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(0, 8, 59, 0.1)",
+                          transition: "all 0.3s ease",
+                        }}
+                        className="hover:shadow-md"
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 6px",
+                          }}
+                        >
+                          <SafetyOutlined
+                            style={{ fontSize: "16px", color: "white" }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "#00083B",
+                            fontWeight: "600",
+                          }}
+                        >
+                          An toàn
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#64748b" }}>
+                          100% chính hãng
+                        </div>
+                      </div>
+                    </Col>
+                    <Col span={8}>
+                      <div
+                        style={{
+                          textAlign: "center",
+                          padding: "12px 10px",
+                          background:
+                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
+                          borderRadius: "12px",
+                          border: "1px solid rgba(0, 8, 59, 0.1)",
+                          transition: "all 0.3s ease",
+                        }}
+                        className="hover:shadow-md"
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "50%",
+                            background:
+                              "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 6px",
+                          }}
+                        >
+                          <DollarOutlined
+                            style={{ fontSize: "16px", color: "white" }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "#00083B",
+                            fontWeight: "600",
+                          }}
+                        >
+                          50k/lần
+                        </div>
+                        <div style={{ fontSize: "10px", color: "#64748b" }}>
+                          Tiết kiệm
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+                {/* Booking Summary moved out to bottom-right card */}
+                {false && (
+                  <div style={{ marginTop: 16 }}>
+                    <Card
+                      style={{
+                        borderRadius: 16,
+                        background:
+                          "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
+                        border: "1px solid rgba(0,8,59,0.08)",
+                        boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
+                      }}
+                      bodyStyle={{ padding: 20 }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: 4,
+                            background: "#00083B",
+                          }}
+                        />
+                        <span
+                          style={{
+                            color: "#00083B",
+                            fontWeight: 700,
+                            fontSize: 18,
+                          }}
+                        >
+                          Tóm tắt đặt lịch
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          color: "#475569",
+                          fontSize: 14,
+                          display: "grid",
+                          gridTemplateColumns: "120px 1fr",
+                          rowGap: 12,
+                        }}
+                      >
+                        <span>Trạm:</span>
+                        <span style={{ color: "#0f172a", fontWeight: 700 }}>
+                          {watchedStation || "Chưa chọn"}
+                        </span>
+                        <span>Ngày:</span>
+                        <span style={{ color: "#0f172a" }}>
+                          {activeTab === "today"
+                            ? dayjs().format("DD/MM/YYYY")
+                            : watchedDate
+                            ? watchedDate.format("DD/MM/YYYY")
+                            : "Chưa chọn"}
+                        </span>
+                        <span>Giờ:</span>
+                        <span style={{ color: "#0f172a" }}>
+                          {watchedTime || "Chưa chọn"}
+                        </span>
+                        <span>Loại xe:</span>
+                        <span style={{ color: "#0f172a" }}>
+                          {watchedVehicle || "Chưa chọn"}
+                        </span>
+                        <span style={{ color: "#10b981", fontWeight: 700 }}>
+                          Phí dịch vụ:
+                        </span>
+                        <span style={{ color: "#10b981", fontWeight: 700 }}>
+                          {formatVND(serviceFee)}
+                        </span>
+                      </div>
+
+                      {selectedTimeSlot && (
+                        <Alert
+                          message="⚠️ Lưu ý quan trọng về thời gian"
+                          description={
+                            <div>
+                              <div style={{ marginBottom: "8px" }}>
+                                <strong>Quy định về thời gian đến:</strong>
+                              </div>
+                              <ul
+                                style={{
+                                  margin: "8px 0",
+                                  paddingLeft: "20px",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                {selectedDate && activeTab === "future" && (
+                                  <li>
+                                    <strong>Ngày đã chọn:</strong>{" "}
+                                    <strong style={{ color: "#00083B" }}>
+                                      {selectedDate.format("DD/MM/YYYY")}
+                                    </strong>
+                                  </li>
+                                )}
+                                <li>
+                                  <strong>Slot đã chọn:</strong>{" "}
+                                  <strong style={{ color: "#00083B" }}>
+                                    {selectedTimeSlot}
+                                  </strong>
+                                </li>
+                                <li>
+                                  ✅ <strong>Được phép:</strong> Đến từ{" "}
+                                  <strong style={{ color: "#10b981" }}>
+                                    {selectedTimeSlot.split(" - ")[0]}
+                                  </strong>{" "}
+                                  đến{" "}
+                                  <strong style={{ color: "#10b981" }}>
+                                    {selectedTimeSlot.split(" - ")[1]}
+                                  </strong>
+                                </li>
+                                <li>
+                                  ❌ <strong>Bị hủy:</strong> Đến sau{" "}
+                                  <strong style={{ color: "#dc2626" }}>
+                                    {selectedTimeSlot.split(" - ")[1]}
+                                  </strong>
+                                </li>
+                                <li>
+                                  Lịch đổi pin sẽ bị{" "}
+                                  <strong style={{ color: "#dc2626" }}>
+                                    hủy tự động
+                                  </strong>{" "}
+                                  nếu đến muộn
+                                </li>
+                              </ul>
+                            </div>
+                          }
+                          type="warning"
+                          showIcon
+                          style={{
+                            marginTop: "16px",
+                            borderRadius: "16px",
+                            background:
+                              "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%)",
+                            border: "1px solid rgba(245, 158, 11, 0.2)",
+                          }}
+                        />
+                      )}
+
+                      <div style={{ marginTop: 16 }}>
+                        <Button
+                          type="primary"
+                          size="large"
+                          loading={isBooking}
+                          style={{
+                            height: 48,
+                            borderRadius: 12,
+                            background:
+                              "linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)",
+                            border: "none",
+                            fontWeight: 700,
+                          }}
+                          onClick={() => {
+                            form
+                              .validateFields()
+                              .then((values) => handleBooking(values))
+                              .catch(() => {
+                                message.error(
+                                  "Vui lòng điền đầy đủ thông tin!"
+                                );
+                              });
+                          }}
+                        >
+                          {isBooking ? "Đang xử lý..." : "Xác nhận đặt lịch"}
+                        </Button>
+                      </div>
+                    </Card>
                   </div>
                 )}
-              </div>
-
-              {/* Quick Info - gọn lại, không dư khoảng trống */}
-              <div style={{ marginTop: "12px" }}>
-                <Row gutter={[16, 16]}>
-                  <Col span={8}>
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "12px 10px",
-                        background:
-                          "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                        borderRadius: "12px",
-                        border: "1px solid rgba(0, 8, 59, 0.1)",
-                        transition: "all 0.3s ease",
-                      }}
-                      className="hover:shadow-md"
-                    >
-                      <div
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 6px",
-                        }}
-                      >
-                        <ThunderboltOutlined
-                          style={{ fontSize: "16px", color: "white" }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#00083B",
-                          fontWeight: "600",
-                        }}
-                      >
-                        5 phút
-                      </div>
-                      <div style={{ fontSize: "10px", color: "#64748b" }}>
-                        Nhanh chóng
-                      </div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "12px 10px",
-                        background:
-                          "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                        borderRadius: "12px",
-                        border: "1px solid rgba(0, 8, 59, 0.1)",
-                        transition: "all 0.3s ease",
-                      }}
-                      className="hover:shadow-md"
-                    >
-                      <div
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 6px",
-                        }}
-                      >
-                        <SafetyOutlined
-                          style={{ fontSize: "16px", color: "white" }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#00083B",
-                          fontWeight: "600",
-                        }}
-                      >
-                        An toàn
-                      </div>
-                      <div style={{ fontSize: "10px", color: "#64748b" }}>
-                        100% chính hãng
-                      </div>
-                    </div>
-                  </Col>
-                  <Col span={8}>
-                    <div
-                      style={{
-                        textAlign: "center",
-                        padding: "12px 10px",
-                        background:
-                          "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                        borderRadius: "12px",
-                        border: "1px solid rgba(0, 8, 59, 0.1)",
-                        transition: "all 0.3s ease",
-                      }}
-                      className="hover:shadow-md"
-                    >
-                      <div
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 6px",
-                        }}
-                      >
-                        <DollarOutlined
-                          style={{ fontSize: "16px", color: "white" }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#00083B",
-                          fontWeight: "600",
-                        }}
-                      >
-                        50k/lần
-                      </div>
-                      <div style={{ fontSize: "10px", color: "#64748b" }}>
-                        Tiết kiệm
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </Card>
-
+              </Card>
+            </div>
             {/* Booking Summary moved below the row to avoid increasing right column height */}
           </Col>
         </Row>
 
-        {/* Booking Summary - match right column width */}
+        {/* Bottom grid: Inventory (left) and Booking Summary (right) */}
         <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
-          <Col xs={24} lg={14} />
+          {selectedStationData && watchedVehicle ? (
+            <Col xs={24} lg={14}>
+              <Card
+                style={{
+                  borderRadius: 16,
+                  background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
+                  border: "1px solid rgba(0,8,59,0.08)",
+                  boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
+                  height: summaryCardHeight ? summaryCardHeight + 10 : 690,
+                }}
+                bodyStyle={{
+                  padding: 20,
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      background: "#10b981",
+                    }}
+                  />
+                  <span
+                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
+                  >
+                    Tồn kho pin tại trạm đã chọn
+                  </span>
+                </div>
+                <div style={{ color: "#475569", fontSize: 14 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
+                      <div style={{ fontWeight: 700 }}>
+                        {selectedStationData.name}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        Tổng pin / Khả dụng
+                      </div>
+                      <div style={{ fontWeight: 700 }}>
+                        {totalBatteriesAll} / {totalAvailableAll}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <strong>Tổng quan theo loại:</strong>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(160px, 1fr))",
+                        gap: 8,
+                        marginTop: 8,
+                      }}
+                    >
+                      {Object.keys(countsByTypeAll).map((type) => (
+                        <div
+                          key={type}
+                          style={{
+                            border: `2px solid ${
+                              compatibleBatteryType === type
+                                ? "#06b6d4"
+                                : "rgba(0,8,59,0.1)"
+                            }`,
+                            borderRadius: 10,
+                            padding: 10,
+                            background:
+                              compatibleBatteryType === type
+                                ? "rgba(6,182,212,0.06)"
+                                : "transparent",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              color:
+                                compatibleBatteryType === type
+                                  ? "#0e7490"
+                                  : "#0f172a",
+                            }}
+                          >
+                            {type}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            Khả dụng: {availableByTypeAll[type] || 0}/
+                            {countsByTypeAll[type]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>
+                      Danh sách chi tiết
+                      {compatibleBatteryType
+                        ? ` (loại tương thích: ${compatibleBatteryType})`
+                        : ""}
+                      :
+                    </strong>
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(200px, 1fr))",
+                      gap: 12,
+                      flex: 1,
+                      minHeight: 0,
+                      maxHeight: 280,
+                      overflowY: "auto",
+                      paddingRight: 6,
+                    }}
+                  >
+                    {compatibleInventoryAll.slice().map((bat) => (
+                      <div
+                        key={bat.id}
+                        style={{
+                          border: "1px solid rgba(0,8,59,0.1)",
+                          borderRadius: 12,
+                          padding: 12,
+                          background: "rgba(0, 8, 59, 0.03)",
+                          height: 130,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                          {bat.type}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          Mã số Pin: {bat.id}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13 }}>
+                          SoH: <strong>{bat.soh}%</strong>
+                        </div>
+                        <div style={{ fontSize: 13 }}>
+                          SoC: <strong>{bat.soc}%</strong>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color:
+                              bat.status === "available"
+                                ? "#059669"
+                                : "#a16207",
+                          }}
+                        >
+                          Trạng thái:{" "}
+                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          ) : (
+            <Col xs={24} lg={14} />
+          )}
           <Col xs={24} lg={10}>
             <Card
+              ref={summaryCardRef}
               style={{
                 borderRadius: 16,
                 background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
@@ -3025,6 +3736,178 @@ export default function Booking() {
             </Card>
           </Col>
         </Row>
+
+        {/* Removed obsolete full-width inventory duplicate */}
+        {false && selectedStationData && watchedVehicle && (
+          <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
+            <Col xs={24} lg={24}>
+              <Card style={{ borderRadius: 16 }} bodyStyle={{ padding: 20 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      background: "#10b981",
+                    }}
+                  />
+                  <span
+                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
+                  >
+                    Tồn kho pin tại trạm đã chọn
+                  </span>
+                </div>
+                <div style={{ color: "#475569", fontSize: 14 }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
+                      <div style={{ fontWeight: 700 }}>
+                        {selectedStationData.name}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        border: "1px solid rgba(0,8,59,0.1)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "rgba(0,8,59,0.03)",
+                      }}
+                    >
+                      <div style={{ fontSize: 12, color: "#64748b" }}>
+                        Tổng pin / Khả dụng
+                      </div>
+                      <div style={{ fontWeight: 700 }}>
+                        {totalBatteriesAll} / {totalAvailableAll}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <strong>Tổng quan theo loại:</strong>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(160px, 1fr))",
+                        gap: 8,
+                        marginTop: 8,
+                      }}
+                    >
+                      {Object.keys(countsByTypeAll).map((type) => (
+                        <div
+                          key={type}
+                          style={{
+                            border: `2px solid ${
+                              compatibleBatteryType === type
+                                ? "#06b6d4"
+                                : "rgba(0,8,59,0.1)"
+                            }`,
+                            borderRadius: 10,
+                            padding: 10,
+                            background:
+                              compatibleBatteryType === type
+                                ? "rgba(6,182,212,0.06)"
+                                : "transparent",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              color:
+                                compatibleBatteryType === type
+                                  ? "#0e7490"
+                                  : "#0f172a",
+                            }}
+                          >
+                            {type}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#64748b" }}>
+                            Khả dụng: {availableByTypeAll[type] || 0}/
+                            {countsByTypeAll[type]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <strong>
+                      Danh sách chi tiết
+                      {compatibleBatteryType
+                        ? ` (loại tương thích: ${compatibleBatteryType})`
+                        : ""}
+                      :
+                    </strong>
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(200px, 1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {compatibleInventoryAll.slice().map((bat) => (
+                      <div
+                        key={bat.id}
+                        style={{
+                          border: "1px solid rgba(0,8,59,0.1)",
+                          borderRadius: 12,
+                          padding: 12,
+                          background: "rgba(0, 8, 59, 0.03)",
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                          {bat.type}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          Mã số Pin: {bat.id}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13 }}>
+                          SoH: <strong>{bat.soh}%</strong>
+                        </div>
+                        <div style={{ fontSize: 13 }}>
+                          SoC: <strong>{bat.soc}%</strong>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color:
+                              bat.status === "available"
+                                ? "#059669"
+                                : "#a16207",
+                          }}
+                        >
+                          Trạng thái:{" "}
+                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        )}
       </div>
     </div>
   );

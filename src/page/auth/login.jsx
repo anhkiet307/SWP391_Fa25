@@ -36,12 +36,16 @@ export default function Login() {
             {
               id: "moto-50",
               name: "Xe máy điện 50cc",
-              battery: "Pin 48V 20Ah",
+              type: "Pin 48V 20Ah",
+              plate: "36A-366.36",
+              currentBattery: { id: "USR-48-001" },
             },
             {
               id: "moto-100",
               name: "Xe máy điện 100cc",
-              battery: "Pin 60V 30Ah",
+              type: "Pin 60V 30Ah",
+              plate: "36A-363.63",
+              currentBattery: { id: "USR-60-001" },
             },
           ],
           role: "user",

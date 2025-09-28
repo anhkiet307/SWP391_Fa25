@@ -123,7 +123,7 @@ const AdminAddBattery = () => {
               {/* Mã pin */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã pin <span className="text-red-500">*</span>
+                  Tên pin <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -229,26 +229,10 @@ const AdminAddBattery = () => {
                 />
               </div>
 
-              {/* Model */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Model <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="INR18650-25R"
-                  required
-                />
-              </div>
-
               {/* Số serial */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Số serial <span className="text-red-500">*</span>
+                  Mã số pin <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -260,36 +244,6 @@ const AdminAddBattery = () => {
                   required
                 />
               </div>
-
-              {/* Ngày mua */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ngày mua <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="purchaseDate"
-                  value={formData.purchaseDate}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-
-              {/* Bảo hành */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Hết bảo hành
-                </label>
-                <input
-                  type="date"
-                  name="warrantyExpiry"
-                  value={formData.warrantyExpiry}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-
             </div>
 
             {/* Buttons */}
