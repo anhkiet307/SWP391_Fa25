@@ -27,6 +27,9 @@ import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManage
 import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
 import AdminAddBattery from "./page/BSS-Admin/stationdashboard/AddBattery.jsx";
 import AdminBatteryManagement from "./page/BSS-Admin/stationdashboard/BatteryManagement.jsx";
+import AdminAddCustomer from "./page/BSS-Admin/userdashboard/AddCustomer.jsx";
+import AdminAddStaff from "./page/BSS-Admin/userdashboard/AddStaff.jsx";
+import AdminPackManagement from "./page/BSS-Admin/userdashboard/PackManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -119,6 +122,9 @@ function App() {
             path="/admin-manage-battery"
             element={<AdminBatteryManagement />}
           />
+          <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
+          <Route path="/admin-add-staff" element={<AdminAddStaff />} />
+          <Route path="/admin-battery-packages" element={<AdminPackManagement />} />
         </Routes>
       </Router>
     </AuthProvider>

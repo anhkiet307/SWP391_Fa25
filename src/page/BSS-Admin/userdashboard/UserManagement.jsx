@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
 import { showConfirm, showSuccess, showError } from "../../../utils/toast";
 
 const UserManagement = () => {
+  const navigate = useNavigate();
+  
   // State cho quản lý người dùng
   const [users, setUsers] = useState([
     {
@@ -423,13 +426,22 @@ const UserManagement = () => {
           </h2>
           <div className="flex gap-3">
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {
+                if (activeTab === "users") {
+                  navigate('/admin-add-customer');
+                } else {
+                  navigate('/admin-add-staff');
+                }
+              }}
               className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm {activeTab === "users" ? "khách hàng" : "nhân viên"}
             </button>
             {activeTab === "users" && (
-              <button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg">
+              <button 
+                onClick={() => navigate('/admin-battery-packages')}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              >
                 Tạo gói thuê pin
               </button>
             )}

@@ -133,11 +133,7 @@ const AdminSidebar = () => {
         },
         {
           path: "/admin-battery-packages",
-          label: "Danh sách gói pin",
-        },
-        {
-          path: "/admin-add-battery-package",
-          label: "Thêm gói pin",
+          label: "Danh sách gói thuê",
         },
       ],
     },
