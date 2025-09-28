@@ -124,7 +124,10 @@ function App() {
           />
           <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
           <Route path="/admin-add-staff" element={<AdminAddStaff />} />
-          <Route path="/admin-battery-packages" element={<AdminPackManagement />} />
+          <Route
+            path="/admin-battery-packages"
+            element={<AdminPackManagement />}
+          />
         </Routes>
       </Router>
     </AuthProvider>
