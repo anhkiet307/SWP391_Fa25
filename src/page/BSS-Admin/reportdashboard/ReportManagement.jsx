@@ -6,8 +6,8 @@ const AdminReportManagement = () => {
   // State cho báo cáo
   const [selectedReport, setSelectedReport] = useState("revenue");
   const [dateRange, setDateRange] = useState({
-    from: "2024-01-01",
-    to: "2024-01-31",
+    from: "01/01/2024",
+    to: "31/01/2024",
   });
 
   // Dữ liệu báo cáo doanh thu
@@ -16,16 +16,31 @@ const AdminReportManagement = () => {
     monthlyGrowth: 15.5,
     dailyAverage: 8064516,
     topStations: [
-      { stationId: "BSS-001", name: "Trạm Quận 1", revenue: 62500000, transactions: 1250 },
-      { stationId: "BSS-002", name: "Trạm Quận 2", revenue: 94500000, transactions: 1890 },
-      { stationId: "BSS-003", name: "Trạm Quận 3", revenue: 49000000, transactions: 980 },
+      {
+        stationId: "BSS-001",
+        name: "Trạm Quận 1",
+        revenue: 62500000,
+        transactions: 1250,
+      },
+      {
+        stationId: "BSS-002",
+        name: "Trạm Quận 2",
+        revenue: 94500000,
+        transactions: 1890,
+      },
+      {
+        stationId: "BSS-003",
+        name: "Trạm Quận 3",
+        revenue: 49000000,
+        transactions: 980,
+      },
     ],
     dailyRevenue: [
-      { date: "2024-01-01", revenue: 7500000, transactions: 150 },
-      { date: "2024-01-02", revenue: 8200000, transactions: 164 },
-      { date: "2024-01-03", revenue: 9100000, transactions: 182 },
-      { date: "2024-01-04", revenue: 8800000, transactions: 176 },
-      { date: "2024-01-05", revenue: 9500000, transactions: 190 },
+      { date: "01/01/2024", revenue: 7500000, transactions: 150 },
+      { date: "02/01/2024", revenue: 8200000, transactions: 164 },
+      { date: "03/01/2024", revenue: 9100000, transactions: 182 },
+      { date: "04/01/2024", revenue: 8800000, transactions: 176 },
+      { date: "05/01/2024", revenue: 9500000, transactions: 190 },
     ],
   };
 
@@ -96,22 +111,111 @@ const AdminReportManagement = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
-          <div>
-            <h1 className="text-3xl font-semibold m-0">
-              Báo cáo & Thống kê
-            </h1>
-            <p className="text-indigo-100 mt-2">
-              Phân tích và báo cáo hiệu suất hệ thống trạm đổi pin
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Admin: Quản trị hệ thống
-            </span>
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Kỳ báo cáo: {dateRange.from} - {dateRange.to}
-            </span>
+        <div className="mb-8">
+          {/* Main Header Card */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+            
+            <div className="relative z-10 p-5">
+              <div className="flex justify-between items-center">
+                {/* Left Content */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold mb-1">Báo cáo & Thống kê</h1>
+                      <p className="text-white text-opacity-90 text-sm">
+                        Phân tích và báo cáo hiệu suất hệ thống trạm đổi pin
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Cards */}
+                  <div className="flex space-x-3">
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Admin: Quản trị hệ thống</span>
+                      </div>
+                    </div>
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Kỳ báo cáo: {dateRange.from} - {dateRange.to}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Content - Admin Profile */}
+                <div className="ml-6">
+                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Admin System</p>
+                        <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('stationMenuOpen');
+                        localStorage.removeItem('userMenuOpen');
+                        window.location.href = '/login';
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
+                    >
+                      <svg
+                        className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span className="text-sm">Đăng xuất</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -126,7 +230,9 @@ const AdminReportManagement = () => {
                 <input
                   type="date"
                   value={dateRange.from}
-                  onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, from: e.target.value })
+                  }
                   className="p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -137,7 +243,9 @@ const AdminReportManagement = () => {
                 <input
                   type="date"
                   value={dateRange.to}
-                  onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, to: e.target.value })
+                  }
                   className="p-2 border border-gray-300 rounded-md"
                 />
               </div>
@@ -216,7 +324,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan doanh thu */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan doanh thu</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan doanh thu
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600">
@@ -268,16 +378,20 @@ const AdminReportManagement = () => {
                   </thead>
                   <tbody>
                     {revenueData.topStations.map((station, index) => (
-                      <tr 
+                      <tr
                         key={station.stationId}
                         className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
                         }`}
                       >
                         <td className="p-4 border-b border-gray-200">
                           <div>
-                            <div className="font-bold text-base text-indigo-600">{station.stationId}</div>
-                            <div className="text-sm text-gray-600 mt-1">{station.name}</div>
+                            <div className="font-bold text-base text-indigo-600">
+                              {station.stationId}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {station.name}
+                            </div>
                           </div>
                         </td>
                         <td className="p-4 border-b border-gray-200">
@@ -292,7 +406,10 @@ const AdminReportManagement = () => {
                         </td>
                         <td className="p-4 border-b border-gray-200">
                           <div className="font-semibold text-base text-gray-800">
-                            {(station.revenue / station.transactions).toLocaleString("vi-VN")} VNĐ
+                            {(
+                              station.revenue / station.transactions
+                            ).toLocaleString("vi-VN")}{" "}
+                            VNĐ
                           </div>
                         </td>
                       </tr>
@@ -304,13 +421,20 @@ const AdminReportManagement = () => {
 
             {/* Biểu đồ doanh thu theo ngày */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Doanh thu theo ngày</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Doanh thu theo ngày
+              </h2>
               <div className="space-y-3">
                 {revenueData.dailyRevenue.map((day) => (
-                  <div key={day.date} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={day.date}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{day.date}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{day.transactions} giao dịch</div>
+                      <div className="text-sm text-gray-600">
+                        {day.transactions} giao dịch
+                      </div>
                       <div className="font-bold text-green-600">
                         {(day.revenue / 1000000).toFixed(1)}M VNĐ
                       </div>
@@ -327,7 +451,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan tần suất */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan tần suất đổi pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan tần suất đổi pin
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
@@ -355,10 +481,15 @@ const AdminReportManagement = () => {
               <h2 className="text-xl font-semibold mb-4">Giờ cao điểm</h2>
               <div className="space-y-3">
                 {frequencyData.peakHours.map((hour, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{hour.hour}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{hour.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {hour.percentage}%
+                      </div>
                       <div className="font-bold text-blue-600">
                         {hour.swaps.toLocaleString("vi-VN")} lượt
                       </div>
@@ -373,10 +504,15 @@ const AdminReportManagement = () => {
               <h2 className="text-xl font-semibold mb-4">Loại pin phổ biến</h2>
               <div className="space-y-3">
                 {frequencyData.batteryTypes.map((battery, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{battery.type}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{battery.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {battery.percentage}%
+                      </div>
                       <div className="font-bold text-green-600">
                         {battery.swaps.toLocaleString("vi-VN")} lượt
                       </div>
@@ -393,7 +529,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan sức khỏe pin */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan sức khỏe pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan sức khỏe pin
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <div className="text-3xl font-bold text-green-600">
@@ -415,7 +553,10 @@ const AdminReportManagement = () => {
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
-                    {batteryHealthData.healthDistribution.reduce((sum, item) => sum + item.count, 0)}
+                    {batteryHealthData.healthDistribution.reduce(
+                      (sum, item) => sum + item.count,
+                      0
+                    )}
                   </div>
                   <div className="text-sm text-blue-700">Tổng pin</div>
                 </div>
@@ -424,13 +565,20 @@ const AdminReportManagement = () => {
 
             {/* Phân bố sức khỏe pin */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Phân bố sức khỏe pin</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Phân bố sức khỏe pin
+              </h2>
               <div className="space-y-3">
                 {batteryHealthData.healthDistribution.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="font-medium">{item.range}</div>
                     <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">{item.percentage}%</div>
+                      <div className="text-sm text-gray-600">
+                        {item.percentage}%
+                      </div>
                       <div className="font-bold text-blue-600">
                         {item.count.toLocaleString("vi-VN")} pin
                       </div>
@@ -447,7 +595,9 @@ const AdminReportManagement = () => {
           <div className="space-y-8">
             {/* Tổng quan khách hàng */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Tổng quan khách hàng</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Tổng quan khách hàng
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-3xl font-bold text-blue-600">
@@ -499,10 +649,10 @@ const AdminReportManagement = () => {
                   </thead>
                   <tbody>
                     {customerData.topCustomers.map((customer, index) => (
-                      <tr 
+                      <tr
                         key={index}
                         className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
                         }`}
                       >
                         <td className="p-4 border-b border-gray-200">
@@ -522,7 +672,10 @@ const AdminReportManagement = () => {
                         </td>
                         <td className="p-4 border-b border-gray-200">
                           <div className="font-semibold text-base text-gray-800">
-                            {(customer.spending / customer.transactions).toLocaleString("vi-VN")} VNĐ
+                            {(
+                              customer.spending / customer.transactions
+                            ).toLocaleString("vi-VN")}{" "}
+                            VNĐ
                           </div>
                         </td>
                       </tr>

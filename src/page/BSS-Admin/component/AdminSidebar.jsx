@@ -5,27 +5,35 @@ const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Khởi tạo state từ localStorage hoặc auto-open nếu đang ở station paths
+  // Khởi tạo state từ localStorage, luôn đóng khi mới login
   const [isStationMenuOpen, setIsStationMenuOpen] = useState(() => {
     const savedState = localStorage.getItem('stationMenuOpen');
     if (savedState !== null) {
       return JSON.parse(savedState);
     }
     
-    // Auto-open nếu đang ở station paths (chỉ lần đầu)
-    const stationPaths = [
-      "/admin-station-management",
-      "/admin-add-station", 
-      "/admin-add-battery",
-      "/admin-manage-battery"
-    ];
-    return stationPaths.includes(window.location.pathname);
+    // Luôn đóng khi mới login vào admin
+    return false;
+  });
+
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(() => {
+    const savedState = localStorage.getItem('userMenuOpen');
+    if (savedState !== null) {
+      return JSON.parse(savedState);
+    }
+    
+    // Luôn đóng khi mới login vào admin
+    return false;
   });
 
   // Lưu trạng thái menu vào localStorage khi thay đổi
   useEffect(() => {
     localStorage.setItem('stationMenuOpen', JSON.stringify(isStationMenuOpen));
   }, [isStationMenuOpen]);
+
+  useEffect(() => {
+    localStorage.setItem('userMenuOpen', JSON.stringify(isUserMenuOpen));
+  }, [isUserMenuOpen]);
 
   const menuItems = [
     {
@@ -94,6 +102,7 @@ const AdminSidebar = () => {
     {
       path: "/admin-user-management",
       label: "Quản lý Người dùng",
+      hasSubmenu: true,
       icon: (
         <svg
           className="w-5 h-5"
@@ -109,6 +118,24 @@ const AdminSidebar = () => {
           />
         </svg>
       ),
+      submenu: [
+        {
+          path: "/admin-user-management",
+          label: "Danh sách khách hàng",
+        },
+        {
+          path: "/admin-add-customer",
+          label: "Thêm khách hàng",
+        },
+        {
+          path: "/admin-add-staff",
+          label: "Thêm nhân viên",
+        },
+        {
+          path: "/admin-battery-packages",
+          label: "Danh sách gói thuê",
+        },
+      ],
     },
     {
       path: "/admin-transaction-management",
@@ -151,7 +178,7 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white shadow-xl h-screen flex flex-col fixed left-0 top-0 z-50 border-r border-gray-100">
+    <div className="w-64 bg-white shadow-xl h-screen flex flex-col fixed left-0 top-0 z-50 border-r border-gray-100 overflow-hidden">
       {/* Logo/Header */}
       <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
         <div className="flex items-center space-x-3">
@@ -178,7 +205,13 @@ const AdminSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="mt-6 flex-1 px-3">
+      <nav 
+        className="mt-6 flex-1 px-3 pb-6 overflow-y-auto custom-scrollbar"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#a5b4fc #f1f5f9'
+        }}
+      >
         <div className="mb-6">
           <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 px-3">
             Quản trị hệ thống
@@ -195,9 +228,15 @@ const AdminSidebar = () => {
                   <div>
                     <button
                       onClick={() => {
-                        setIsStationMenuOpen(!isStationMenuOpen);
-                        // Navigate to first submenu item (Danh sách trạm)
-                        navigate('/admin-station-management');
+                        if (item.path === "/admin-station-management") {
+                          setIsStationMenuOpen(!isStationMenuOpen);
+                          // Navigate to first submenu item (Danh sách trạm)
+                          navigate('/admin-station-management');
+                        } else if (item.path === "/admin-user-management") {
+                          setIsUserMenuOpen(!isUserMenuOpen);
+                          // Navigate to first submenu item (Danh sách khách hàng)
+                          navigate('/admin-user-management');
+                        }
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                         isActive || hasActiveSubmenu
@@ -217,7 +256,9 @@ const AdminSidebar = () => {
                       </div>
                       <svg
                         className={`w-4 h-4 transition-transform duration-300 ${
-                          isStationMenuOpen ? "rotate-180" : ""
+                          (item.path === "/admin-station-management" && isStationMenuOpen) ||
+                          (item.path === "/admin-user-management" && isUserMenuOpen)
+                            ? "rotate-180" : ""
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -232,7 +273,8 @@ const AdminSidebar = () => {
                       </svg>
                     </button>
                     
-                    {isStationMenuOpen && (
+                    {((item.path === "/admin-station-management" && isStationMenuOpen) ||
+                      (item.path === "/admin-user-management" && isUserMenuOpen)) && (
                       <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
                         {item.submenu.map((subItem) => {
                           const isSubActive = location.pathname === subItem.path;
@@ -278,59 +320,6 @@ const AdminSidebar = () => {
         </div>
       </nav>
 
-      {/* User Info & Logout */}
-      <div className="p-6 border-t border-gray-200 mt-auto bg-gradient-to-r from-gray-50 to-indigo-50">
-        {/* User Info */}
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800 truncate">
-              Admin System
-            </p>
-            <p className="text-xs text-indigo-600 font-medium truncate">Quản trị viên</p>
-          </div>
-        </div>
-
-        {/* Logout Button */}
-        <button
-          onClick={() => {
-            // Clear localStorage
-            localStorage.removeItem('stationMenuOpen');
-            // Add logout logic here (clear auth tokens, redirect, etc.)
-            navigate('/login');
-          }}
-          className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 group"
-        >
-          <svg
-            className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-200"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-          <span className="font-semibold">Đăng xuất</span>
-        </button>
-      </div>
     </div>
   );
 };

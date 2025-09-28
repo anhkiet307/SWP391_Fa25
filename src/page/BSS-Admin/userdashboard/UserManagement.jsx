@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
 import { showConfirm, showSuccess, showError } from "../../../utils/toast";
 
 const UserManagement = () => {
+  const navigate = useNavigate();
+  
   // State cho quản lý người dùng
   const [users, setUsers] = useState([
     {
@@ -13,18 +16,18 @@ const UserManagement = () => {
       phone: "0901234567",
       role: "driver",
       status: "active",
-      registrationDate: "2024-01-01",
+      registrationDate: "01/01/2024",
       totalTransactions: 25,
       totalSpent: 1250000,
       vehicleInfo: {
         vin: "VIN123456789",
         batteryType: "Battery A - 5000mAh",
-        lastSwap: "2024-01-15 14:30:00",
+        lastSwap: "15/01/2024 14:30:00",
       },
       subscription: {
         type: "monthly",
         plan: "Premium",
-        expiryDate: "2024-02-01",
+        expiryDate: "01/02/2024",
         remainingSwaps: 15,
       },
     },
@@ -36,13 +39,13 @@ const UserManagement = () => {
       phone: "0907654321",
       role: "driver",
       status: "active",
-      registrationDate: "2024-01-05",
+      registrationDate: "05/01/2024",
       totalTransactions: 18,
       totalSpent: 900000,
       vehicleInfo: {
         vin: "VIN987654321",
         batteryType: "Battery B - 3000mAh",
-        lastSwap: "2024-01-14 16:20:00",
+        lastSwap: "14/01/2024 16:20:00",
       },
       subscription: {
         type: "pay-per-use",
@@ -59,18 +62,18 @@ const UserManagement = () => {
       phone: "0909876543",
       role: "driver",
       status: "suspended",
-      registrationDate: "2023-12-15",
+      registrationDate: "15/12/2023",
       totalTransactions: 45,
       totalSpent: 2250000,
       vehicleInfo: {
         vin: "VIN456789123",
         batteryType: "Battery C - 7000mAh",
-        lastSwap: "2024-01-10 10:15:00",
+        lastSwap: "10/01/2024 10:15:00",
       },
       subscription: {
         type: "yearly",
         plan: "Enterprise",
-        expiryDate: "2024-12-15",
+        expiryDate: "15/12/2024",
         remainingSwaps: 120,
       },
     },
@@ -87,7 +90,7 @@ const UserManagement = () => {
       status: "active",
       stationId: "BSS-001",
       stationName: "Trạm Quận 1",
-      hireDate: "2023-06-01",
+      hireDate: "01/06/2023",
       permissions: ["station_management", "transaction_processing"],
     },
     {
@@ -100,8 +103,12 @@ const UserManagement = () => {
       status: "active",
       stationId: "BSS-002",
       stationName: "Trạm Quận 2",
-      hireDate: "2023-08-15",
-      permissions: ["station_management", "transaction_processing", "inventory_management"],
+      hireDate: "15/08/2023",
+      permissions: [
+        "station_management",
+        "transaction_processing",
+        "inventory_management",
+      ],
     },
   ]);
 
@@ -169,9 +176,7 @@ const UserManagement = () => {
   // Hàm cập nhật người dùng
   const handleUpdateUser = (id, updates) => {
     setUsers(
-      users.map((user) =>
-        user.id === id ? { ...user, ...updates } : user
-      )
+      users.map((user) => (user.id === id ? { ...user, ...updates } : user))
     );
     setShowEditForm(false);
     setSelectedUser(null);
@@ -179,13 +184,10 @@ const UserManagement = () => {
 
   // Hàm xóa người dùng
   const handleDeleteUser = (id) => {
-    showConfirm(
-      "Bạn có chắc chắn muốn xóa người dùng này?",
-      () => {
-        setUsers(users.filter((user) => user.id !== id));
-        showSuccess("Đã xóa người dùng thành công!");
-      }
-    );
+    showConfirm("Bạn có chắc chắn muốn xóa người dùng này?", () => {
+      setUsers(users.filter((user) => user.id !== id));
+      showSuccess("Đã xóa người dùng thành công!");
+    });
   };
 
   // Hàm thay đổi trạng thái người dùng
@@ -212,10 +214,13 @@ const UserManagement = () => {
               subscription: {
                 type: planType,
                 plan: planName,
-                expiryDate: new Date(Date.now() + duration * 24 * 60 * 60 * 1000)
+                expiryDate: new Date(
+                  Date.now() + duration * 24 * 60 * 60 * 1000
+                )
                   .toISOString()
                   .split("T")[0],
-                remainingSwaps: planType === "monthly" ? 30 : planType === "yearly" ? 365 : 0,
+                remainingSwaps:
+                  planType === "monthly" ? 30 : planType === "yearly" ? 365 : 0,
               },
             }
           : user
@@ -227,20 +232,111 @@ const UserManagement = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
+        <div className="mb-8">
+          {/* Main Header Card */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+            
+            <div className="relative z-10 p-5">
+              <div className="flex justify-between items-center">
+                {/* Left Content */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                        />
+                      </svg>
+                    </div>
           <div>
-            <h1 className="text-3xl font-semibold m-0">Quản lý Người dùng</h1>
-            <p className="text-indigo-100 mt-2">
+                      <h1 className="text-2xl font-bold mb-1">Quản lý Người dùng</h1>
+                      <p className="text-white text-opacity-90 text-sm">
               Quản lý khách hàng, nhân viên và phân quyền hệ thống
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Admin: Quản trị hệ thống
-            </span>
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Tổng người dùng: {userStats.totalUsers}
-            </span>
+                  </div>
+                  
+                  {/* Stats Cards */}
+                  <div className="flex space-x-3">
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Admin: Quản trị hệ thống</span>
+                      </div>
+                    </div>
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Tổng người dùng: {userStats.totalUsers}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Content - Admin Profile */}
+                <div className="ml-6">
+                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Admin System</p>
+                        <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('stationMenuOpen');
+                        localStorage.removeItem('userMenuOpen');
+                        window.location.href = '/login';
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
+                    >
+                      <svg
+                        className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span className="text-sm">Đăng xuất</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -324,17 +420,28 @@ const UserManagement = () => {
         {/* Actions */}
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-gray-800 text-2xl font-semibold">
-            {activeTab === "users" ? "Danh sách khách hàng" : "Danh sách nhân viên"}
+            {activeTab === "users"
+              ? "Danh sách khách hàng"
+              : "Danh sách nhân viên"}
           </h2>
           <div className="flex gap-3">
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {
+                if (activeTab === "users") {
+                  navigate('/admin-add-customer');
+                } else {
+                  navigate('/admin-add-staff');
+                }
+              }}
               className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm {activeTab === "users" ? "khách hàng" : "nhân viên"}
             </button>
             {activeTab === "users" && (
-              <button className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg">
+              <button 
+                onClick={() => navigate('/admin-battery-packages')}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              >
                 Tạo gói thuê pin
               </button>
             )}
@@ -376,10 +483,10 @@ const UserManagement = () => {
                 </thead>
                 <tbody>
                   {users.map((user, index) => (
-                    <tr 
-                      key={user.id} 
+                    <tr
+                      key={user.id}
                       className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                        index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="p-4 border-b border-gray-200">
@@ -389,7 +496,9 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-semibold text-base text-gray-800">{user.name}</div>
+                          <div className="font-semibold text-base text-gray-800">
+                            {user.name}
+                          </div>
                           <div className="text-gray-600 text-sm mt-1">
                             Đăng ký: {user.registrationDate}
                           </div>
@@ -397,24 +506,34 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-sm text-gray-800 mb-1">{user.email}</div>
-                          <div className="text-gray-600 text-sm">{user.phone}</div>
+                          <div className="text-sm text-gray-800 mb-1">
+                            {user.email}
+                          </div>
+                          <div className="text-gray-600 text-sm">
+                            {user.phone}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
-                        <span
-                          className={`px-3 py-2 rounded-full text-sm font-semibold ${
-                            user.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {user.status === "active" ? "Hoạt động" : "Tạm khóa"}
-                        </span>
+                        <div className="flex justify-center">
+                          <span
+                            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                              user.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {user.status === "active"
+                              ? "Hoạt động"
+                              : "Tạm khóa"}
+                          </span>
+                        </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-sm font-semibold text-gray-800 mb-1">VIN: {user.vehicleInfo.vin}</div>
+                          <div className="text-sm font-semibold text-gray-800 mb-1">
+                            VIN: {user.vehicleInfo.vin}
+                          </div>
                           <div className="text-sm text-gray-600 mb-1">
                             {user.vehicleInfo.batteryType}
                           </div>
@@ -425,7 +544,9 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-semibold text-base text-gray-800">{user.subscription.plan}</div>
+                          <div className="font-semibold text-base text-gray-800">
+                            {user.subscription.plan}
+                          </div>
                           <div className="text-sm text-gray-600 mt-1">
                             {user.subscription.type}
                           </div>
@@ -452,9 +573,24 @@ const UserManagement = () => {
                             onClick={() => setSelectedUser(user)}
                             title="Chi tiết"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Chi tiết
@@ -470,8 +606,18 @@ const UserManagement = () => {
                             }}
                             title="Sửa"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Chỉnh sửa
@@ -486,15 +632,39 @@ const UserManagement = () => {
                                 : "bg-green-500 hover:bg-green-600"
                             }`}
                             onClick={() => toggleUserStatus(user.id)}
-                            title={user.status === "active" ? "Khóa tài khoản" : "Mở khóa tài khoản"}
+                            title={
+                              user.status === "active"
+                                ? "Khóa tài khoản"
+                                : "Mở khóa tài khoản"
+                            }
                           >
                             {user.status === "active" ? (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                />
                               </svg>
                             ) : (
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                                />
                               </svg>
                             )}
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
@@ -508,8 +678,18 @@ const UserManagement = () => {
                             onClick={() => handleDeleteUser(user.id)}
                             title="Xóa"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Xóa người dùng
@@ -557,10 +737,10 @@ const UserManagement = () => {
                 </thead>
                 <tbody>
                   {staff.map((staffMember, index) => (
-                    <tr 
-                      key={staffMember.id} 
+                    <tr
+                      key={staffMember.id}
                       className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                        index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="p-4 border-b border-gray-200">
@@ -570,7 +750,9 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-semibold text-base text-gray-800">{staffMember.name}</div>
+                          <div className="font-semibold text-base text-gray-800">
+                            {staffMember.name}
+                          </div>
                           <div className="text-gray-600 text-sm mt-1">
                             Tuyển: {staffMember.hireDate}
                           </div>
@@ -578,19 +760,29 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="text-sm text-gray-800 mb-1">{staffMember.email}</div>
-                          <div className="text-gray-600 text-sm">{staffMember.phone}</div>
+                          <div className="text-sm text-gray-800 mb-1">
+                            {staffMember.email}
+                          </div>
+                          <div className="text-gray-600 text-sm">
+                            {staffMember.phone}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <span className="px-3 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                          {staffMember.role === "station_manager" ? "Quản lý trạm" : "Nhân viên"}
+                          {staffMember.role === "station_manager"
+                            ? "Quản lý trạm"
+                            : "Nhân viên"}
                         </span>
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-semibold text-base text-gray-800">{staffMember.stationId}</div>
-                          <div className="text-sm text-gray-600 mt-1">{staffMember.stationName}</div>
+                          <div className="font-semibold text-base text-gray-800">
+                            {staffMember.stationId}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {staffMember.stationName}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
@@ -613,9 +805,24 @@ const UserManagement = () => {
                             onClick={() => setSelectedUser(staffMember)}
                             title="Chi tiết"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Chi tiết
@@ -627,8 +834,18 @@ const UserManagement = () => {
                             className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             title="Sửa"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Chỉnh sửa
@@ -640,8 +857,18 @@ const UserManagement = () => {
                             className="group relative bg-purple-500 hover:bg-purple-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             title="Phân quyền"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Phân quyền
@@ -653,8 +880,18 @@ const UserManagement = () => {
                             className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             title="Xóa"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Xóa nhân viên
@@ -675,7 +912,8 @@ const UserManagement = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
               <h3 className="text-xl font-semibold mb-4">
-                Thêm {activeTab === "users" ? "khách hàng mới" : "nhân viên mới"}
+                Thêm{" "}
+                {activeTab === "users" ? "khách hàng mới" : "nhân viên mới"}
               </h3>
               <div className="space-y-4">
                 <div>
@@ -777,7 +1015,8 @@ const UserManagement = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
               <h3 className="text-xl font-semibold mb-4">
-                Chi tiết {activeTab === "users" ? "khách hàng" : "nhân viên"} {selectedUser.userId}
+                Chi tiết {activeTab === "users" ? "khách hàng" : "nhân viên"}{" "}
+                {selectedUser.userId}
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -806,14 +1045,18 @@ const UserManagement = () => {
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {selectedUser.status === "active" ? "Hoạt động" : "Tạm khóa"}
+                        {selectedUser.status === "active"
+                          ? "Hoạt động"
+                          : "Tạm khóa"}
                       </span>
                     </div>
                   </div>
                 </div>
                 {activeTab === "users" && selectedUser.vehicleInfo && (
                   <div>
-                    <h4 className="font-medium text-gray-700">Thông tin phương tiện</h4>
+                    <h4 className="font-medium text-gray-700">
+                      Thông tin phương tiện
+                    </h4>
                     <div className="space-y-2 mt-2">
                       <div>
                         <span className="font-medium">VIN:</span>{" "}
@@ -844,7 +1087,8 @@ const UserManagement = () => {
                       </div>
                       <div>
                         <span className="font-medium">Hết hạn:</span>{" "}
-                        {selectedUser.subscription.expiryDate || "Không giới hạn"}
+                        {selectedUser.subscription.expiryDate ||
+                          "Không giới hạn"}
                       </div>
                       <div>
                         <span className="font-medium">Còn lại:</span>{" "}
@@ -870,7 +1114,9 @@ const UserManagement = () => {
                 )}
                 {activeTab === "staff" && selectedUser.stationId && (
                   <div>
-                    <h4 className="font-medium text-gray-700">Thông tin trạm</h4>
+                    <h4 className="font-medium text-gray-700">
+                      Thông tin trạm
+                    </h4>
                     <div className="space-y-2 mt-2">
                       <div>
                         <span className="font-medium">Mã trạm:</span>{" "}

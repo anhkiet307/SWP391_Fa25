@@ -5,7 +5,7 @@ import { showSuccess, showInfo } from "../../../utils/toast";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  
+
   // State cho thống kê tổng quan hệ thống
   const [systemStats, setSystemStats] = useState({
     totalStations: 15,
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   const [stationStats, setStationStats] = useState([
     {
       id: 1,
-      stationId: "BSS-002", 
+      stationId: "BSS-002",
       name: "Trạm Quận 2",
       status: "active",
       batteryCapacity: 100,
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
     {
       id: 3,
       stationId: "BSS-003",
-      name: "Trạm Quận 3", 
+      name: "Trạm Quận 3",
       status: "maintenance",
       batteryCapacity: 60,
       batteryFull: 30,
@@ -97,22 +97,117 @@ const AdminDashboard = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
-          <div>
-            <h1 className="text-3xl font-semibold m-0">
-              Dashboard Quản trị Hệ thống
-            </h1>
-            <p className="text-indigo-100 mt-2">
-              Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Admin: Quản trị hệ thống
-            </span>
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Tổng trạm: {systemStats.totalStations}
-            </span>
+        <div className="mb-8">
+          {/* Main Header Card */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
+            
+            <div className="relative z-10 p-5">
+              <div className="flex justify-between items-center">
+                {/* Left Content */}
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold mb-1">Dashboard Quản trị Hệ thống</h1>
+                      <p className="text-white text-opacity-90 text-sm">
+                        Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Cards */}
+                  <div className="flex space-x-3">
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Admin: Quản trị hệ thống</span>
+                      </div>
+                    </div>
+                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        <span className="text-xs font-medium">Tổng trạm: {systemStats.totalStations}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Content - Admin Profile */}
+                <div className="ml-6">
+                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-sm">Admin System</p>
+                        <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('stationMenuOpen');
+                        localStorage.removeItem('userMenuOpen');
+                        window.location.href = '/login';
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
+                    >
+                      <svg
+                        className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span className="text-sm">Đăng xuất</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -155,7 +250,7 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
@@ -221,16 +316,20 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {stationStats.map((station, index) => (
-                    <tr 
+                    <tr
                       key={station.id}
                       className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                        index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="p-4 border-b border-gray-200">
                         <div>
-                          <div className="font-bold text-base text-indigo-600">{station.stationId}</div>
-                          <div className="text-sm text-gray-600 mt-1">{station.name}</div>
+                          <div className="font-bold text-base text-indigo-600">
+                            {station.stationId}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            {station.name}
+                          </div>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
@@ -252,25 +351,33 @@ const AdminDashboard = () => {
                             <div className="text-green-600 font-bold text-base">
                               {station.batteryFull}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">Đầy</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Đầy
+                            </div>
                           </div>
                           <div className="text-center">
                             <div className="text-yellow-600 font-bold text-base">
                               {station.batteryCharging}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">Sạc</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Sạc
+                            </div>
                           </div>
                           <div className="text-center">
                             <div className="text-red-600 font-bold text-base">
                               {station.batteryMaintenance}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">Bảo dưỡng</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Bảo dưỡng
+                            </div>
                           </div>
                           <div className="text-center ml-3 pl-3 border-l border-gray-300">
                             <div className="font-bold text-base text-gray-800">
                               {station.batteryCapacity}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">Tổng</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Tổng
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -304,8 +411,8 @@ const AdminDashboard = () => {
               </table>
             </div>
             <div className="mt-6 text-center">
-              <button 
-                onClick={() => navigate('/admin-station-management')}
+              <button
+                onClick={() => navigate("/admin-station-management")}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
                 Xem tất cả trạm
@@ -323,8 +430,8 @@ const AdminDashboard = () => {
                 <div
                   key={transaction.id}
                   className={`flex items-center justify-between p-5 rounded-lg border-l-4 transition-all duration-200 hover:shadow-md ${
-                    transaction.status === "completed" 
-                      ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100" 
+                    transaction.status === "completed"
+                      ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
                       : "border-yellow-400 bg-gradient-to-r from-yellow-50 to-white hover:from-yellow-100"
                   }`}
                 >
@@ -347,8 +454,18 @@ const AdminDashboard = () => {
                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
                           Vào: {transaction.batteryIn}
                         </span>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        <svg
+                          className="w-4 h-4 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 8l4 4m0 0l-4 4m4-4H3"
+                          />
                         </svg>
                         <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
                           Ra: {transaction.batteryOut}
@@ -357,8 +474,18 @@ const AdminDashboard = () => {
                     </div>
                     <div className="text-sm text-gray-500 pl-13">
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         {transaction.timestamp}
                       </div>
@@ -377,15 +504,35 @@ const AdminDashboard = () => {
                     >
                       {transaction.status === "completed" ? (
                         <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           Hoàn thành
                         </>
                       ) : (
                         <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                           Chờ xử lý
                         </>
@@ -396,8 +543,8 @@ const AdminDashboard = () => {
               ))}
             </div>
             <div className="mt-6 text-center">
-              <button 
-                onClick={() => navigate('/admin-transaction-management')}
+              <button
+                onClick={() => navigate("/admin-transaction-management")}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
                 Xem tất cả giao dịch

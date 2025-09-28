@@ -4,12 +4,12 @@ import StaffHeader from "./StaffHeader";
 
 const StaffLayout = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <StaffSidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col pl-64">
         {/* Header */}
         <StaffHeader />
 

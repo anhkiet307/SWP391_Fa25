@@ -16,7 +16,6 @@ import ForgotPassword from "./page/auth/forgot_password.jsx";
 import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
 import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
-import BatteryInventory from "./page/BSS-Staff/BatteryInventory.jsx";
 import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
 
 // Admin pages
@@ -28,6 +27,9 @@ import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManage
 import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
 import AdminAddBattery from "./page/BSS-Admin/stationdashboard/AddBattery.jsx";
 import AdminBatteryManagement from "./page/BSS-Admin/stationdashboard/BatteryManagement.jsx";
+import AdminAddCustomer from "./page/BSS-Admin/userdashboard/AddCustomer.jsx";
+import AdminAddStaff from "./page/BSS-Admin/userdashboard/AddStaff.jsx";
+import AdminPackManagement from "./page/BSS-Admin/userdashboard/PackManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -95,7 +97,7 @@ function App() {
             element={<TransactionManagement />}
           />
           <Route path="/station-management" element={<StationManagement />} />
-          <Route path="/battery-inventory" element={<BatteryInventory />} />
+
           {/* Admin Routes */}
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route
@@ -119,6 +121,12 @@ function App() {
           <Route
             path="/admin-manage-battery"
             element={<AdminBatteryManagement />}
+          />
+          <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
+          <Route path="/admin-add-staff" element={<AdminAddStaff />} />
+          <Route
+            path="/admin-battery-packages"
+            element={<AdminPackManagement />}
           />
         </Routes>
       </Router>

@@ -24,9 +24,28 @@ const StaffSidebar = () => {
         </svg>
       ),
     },
+    // {
+    //   path: "/battery-inventory",
+    //   label: "Quản lý Kho Pin",
+    //   icon: (
+    //     <svg
+    //       className="w-5 h-5"
+    //       fill="none"
+    //       stroke="currentColor"
+    //       viewBox="0 0 24 24"
+    //     >
+    //       <path
+    //         strokeLinecap="round"
+    //         strokeLinejoin="round"
+    //         strokeWidth={2}
+    //         d="M4 6h16v2H4zm0 5h16v6H4z"
+    //       />
+    //     </svg>
+    //   ),
+    // },
     {
-      path: "/battery-inventory",
-      label: "Quản lý Kho Pin",
+      path: "/station-management",
+      label: "Quản lý Trạm",
       icon: (
         <svg
           className="w-5 h-5"
@@ -38,7 +57,7 @@ const StaffSidebar = () => {
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M4 6h16v2H4zm0 5h16v6H4z"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
           />
         </svg>
       ),
@@ -62,29 +81,10 @@ const StaffSidebar = () => {
         </svg>
       ),
     },
-    {
-      path: "/station-management",
-      label: "Quản lý Trạm",
-      icon: (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      ),
-    },
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg min-h-screen">
+    <div className="fixed top-0 left-0 bottom-0 w-64 bg-white shadow-lg overflow-y-auto flex flex-col">
       {/* Logo/Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -111,7 +111,7 @@ const StaffSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="mt-6">
+      <nav className="mt-6 flex-1">
         <div className="px-3">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Quản lý chính
@@ -142,17 +142,10 @@ const StaffSidebar = () => {
             );
           })}
         </div>
-
-        {/* System Section */}
-        <div className="px-3 mt-8">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Hệ thống
-          </p>
-        </div>
       </nav>
 
       {/* User Info */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="p-6 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <svg
