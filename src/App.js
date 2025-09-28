@@ -1,4 +1,5 @@
 import "./App.css";
+import "antd/dist/reset.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Header from "./components/layout/header.jsx";
@@ -6,6 +7,7 @@ import Footer from "./components/layout/footer.jsx";
 
 // User pages
 import Home from "./page/home.jsx";
+import Booking from "./page/EVDriver/booking.jsx";
 import Login from "./page/auth/login.jsx";
 import Register from "./page/auth/register.jsx";
 import ForgotPassword from "./page/auth/forgot_password.jsx";
@@ -15,9 +17,10 @@ import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
 import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 import BatteryInventory from "./page/BSS-Staff/BatteryInventory.jsx";
+import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
 
 // Admin pages
-import AdminDashboard from "./page/BSS-Admin/Dashboard.jsx";
+import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
 import AdminTransactionManagement from "./page/BSS-Admin/transactiondashboard/TransactionManagement.jsx";
@@ -59,6 +62,8 @@ function App() {
               </MainLayout>
             }
           />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/booking-success" element={<BookingSuccess />} />
           <Route
             path="/login"
             element={

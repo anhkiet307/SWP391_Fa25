@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import AdminLayout from "./component/AdminLayout";
-import { showSuccess, showInfo } from "../../utils/toast";
+import { useNavigate } from "react-router-dom";
+import AdminLayout from "../component/AdminLayout";
+import { showSuccess, showInfo } from "../../../utils/toast";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  
   // State cho thống kê tổng quan hệ thống
   const [systemStats, setSystemStats] = useState({
     totalStations: 15,
@@ -18,19 +21,6 @@ const AdminDashboard = () => {
   const [stationStats, setStationStats] = useState([
     {
       id: 1,
-      stationId: "BSS-001",
-      name: "Trạm Quận 1",
-      status: "active",
-      batteryCapacity: 80,
-      batteryFull: 60,
-      batteryCharging: 15,
-      batteryMaintenance: 5,
-      totalTransactions: 1250,
-      monthlyRevenue: 62500000,
-      batteryHealth: 92,
-    },
-    {
-      id: 2,
       stationId: "BSS-002", 
       name: "Trạm Quận 2",
       status: "active",
@@ -41,6 +31,19 @@ const AdminDashboard = () => {
       totalTransactions: 1890,
       monthlyRevenue: 94500000,
       batteryHealth: 88,
+    },
+    {
+      id: 2,
+      stationId: "BSS-001",
+      name: "Trạm Quận 1",
+      status: "active",
+      batteryCapacity: 80,
+      batteryFull: 60,
+      batteryCharging: 15,
+      batteryMaintenance: 5,
+      totalTransactions: 1250,
+      monthlyRevenue: 62500000,
+      batteryHealth: 92,
     },
     {
       id: 3,
@@ -60,13 +63,13 @@ const AdminDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([
     {
       id: 1,
-      customerName: "Nguyễn Văn A",
+      customerName: "Lê Văn C",
       stationId: "BSS-001",
-      batteryIn: "Battery A - 5000mAh",
-      batteryOut: "Battery B - 3000mAh",
-      amount: 50000,
-      timestamp: "2024-01-15 14:30:00",
-      status: "completed",
+      batteryIn: "Battery B - 3000mAh",
+      batteryOut: "Battery C - 7000mAh",
+      amount: 100000,
+      timestamp: "15/01/2024 16:00",
+      status: "pending",
     },
     {
       id: 2,
@@ -75,18 +78,18 @@ const AdminDashboard = () => {
       batteryIn: "Battery C - 7000mAh",
       batteryOut: "Battery A - 5000mAh",
       amount: 75000,
-      timestamp: "2024-01-15 15:15:00",
+      timestamp: "15/01/2024 15:15",
       status: "completed",
     },
     {
       id: 3,
-      customerName: "Lê Văn C",
+      customerName: "Nguyễn Văn A",
       stationId: "BSS-001",
-      batteryIn: "Battery B - 3000mAh",
-      batteryOut: "Battery C - 7000mAh",
-      amount: 100000,
-      timestamp: "2024-01-15 16:00:00",
-      status: "pending",
+      batteryIn: "Battery A - 5000mAh",
+      batteryOut: "Battery B - 3000mAh",
+      amount: 50000,
+      timestamp: "15/01/2024 14:30",
+      status: "completed",
     },
   ]);
 
@@ -191,11 +194,11 @@ const AdminDashboard = () => {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Thống kê trạm */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
               Thống kê trạm
             </h2>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden mt-4">
                 <thead>
                   <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
@@ -300,14 +303,22 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => navigate('/admin-station-management')}
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+              >
+                Xem tất cả trạm
+              </button>
+            </div>
           </div>
 
           {/* Giao dịch gần đây */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
               Giao dịch gần đây
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-3 flex-1 mt-8">
               {recentTransactions.map((transaction, index) => (
                 <div
                   key={transaction.id}
@@ -385,7 +396,10 @@ const AdminDashboard = () => {
               ))}
             </div>
             <div className="mt-6 text-center">
-              <button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
+              <button 
+                onClick={() => navigate('/admin-transaction-management')}
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+              >
                 Xem tất cả giao dịch
               </button>
             </div>

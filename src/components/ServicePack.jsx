@@ -1,4 +1,18 @@
 import React, { useState } from "react";
+import { Card, Row, Col, Typography, Button, Space, Tag } from "antd";
+import {
+  PoweroffOutlined,
+  CrownOutlined,
+  CheckCircleOutlined,
+  ThunderboltOutlined,
+  SafetyOutlined,
+  MobileOutlined,
+  DollarOutlined,
+  StarOutlined,
+  RocketOutlined,
+} from "@ant-design/icons";
+
+const { Title, Paragraph } = Typography;
 
 export default function ServicePack() {
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -20,7 +34,7 @@ export default function ServicePack() {
         "Có sẵn cho mọi tài khoản",
       ],
       color: "blue",
-      icon: "🔋",
+      icon: <DollarOutlined />,
       popular: false,
     },
     {
@@ -38,7 +52,7 @@ export default function ServicePack() {
         "Tiết kiệm 50% chi phí",
       ],
       color: "green",
-      icon: "💎",
+      icon: <StarOutlined />,
       popular: true,
     },
     {
@@ -57,7 +71,7 @@ export default function ServicePack() {
         "Tiết kiệm tối đa",
       ],
       color: "purple",
-      icon: "👑",
+      icon: <RocketOutlined />,
       popular: false,
     },
   ];
@@ -68,178 +82,661 @@ export default function ServicePack() {
     console.log("Đã chọn gói:", plan.name);
   };
 
-  const getColorClasses = (color) => {
+  const getIconColor = (color) => {
     const colors = {
-      blue: "border-blue-500 bg-blue-50 text-blue-700",
-      green: "border-green-500 bg-green-50 text-green-700",
-      purple: "border-purple-500 bg-purple-50 text-purple-700",
+      blue: "#00083B", // Màu xanh đậm của header
+      green: "#00083B", // Sử dụng cùng màu header
+      purple: "#00083B", // Sử dụng cùng màu header
     };
     return colors[color] || colors.blue;
   };
 
-  const getButtonClasses = (color) => {
+  const getButtonColor = (color) => {
     const colors = {
-      blue: "bg-blue-600 hover:bg-blue-700 text-white",
-      green: "bg-green-600 hover:bg-green-700 text-white",
-      purple: "bg-purple-600 hover:bg-purple-700 text-white",
+      blue: "#00083B", // Màu xanh đậm của header
+      green: "#00083B", // Sử dụng cùng màu header
+      purple: "#00083B", // Sử dụng cùng màu header
     };
     return colors[color] || colors.blue;
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+    <section
+      className="py-16"
+      style={{
+        background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+      }}
+    >
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            🔋 Gói Dịch Vụ Đổi Pin VoltSwap
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Chọn gói dịch vụ phù hợp với nhu cầu sử dụng của bạn. Tất cả gói đều
-            bao gồm đặt lịch trực tuyến và hỗ trợ 24/7.
-          </p>
+          <Space direction="vertical" size="large" className="w-full">
+            <Space size="large" className="justify-center">
+              <PoweroffOutlined
+                style={{ fontSize: "48px", color: "#00083B" }}
+              />
+              <Title level={1} style={{ margin: 0 }}>
+                Gói Dịch Vụ Đổi Pin VoltSwap
+              </Title>
+            </Space>
+            <Paragraph
+              style={{ fontSize: "20px", maxWidth: "800px", margin: "0 auto" }}
+            >
+              Chọn gói dịch vụ phù hợp với nhu cầu sử dụng của bạn. Tất cả gói
+              đều bao gồm đặt lịch trực tuyến và hỗ trợ 24/7.
+            </Paragraph>
+          </Space>
         </div>
 
         {/* Service Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <Row gutter={[32, 32]} className="mb-12">
           {servicePlans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative bg-white rounded-2xl shadow-xl border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 ${
-                plan.popular
-                  ? "border-yellow-400 ring-4 ring-yellow-100 scale-105"
-                  : "border-gray-200"
-              }`}
-            >
-              {/* Popular Badge */}
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+            <Col xs={24} md={12} lg={8} key={plan.id}>
+              <Card
+                className="relative h-full"
+                style={{
+                  borderRadius: "20px",
+                  boxShadow: plan.popular
+                    ? "0 20px 40px rgba(0, 8, 59, 0.15), 0 8px 16px rgba(0, 8, 59, 0.1)"
+                    : "0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05)",
+                  border: plan.popular
+                    ? "2px solid #00083B"
+                    : "1px solid rgba(0, 8, 59, 0.1)",
+                  transform: plan.popular ? "scale(1.05)" : "scale(1)",
+                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  background: plan.popular
+                    ? "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)"
+                    : "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
+                }}
+                hoverable
+              >
+                {/* Popular Badge */}
+                {plan.popular && (
+                  <Tag
+                    color="#00083B"
+                    style={{
+                      position: "absolute",
+                      top: "-18px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      padding: "6px 20px",
+                      borderRadius: "20px",
+                      boxShadow:
+                        "0 8px 20px rgba(0, 8, 59, 0.25), 0 4px 8px rgba(0, 8, 59, 0.15)",
+                      background:
+                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                      border: "2px solid #ffffff",
+                    }}
+                  >
                     ⭐ PHỔ BIẾN NHẤT
-                  </span>
-                </div>
-              )}
+                  </Tag>
+                )}
 
-              {/* Plan Header */}
-              <div className="p-8 text-center">
-                <div className="text-4xl mb-4">{plan.icon}</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {plan.name}
-                </h3>
-                <div
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 ${getColorClasses(
-                    plan.color
-                  )}`}
-                >
-                  {plan.type}
-                </div>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
-                    {plan.price}
-                  </span>
-                  <span className="text-gray-600 ml-2">/{plan.period}</span>
-                </div>
-                <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
-              </div>
-
-              {/* Features */}
-              <div className="px-8 pb-8">
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center text-sm text-gray-600"
+                {/* Plan Header */}
+                <div className="text-center mb-6">
+                  <div
+                    style={{
+                      fontSize: "48px",
+                      marginBottom: "16px",
+                      color: getIconColor(plan.color),
+                      background:
+                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                      filter: "drop-shadow(0 2px 4px rgba(0, 8, 59, 0.2))",
+                    }}
+                  >
+                    {plan.icon}
+                  </div>
+                  <Title level={3} style={{ marginBottom: "8px" }}>
+                    {plan.name}
+                  </Title>
+                  <Tag color={plan.color} style={{ marginBottom: "16px" }}>
+                    {plan.type}
+                  </Tag>
+                  <div style={{ marginBottom: "16px" }}>
+                    <span
+                      style={{
+                        fontSize: "36px",
+                        fontWeight: "bold",
+                        background:
+                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                      }}
                     >
-                      <span className="text-green-500 mr-3">✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                      {plan.price}
+                    </span>
+                    <span
+                      style={{
+                        color: "#64748b",
+                        marginLeft: "8px",
+                        fontSize: "16px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      /{plan.period}
+                    </span>
+                  </div>
+                  <Paragraph style={{ color: "#666", margin: 0 }}>
+                    {plan.description}
+                  </Paragraph>
+                </div>
+
+                {/* Features */}
+                <div style={{ marginBottom: "24px" }}>
+                  <Space
+                    direction="vertical"
+                    size="small"
+                    style={{ width: "100%" }}
+                  >
+                    {plan.features.map((feature, index) => (
+                      <Space key={index}>
+                        <CheckCircleOutlined
+                          style={{
+                            color: "#10b981",
+                            fontSize: "16px",
+                            filter:
+                              "drop-shadow(0 1px 2px rgba(16, 185, 129, 0.3))",
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: "14px",
+                            color: "#475569",
+                            fontWeight: "500",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {feature}
+                        </span>
+                      </Space>
+                    ))}
+                  </Space>
+                </div>
 
                 {/* Action Button */}
                 {plan.id === 1 ? (
-                  <div className="w-full py-3 px-6 rounded-lg font-semibold bg-gray-100 text-gray-600 text-center">
-                    ✅ Đã có sẵn
-                  </div>
+                  <Button
+                    block
+                    disabled
+                    style={{
+                      height: "48px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    <CheckCircleOutlined />
+                    Đã có sẵn
+                  </Button>
                 ) : (
-                  <button
+                  <Button
+                    type={selectedPlan?.id === plan.id ? "default" : "primary"}
+                    block
                     onClick={() => handleSelectPlan(plan)}
-                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${getButtonClasses(
-                      plan.color
-                    )} hover:shadow-lg`}
+                    style={{
+                      height: "52px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      borderRadius: "12px",
+                      background:
+                        selectedPlan?.id === plan.id
+                          ? "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)"
+                          : "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                      borderColor:
+                        selectedPlan?.id === plan.id ? "#cbd5e1" : "#00083B",
+                      boxShadow:
+                        selectedPlan?.id === plan.id
+                          ? "0 4px 12px rgba(0,0,0,0.1)"
+                          : "0 8px 20px rgba(0, 8, 59, 0.25), 0 4px 8px rgba(0, 8, 59, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
                   >
                     {selectedPlan?.id === plan.id ? "Đã Chọn" : "Chọn Gói Này"}
-                  </button>
+                  </Button>
                 )}
-              </div>
-            </div>
+              </Card>
+            </Col>
           ))}
-        </div>
+        </Row>
 
         {/* Selected Plan Info */}
         {selectedPlan && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 border-2 border-gray-200">
-            <div className="text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                🎉 Bạn đã chọn: {selectedPlan.name}
-              </h3>
-              <p className="text-lg text-gray-600 mb-6">
-                {selectedPlan.description}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
-                  🚀 Đăng Ký Ngay
-                </button>
-                <button
-                  onClick={() => setSelectedPlan(null)}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors"
+          <Card
+            style={{
+              borderRadius: "24px",
+              boxShadow:
+                "0 20px 40px rgba(0, 8, 59, 0.15), 0 8px 16px rgba(0, 8, 59, 0.1)",
+              border: "2px solid #00083B",
+              marginBottom: "48px",
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Decorative Background */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-50px",
+                right: "-50px",
+                width: "100px",
+                height: "100px",
+                background:
+                  "linear-gradient(135deg, rgba(0, 8, 59, 0.1) 0%, rgba(26, 31, 92, 0.05) 100%)",
+                borderRadius: "50%",
+                zIndex: 0,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: "-30px",
+                left: "-30px",
+                width: "60px",
+                height: "60px",
+                background:
+                  "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
+                borderRadius: "50%",
+                zIndex: 0,
+              }}
+            />
+
+            <div
+              className="text-center"
+              style={{ position: "relative", zIndex: 1 }}
+            >
+              <Space direction="vertical" size="large" className="w-full">
+                <Space size="middle">
+                  <div
+                    style={{
+                      width: "64px",
+                      height: "64px",
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow:
+                        "0 8px 20px rgba(16, 185, 129, 0.3), 0 4px 8px rgba(16, 185, 129, 0.2)",
+                    }}
+                  >
+                    <CheckCircleOutlined
+                      style={{ fontSize: "32px", color: "white" }}
+                    />
+                  </div>
+                  <div>
+                    <Title level={2} style={{ margin: 0, color: "#00083B" }}>
+                      Bạn đã chọn: {selectedPlan.name}
+                    </Title>
+                    <Tag
+                      color="#00083B"
+                      style={{
+                        marginTop: "8px",
+                        padding: "4px 12px",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        background:
+                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                        border: "none",
+                      }}
+                    >
+                      {selectedPlan.type}
+                    </Tag>
+                  </div>
+                </Space>
+
+                <div
+                  style={{
+                    background: "rgba(0, 8, 59, 0.05)",
+                    padding: "20px",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(0, 8, 59, 0.1)",
+                  }}
                 >
-                  🔄 Chọn Lại
-                </button>
-              </div>
+                  <Paragraph
+                    style={{
+                      fontSize: "18px",
+                      color: "#475569",
+                      margin: 0,
+                      fontWeight: "500",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    {selectedPlan.description}
+                  </Paragraph>
+                  <div style={{ marginTop: "16px" }}>
+                    <span
+                      style={{
+                        fontSize: "28px",
+                        fontWeight: "bold",
+                        background:
+                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                      }}
+                    >
+                      {selectedPlan.price}
+                    </span>
+                    <span
+                      style={{
+                        color: "#64748b",
+                        marginLeft: "8px",
+                        fontSize: "16px",
+                      }}
+                    >
+                      /{selectedPlan.period}
+                    </span>
+                  </div>
+                </div>
+
+                <Space size="large">
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<ThunderboltOutlined />}
+                    style={{
+                      height: "56px",
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      borderRadius: "16px",
+                      background:
+                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                      border: "none",
+                      boxShadow:
+                        "0 12px 24px rgba(0, 8, 59, 0.3), 0 4px 8px rgba(0, 8, 59, 0.2)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
+                    className="hover:scale-105"
+                  >
+                    Đăng Ký Ngay
+                  </Button>
+                  <Button
+                    size="large"
+                    onClick={() => setSelectedPlan(null)}
+                    style={{
+                      height: "56px",
+                      fontSize: "18px",
+                      fontWeight: "600",
+                      borderRadius: "16px",
+                      background:
+                        "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
+                      border: "2px solid #cbd5e1",
+                      color: "#475569",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    }}
+                    className="hover:scale-105"
+                  >
+                    Chọn Lại
+                  </Button>
+                </Space>
+              </Space>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Additional Info */}
-        <div className="mt-12 text-center">
-          <div className="bg-blue-50 rounded-2xl p-8 border border-blue-200">
-            <h3 className="text-2xl font-bold text-blue-900 mb-4">
-              💡 Tại sao chọn VoltSwap?
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">⚡</div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">
-                    Nhanh Chóng
-                  </h4>
-                  <p className="text-blue-700 text-sm">
-                    Đổi pin chỉ trong 5 phút, không cần chờ đợi
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">🔒</div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">An Toàn</h4>
-                  <p className="text-blue-700 text-sm">
-                    Pin chính hãng, đảm bảo chất lượng 100%
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">📱</div>
-                <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">Tiện Lợi</h4>
-                  <p className="text-blue-700 text-sm">
-                    Đặt lịch online, thanh toán linh hoạt
-                  </p>
-                </div>
-              </div>
+        <Card
+          style={{
+            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+            border: "1px solid rgba(0, 8, 59, 0.1)",
+            borderRadius: "24px",
+            boxShadow:
+              "0 20px 40px rgba(0, 8, 59, 0.1), 0 8px 16px rgba(0, 8, 59, 0.05)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative Background */}
+          <div
+            style={{
+              position: "absolute",
+              top: "-40px",
+              left: "-40px",
+              width: "80px",
+              height: "80px",
+              background:
+                "linear-gradient(135deg, rgba(0, 8, 59, 0.08) 0%, rgba(26, 31, 92, 0.04) 100%)",
+              borderRadius: "50%",
+              zIndex: 0,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-30px",
+              right: "-30px",
+              width: "60px",
+              height: "60px",
+              background:
+                "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%)",
+              borderRadius: "50%",
+              zIndex: 0,
+            }}
+          />
+
+          <div
+            className="text-center mb-8"
+            style={{ position: "relative", zIndex: 1 }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                marginBottom: "24px",
+                boxShadow:
+                  "0 12px 24px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+              }}
+            >
+              <MobileOutlined style={{ fontSize: "36px", color: "white" }} />
             </div>
+            <Title
+              level={2}
+              style={{ color: "#00083B", margin: 0, marginBottom: "8px" }}
+            >
+              Tại sao chọn VoltSwap?
+            </Title>
+            <Paragraph
+              style={{
+                color: "#64748b",
+                fontSize: "18px",
+                margin: 0,
+                maxWidth: "600px",
+                margin: "0 auto",
+                lineHeight: "1.6",
+              }}
+            >
+              Giải pháp đổi pin xe điện hiện đại, nhanh chóng và tiện lợi nhất
+            </Paragraph>
           </div>
-        </div>
+
+          <Row gutter={[32, 32]} style={{ position: "relative", zIndex: 1 }}>
+            <Col xs={24} md={8}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "32px 24px",
+                  borderRadius: "20px",
+                  background:
+                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
+                  border: "1px solid rgba(0, 8, 59, 0.08)",
+                  height: "100%",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+                className="hover:shadow-lg"
+              >
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    background:
+                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 20px",
+                    boxShadow:
+                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                  }}
+                >
+                  <ThunderboltOutlined
+                    style={{ fontSize: "28px", color: "white" }}
+                  />
+                </div>
+                <Title
+                  level={4}
+                  style={{
+                    color: "#00083B",
+                    margin: "0 0 12px 0",
+                    fontSize: "20px",
+                  }}
+                >
+                  Nhanh Chóng
+                </Title>
+                <Paragraph
+                  style={{
+                    color: "#64748b",
+                    margin: 0,
+                    fontSize: "16px",
+                    lineHeight: "1.6",
+                    fontWeight: "500",
+                  }}
+                >
+                  Đổi pin chỉ trong 5 phút, không cần chờ đợi
+                </Paragraph>
+              </div>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "32px 24px",
+                  borderRadius: "20px",
+                  background:
+                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
+                  border: "1px solid rgba(0, 8, 59, 0.08)",
+                  height: "100%",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+                className="hover:shadow-lg"
+              >
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    background:
+                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 20px",
+                    boxShadow:
+                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                  }}
+                >
+                  <SafetyOutlined
+                    style={{ fontSize: "28px", color: "white" }}
+                  />
+                </div>
+                <Title
+                  level={4}
+                  style={{
+                    color: "#00083B",
+                    margin: "0 0 12px 0",
+                    fontSize: "20px",
+                  }}
+                >
+                  An Toàn
+                </Title>
+                <Paragraph
+                  style={{
+                    color: "#64748b",
+                    margin: 0,
+                    fontSize: "16px",
+                    lineHeight: "1.6",
+                    fontWeight: "500",
+                  }}
+                >
+                  Pin chính hãng, đảm bảo chất lượng 100%
+                </Paragraph>
+              </div>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "32px 24px",
+                  borderRadius: "20px",
+                  background:
+                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
+                  border: "1px solid rgba(0, 8, 59, 0.08)",
+                  height: "100%",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
+                className="hover:shadow-lg"
+              >
+                <div
+                  style={{
+                    width: "64px",
+                    height: "64px",
+                    borderRadius: "50%",
+                    background:
+                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 20px",
+                    boxShadow:
+                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                  }}
+                >
+                  <MobileOutlined
+                    style={{ fontSize: "28px", color: "white" }}
+                  />
+                </div>
+                <Title
+                  level={4}
+                  style={{
+                    color: "#00083B",
+                    margin: "0 0 12px 0",
+                    fontSize: "20px",
+                  }}
+                >
+                  Tiện Lợi
+                </Title>
+                <Paragraph
+                  style={{
+                    color: "#64748b",
+                    margin: 0,
+                    fontSize: "16px",
+                    lineHeight: "1.6",
+                    fontWeight: "500",
+                  }}
+                >
+                  Đặt lịch online, thanh toán linh hoạt
+                </Paragraph>
+              </div>
+            </Col>
+          </Row>
+        </Card>
       </div>
     </section>
   );

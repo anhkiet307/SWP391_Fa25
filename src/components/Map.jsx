@@ -2,6 +2,18 @@ import React, { useCallback, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Typography, Space, Button, Tag } from "antd";
+import {
+  PoweroffOutlined,
+  EnvironmentOutlined,
+  AimOutlined,
+  StarOutlined,
+  CheckCircleOutlined,
+  ReloadOutlined,
+  RightOutlined,
+} from "@ant-design/icons";
+
+const { Title, Paragraph } = Typography;
 
 // CSS cho animation
 const popupStyles = `
@@ -65,7 +77,7 @@ const createBatteryIcon = (color) => {
         justify-content: center;
         font-size: 16px;
       ">
-        🔋
+        ⚡
       </div>
     `,
     iconSize: [30, 30],
@@ -118,7 +130,7 @@ const createNearestStationIcon = (color) => {
         font-size: 18px;
         animation: pulse 2s infinite;
       ">
-        🔋
+        ⚡
       </div>
     `,
     iconSize: [35, 35],
@@ -310,11 +322,180 @@ function UserLocationMarker({ userLocation }) {
   return (
     <Marker position={userLocation} icon={createUserIcon()}>
       <Popup>
-        <div className="p-2">
-          <h3 className="font-bold text-lg text-gray-800 mb-2">
-            📍 Vị trí của bạn
-          </h3>
-          <p className="text-sm text-gray-600">Bạn đang ở đây trên bản đồ</p>
+        <div style={{ padding: "16px", minWidth: "300px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "8px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "700",
+                  color: "#00083B",
+                  margin: 0,
+                  lineHeight: "1.3",
+                }}
+              >
+                Vị trí của bạn
+              </h3>
+              <div
+                style={{
+                  background:
+                    "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                  color: "#1e40af",
+                  padding: "4px 8px",
+                  borderRadius: "12px",
+                  fontSize: "10px",
+                  fontWeight: "700",
+                  border: "1px solid #3b82f6",
+                  boxShadow: "0 2px 4px rgba(59, 130, 246, 0.2)",
+                }}
+              >
+                📍 HIỆN TẠI
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "8px",
+                }}
+              >
+                <span style={{ fontSize: "12px", color: "white" }}>🎯</span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: "#00083B",
+                    marginBottom: "2px",
+                  }}
+                >
+                  Trạng thái định vị
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#475569",
+                  }}
+                >
+                  Đã xác định vị trí thành công
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "12px",
+              }}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "8px",
+                }}
+              >
+                <span style={{ fontSize: "12px", color: "white" }}>🔍</span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: "#00083B",
+                    marginBottom: "2px",
+                  }}
+                >
+                  Độ chính xác
+                </div>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#475569",
+                  }}
+                >
+                  GPS độ chính xác cao
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
+              border: "1px solid rgba(0, 8, 59, 0.1)",
+              borderRadius: "12px",
+              padding: "12px",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: "8px",
+                }}
+              >
+                <EnvironmentOutlined
+                  style={{ fontSize: "10px", color: "white" }}
+                />
+              </div>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "#00083B",
+                  fontWeight: "600",
+                }}
+              >
+                VoltSwap Location Service
+              </span>
+            </div>
+          </div>
         </div>
       </Popup>
     </Marker>
@@ -515,7 +696,8 @@ function Map() {
         <div className="lg:w-1/3">
           <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              🗺️ Bộ lọc trạm sạc
+              <EnvironmentOutlined style={{ marginRight: "8px" }} />
+              Bộ lọc trạm sạc
             </h3>
 
             <div className="space-y-4">
@@ -604,7 +786,8 @@ function Map() {
                 }}
                 className="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
               >
-                🔄 Reset bộ lọc
+                <ReloadOutlined style={{ marginRight: "8px" }} />
+                Reset bộ lọc
               </button>
             </div>
           </div>
@@ -627,7 +810,7 @@ function Map() {
                   </>
                 ) : (
                   <>
-                    <span>📍</span>
+                    <EnvironmentOutlined />
                     <span>Định vị vị trí</span>
                   </>
                 )}
@@ -647,7 +830,7 @@ function Map() {
                   }}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
                 >
-                  <span>🗺️</span>
+                  <EnvironmentOutlined />
                   <span>Chỉ đường gần nhất</span>
                 </button>
               )}
@@ -672,19 +855,22 @@ function Map() {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-green-200 rounded-full animate-pulse"></div>
                 <p className="text-sm font-semibold">
-                  ✅ Đã định vị thành công!
+                  <CheckCircleOutlined style={{ marginRight: "8px" }} />
+                  Đã định vị thành công!
                 </p>
               </div>
 
               <div className="bg-green-600 rounded-lg p-2 mt-2">
                 <p className="text-xs font-semibold text-green-100 mb-1">
-                  🔋 Trạm gần nhất:
+                  <PoweroffOutlined style={{ marginRight: "4px" }} />
+                  Trạm gần nhất:
                 </p>
                 <p className="text-sm font-bold text-white">
                   {nearestStation.name}
                 </p>
                 <p className="text-xs text-green-100 mt-1">
-                  📍 {nearestStation.address}
+                  <EnvironmentOutlined style={{ marginRight: "4px" }} />
+                  {nearestStation.address}
                 </p>
                 <p className="text-xs text-green-200 mt-1 font-semibold">
                   🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
@@ -703,7 +889,7 @@ function Map() {
                       window.open(googleMapsUrl, "_blank");
                     }}
                   >
-                    <span>🗺️</span>
+                    <EnvironmentOutlined />
                     <span>Chỉ đường đến trạm gần nhất</span>
                   </button>
                 </div>
@@ -716,18 +902,23 @@ function Map() {
             <div className="fixed top-20 right-4 z-[10000] bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm animate-slide-in">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-blue-200 rounded-full animate-pulse"></div>
-                <p className="text-sm font-semibold">🎯 Trạm đã chọn!</p>
+                <p className="text-sm font-semibold">
+                  <AimOutlined style={{ marginRight: "8px" }} />
+                  Trạm đã chọn!
+                </p>
               </div>
 
               <div className="bg-blue-600 rounded-lg p-2 mt-2">
                 <p className="text-xs font-semibold text-blue-100 mb-1">
-                  🔋 {selectedStation.name}
+                  <PoweroffOutlined style={{ marginRight: "4px" }} />
+                  {selectedStation.name}
                 </p>
                 <p className="text-sm font-bold text-white">
                   {selectedStation.city}
                 </p>
                 <p className="text-xs text-blue-100 mt-1">
-                  📍 {selectedStation.address}
+                  <EnvironmentOutlined style={{ marginRight: "4px" }} />
+                  {selectedStation.address}
                 </p>
                 {selectedStation.distance && (
                   <p className="text-xs text-blue-200 mt-1 font-semibold">
@@ -762,7 +953,8 @@ function Map() {
                       }
                     }}
                   >
-                    🗺️ Chỉ đường
+                    <EnvironmentOutlined />
+                    Chỉ đường
                   </button>
                 </div>
               </div>
@@ -818,46 +1010,356 @@ function Map() {
                     }
                   >
                     <Popup>
-                      <div className="p-2">
-                        <h3 className="font-bold text-lg text-gray-800 mb-2">
-                          {station.name}
-                          {isNearest && (
-                            <span className="ml-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold">
-                              ⭐ GẦN NHẤT
-                            </span>
-                          )}
-                          {isSelected && (
-                            <span className="ml-2 bg-blue-400 text-blue-900 px-2 py-1 rounded-full text-xs font-bold">
-                              🎯 ĐÃ CHỌN
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-1">
-                          <strong>Địa chỉ:</strong> {station.address}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-1">
-                          <strong>Thành phố:</strong> {station.city}
-                        </p>
-                        <p className="text-sm text-gray-600 mb-1">
-                          <strong>Quận/Huyện:</strong> {station.district}
-                        </p>
+                      <div style={{ padding: "16px", minWidth: "300px" }}>
+                        <div style={{ marginBottom: "16px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <h3
+                              style={{
+                                fontSize: "18px",
+                                fontWeight: "700",
+                                color: "#00083B",
+                                margin: 0,
+                                lineHeight: "1.3",
+                              }}
+                            >
+                              {station.name}
+                            </h3>
+                            <div style={{ display: "flex", gap: "4px" }}>
+                              {isNearest && (
+                                <div
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+                                    color: "#92400e",
+                                    padding: "4px 8px",
+                                    borderRadius: "12px",
+                                    fontSize: "10px",
+                                    fontWeight: "700",
+                                    border: "1px solid #f59e0b",
+                                    boxShadow:
+                                      "0 2px 4px rgba(245, 158, 11, 0.2)",
+                                  }}
+                                >
+                                  ⭐ GẦN NHẤT
+                                </div>
+                              )}
+                              {isSelected && (
+                                <div
+                                  style={{
+                                    background:
+                                      "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                                    color: "#1e40af",
+                                    padding: "4px 8px",
+                                    borderRadius: "12px",
+                                    fontSize: "10px",
+                                    fontWeight: "700",
+                                    border: "1px solid #3b82f6",
+                                    boxShadow:
+                                      "0 2px 4px rgba(59, 130, 246, 0.2)",
+                                  }}
+                                >
+                                  🎯 ĐÃ CHỌN
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom: "16px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "8px",
+                                marginTop: "2px",
+                              }}
+                            >
+                              <EnvironmentOutlined
+                                style={{ fontSize: "10px", color: "white" }}
+                              />
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  color: "#00083B",
+                                  marginBottom: "2px",
+                                }}
+                              >
+                                Địa chỉ
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#475569",
+                                  lineHeight: "1.4",
+                                }}
+                              >
+                                {station.address}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "8px",
+                              }}
+                            >
+                              <span
+                                style={{ fontSize: "10px", color: "white" }}
+                              >
+                                🏙️
+                              </span>
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  color: "#00083B",
+                                  marginBottom: "2px",
+                                }}
+                              >
+                                Thành phố
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#475569",
+                                }}
+                              >
+                                {station.city}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "12px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "8px",
+                              }}
+                            >
+                              <span
+                                style={{ fontSize: "10px", color: "white" }}
+                              >
+                                📍
+                              </span>
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  color: "#00083B",
+                                  marginBottom: "2px",
+                                }}
+                              >
+                                Quận/Huyện
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#475569",
+                                }}
+                              >
+                                {station.district}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         {isNearest && (
-                          <p className="text-sm text-red-600 font-semibold">
-                            <strong>🚗 Cách bạn:</strong>{" "}
-                            {nearestStation.distance.toFixed(1)} km
-                          </p>
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%)",
+                              border: "1px solid rgba(220, 38, 38, 0.1)",
+                              borderRadius: "12px",
+                              padding: "12px",
+                              marginBottom: "16px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "24px",
+                                  height: "24px",
+                                  borderRadius: "50%",
+                                  background:
+                                    "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginRight: "8px",
+                                }}
+                              >
+                                <span
+                                  style={{ fontSize: "12px", color: "white" }}
+                                >
+                                  🚗
+                                </span>
+                              </div>
+                              <div>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: "600",
+                                    color: "#00083B",
+                                    marginBottom: "2px",
+                                  }}
+                                >
+                                  Khoảng cách
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "14px",
+                                    color: "#dc2626",
+                                    fontWeight: "700",
+                                  }}
+                                >
+                                  {nearestStation.distance.toFixed(1)} km
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
-                        <div className="mt-2 text-xs text-blue-600 mb-3">
-                          🔋 Trạm đổi pin VoltSwap
+
+                        <div
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
+                            border: "1px solid rgba(0, 8, 59, 0.1)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            marginBottom: "16px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "8px",
+                              }}
+                            >
+                              <PoweroffOutlined
+                                style={{ fontSize: "10px", color: "white" }}
+                              />
+                            </div>
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                color: "#00083B",
+                                fontWeight: "600",
+                              }}
+                            >
+                              Trạm đổi pin VoltSwap
+                            </span>
+                          </div>
                         </div>
 
                         {/* Nút chọn trạm và chỉ đường */}
-                        <div className="flex gap-2">
+                        <div style={{ display: "flex", gap: "8px" }}>
                           <button
                             onClick={() => selectStation(station)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                            style={{
+                              flex: 1,
+                              background:
+                                "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                              color: "white",
+                              padding: "10px 12px",
+                              borderRadius: "12px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(0, 8, 59, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(0, 8, 59, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(0, 8, 59, 0.2)";
+                            }}
                           >
-                            <span>🎯</span>
+                            <AimOutlined style={{ fontSize: "12px" }} />
                             <span>Chọn</span>
                           </button>
                           <button
@@ -879,9 +1381,36 @@ function Map() {
                                 window.open(googleMapsUrl, "_blank");
                               }
                             }}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                            style={{
+                              flex: 1,
+                              background:
+                                "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                              color: "white",
+                              padding: "10px 12px",
+                              borderRadius: "12px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(16, 185, 129, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(16, 185, 129, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(16, 185, 129, 0.2)";
+                            }}
                           >
-                            <span>🗺️</span>
+                            <EnvironmentOutlined style={{ fontSize: "12px" }} />
                             <span>Chỉ đường</span>
                           </button>
                         </div>

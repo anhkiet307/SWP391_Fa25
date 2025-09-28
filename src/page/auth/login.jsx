@@ -32,15 +32,30 @@ export default function Login() {
           username: formData.username,
           name: "Người dùng",
           email: "user@voltswap.com",
-          role: "user"
+          vehicles: [
+            {
+              id: "moto-50",
+              name: "Xe máy điện 50cc",
+              battery: "Pin 48V 20Ah",
+            },
+            {
+              id: "moto-100",
+              name: "Xe máy điện 100cc",
+              battery: "Pin 60V 30Ah",
+            },
+          ],
+          role: "user",
         });
         navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
-      } else if (formData.username === "admin" && formData.password === "admin") {
+      } else if (
+        formData.username === "admin" &&
+        formData.password === "admin"
+      ) {
         await login({
           username: formData.username,
           name: "Admin System",
           email: "admin@voltswap.com",
-          role: "admin"
+          role: "admin",
         });
         navigate("/admin-dashboard"); // Chuyển về trang admin sau khi đăng nhập thành công
       } else {
@@ -222,10 +237,12 @@ export default function Login() {
               <p className="text-sm text-blue-200 font-semibold mb-3">
                 🔑 Tài khoản test:
               </p>
-              
+
               {/* User Account */}
               <div className="mb-3 p-2 bg-green-500/20 rounded border border-green-400/30">
-                <p className="text-xs text-green-200 font-medium mb-1">👤 Người dùng:</p>
+                <p className="text-xs text-green-200 font-medium mb-1">
+                  👤 Người dùng:
+                </p>
                 <p className="text-xs text-green-100">
                   Username:{" "}
                   <span className="font-mono bg-green-600/50 px-2 py-1 rounded text-white">
@@ -241,7 +258,9 @@ export default function Login() {
 
               {/* Admin Account */}
               <div className="p-2 bg-red-500/20 rounded border border-red-400/30">
-                <p className="text-xs text-red-200 font-medium mb-1">⚡ Quản trị viên:</p>
+                <p className="text-xs text-red-200 font-medium mb-1">
+                  ⚡ Quản trị viên:
+                </p>
                 <p className="text-xs text-red-100">
                   Username:{" "}
                   <span className="font-mono bg-red-600/50 px-2 py-1 rounded text-white">
