@@ -1387,6 +1387,11 @@ export default function Booking() {
                       </Col>
                     </Row>
 
+                    {/* Hidden field for selectedSlot */}
+                    <Form.Item name="selectedSlot" style={{ display: "none" }}>
+                      <input type="hidden" />
+                    </Form.Item>
+
                     {/* Action Buttons removed per request */}
                   </Form>
                 </TabPane>
@@ -1903,6 +1908,11 @@ export default function Booking() {
                         </Form.Item>
                       </Col>
                     </Row>
+
+                    {/* Hidden field for selectedSlot */}
+                    <Form.Item name="selectedSlot" style={{ display: "none" }}>
+                      <input type="hidden" />
+                    </Form.Item>
 
                     {/* Action Buttons removed per request */}
                   </Form>

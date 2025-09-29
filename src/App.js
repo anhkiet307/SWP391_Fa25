@@ -17,6 +17,7 @@ import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
 import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
+import Profile from "./page/profile.jsx";
 
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
@@ -65,6 +66,14 @@ function App() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
           <Route
+            path="/profile"
+            element={
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            }
+          />
+          <Route
             path="/login"
             element={
               <AuthLayout>
@@ -107,11 +116,20 @@ function App() {
             element={<AdminUserManagement />}
           />
           <Route path="/admin-add-station" element={<AdminAddStation />} />
-          <Route path="/admin-battery-dispatch" element={<AdminBatteryDispatch />} />
+          <Route
+            path="/admin-battery-dispatch"
+            element={<AdminBatteryDispatch />}
+          />
           <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
           <Route path="/admin-add-staff" element={<AdminAddStaff />} />
-          <Route path="/admin-battery-packages" element={<AdminPackManagement />} />
-          <Route path="/admin-report-management" element={<AdminReportManagement />} />
+          <Route
+            path="/admin-battery-packages"
+            element={<AdminPackManagement />}
+          />
+          <Route
+            path="/admin-report-management"
+            element={<AdminReportManagement />}
+          />
         </Routes>
       </Router>
     </AuthProvider>
