@@ -249,12 +249,12 @@ const AdminReportManagement = () => {
                         />
                       </svg>
                     </div>
-                    <div>
+          <div>
                       <h1 className="text-2xl font-bold mb-1">Quản lý Report</h1>
                       <p className="text-white text-opacity-90 text-sm">
                         Quản lý các báo cáo và phản hồi từ khách hàng
-                      </p>
-                    </div>
+            </p>
+          </div>
                   </div>
                   
                   {/* Stats Cards */}
@@ -271,8 +271,8 @@ const AdminReportManagement = () => {
                         <span className="text-xs font-medium">Tổng report: {reports.length}</span>
                       </div>
                     </div>
-                  </div>
-                </div>
+          </div>
+        </div>
 
                 {/* Right Content - Admin Profile */}
                 <div className="ml-6">
@@ -292,14 +292,14 @@ const AdminReportManagement = () => {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                      </div>
-                      <div>
+              </div>
+              <div>
                         <p className="text-white font-semibold text-sm">Admin System</p>
                         <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
-                      </div>
-                    </div>
+              </div>
+            </div>
                     
-                    <button
+              <button
                       onClick={() => {
                         localStorage.removeItem('stationMenuOpen');
                         localStorage.removeItem('userMenuOpen');
@@ -321,10 +321,10 @@ const AdminReportManagement = () => {
                         />
                       </svg>
                       <span className="text-sm">Đăng xuất</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </button>
+            </div>
+          </div>
+        </div>
             </div>
           </div>
         </div>
@@ -341,30 +341,187 @@ const AdminReportManagement = () => {
               </h3>
               <div className="text-4xl font-bold m-0 text-blue-500">
                 {reports.length}
-              </div>
-            </div>
+                  </div>
+                </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Chờ xử lý
               </h3>
               <div className="text-4xl font-bold m-0 text-yellow-500">
                 {reports.filter(r => r.status === "pending").length}
-              </div>
-            </div>
+                  </div>
+                </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Đang xử lý
               </h3>
               <div className="text-4xl font-bold m-0 text-blue-500">
                 {reports.filter(r => r.status === "in_progress").length}
-              </div>
-            </div>
+                  </div>
+                </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Đã giải quyết
               </h3>
               <div className="text-4xl font-bold m-0 text-green-500">
                 {reports.filter(r => r.status === "resolved").length}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        {/* Báo cáo & Thống kê */}
+        <div className="mb-8">
+          <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+            Báo cáo & Thống kê
+          </h2>
+          
+          {/* Doanh thu & Số lượt đổi pin */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Doanh thu & Số lượt đổi pin</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">2,450</div>
+                  <div className="text-sm text-green-700 font-medium">Lượt đổi pin</div>
+                  <div className="text-xs text-green-600 mt-1">+12% so với tháng trước</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">245M</div>
+                  <div className="text-sm text-blue-700 font-medium">Doanh thu (VNĐ)</div>
+                  <div className="text-xs text-blue-600 mt-1">+8% so với tháng trước</div>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Trung bình mỗi ngày:</span>
+                  <span className="font-semibold text-gray-800">82 lượt đổi / 8.2M VNĐ</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tần suất đổi pin & Giờ cao điểm */}
+            <div className="bg-white p-6 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Tần suất đổi pin & Giờ cao điểm</h3>
+              <div className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-purple-700">Giờ cao điểm</span>
+                    <span className="text-lg font-bold text-purple-800">17:00 - 19:00</span>
+                  </div>
+                  <div className="w-full bg-purple-200 rounded-full h-2">
+                    <div className="bg-purple-500 h-2 rounded-full" style={{width: '85%'}}></div>
+                  </div>
+                  <div className="text-xs text-purple-600 mt-1">85% tải trọng</div>
+                </div>
+                
+                <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-orange-700">Giờ thấp điểm</span>
+                    <span className="text-lg font-bold text-orange-800">02:00 - 06:00</span>
+                  </div>
+                  <div className="w-full bg-orange-200 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full" style={{width: '25%'}}></div>
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">25% tải trọng</div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">156</div>
+                    <div className="text-xs text-gray-600">Thứ 2</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">189</div>
+                    <div className="text-xs text-gray-600">Thứ 3</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">203</div>
+                    <div className="text-xs text-gray-600">Thứ 4</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Dự báo nhu cầu */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">AI Dự báo nhu cầu sử dụng trạm đổi pin</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Dự báo tuần tới */}
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="font-semibold text-blue-800">Tuần tới</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-900 mb-2">1,850 lượt</div>
+                <div className="text-sm text-blue-700">Dự kiến tăng 15%</div>
+                <div className="mt-2 text-xs text-blue-600">
+                  <div>• Thứ 2-4: Cao điểm</div>
+                  <div>• Thứ 7-CN: Thấp điểm</div>
+                </div>
+              </div>
+
+              {/* Dự báo tháng tới */}
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-semibold text-green-800">Tháng tới</span>
+                </div>
+                <div className="text-2xl font-bold text-green-900 mb-2">7,200 lượt</div>
+                <div className="text-sm text-green-700">Dự kiến tăng 8%</div>
+                <div className="mt-2 text-xs text-green-600">
+                  <div>• Doanh thu: 288M VNĐ</div>
+                  <div>• Trung bình: 240 lượt/ngày</div>
+                </div>
+              </div>
+
+              {/* Khuyến nghị AI */}
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="font-semibold text-purple-800">Khuyến nghị</span>
+                </div>
+                <div className="space-y-2 text-sm text-purple-700">
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Tăng số pin tại BSS-001</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Mở thêm trạm ở Quận 7</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Bảo dưỡng vào 2-4h sáng</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Biểu đồ dự báo đơn giản */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Xu hướng dự báo 7 ngày tới</h4>
+              <div className="flex items-end gap-2 h-20">
+                {[65, 78, 85, 92, 88, 95, 82].map((height, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-gradient-to-t from-indigo-400 to-indigo-500 rounded-t"
+                      style={{height: `${height}%`}}
+                    ></div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index]}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -376,7 +533,7 @@ const AdminReportManagement = () => {
             <h2 className="text-xl font-semibold text-gray-800">Danh sách Report</h2>
           </div>
           
-          <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -384,8 +541,8 @@ const AdminReportManagement = () => {
                     Khách hàng
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Trạm
-                  </th>
+                        Trạm
+                      </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Loại
                   </th>
@@ -397,28 +554,28 @@ const AdminReportManagement = () => {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trạng thái
-                  </th>
+                      </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ngày tạo
-                  </th>
+                      </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Hành động
-                  </th>
-                </tr>
-              </thead>
+                      </th>
+                    </tr>
+                  </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reports.map((report, index) => (
                   <tr key={report.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
+                          <div>
                         <div className="text-sm font-medium text-gray-900">
                           {report.customerName}
                         </div>
                         <div className="text-sm text-gray-500">
                           {report.customerEmail}
                         </div>
-                      </div>
-                    </td>
+                          </div>
+                        </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
@@ -427,8 +584,8 @@ const AdminReportManagement = () => {
                         <div className="text-sm text-gray-500">
                           {report.stationName}
                         </div>
-                      </div>
-                    </td>
+                          </div>
+                        </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getReportTypeColor(report.reportType)}`}>
                         {report.reportType}
@@ -437,8 +594,8 @@ const AdminReportManagement = () => {
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
                         {report.title}
-                      </div>
-                    </td>
+                          </div>
+                        </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(report.priority)}`}>
                         {getPriorityLabel(report.priority)}
@@ -476,14 +633,14 @@ const AdminReportManagement = () => {
                             Giải quyết
                           </button>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
         {/* Detail Modal */}
         {showDetailModal && selectedReport && (
@@ -503,8 +660,8 @@ const AdminReportManagement = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </div>
-              </div>
+                      </div>
+                    </div>
 
               {/* Modal Content */}
               <div className="p-6">
@@ -517,9 +674,9 @@ const AdminReportManagement = () => {
                         <div><span className="font-medium">Tên:</span> {selectedReport.customerName}</div>
                         <div><span className="font-medium">Email:</span> {selectedReport.customerEmail}</div>
                         <div><span className="font-medium">SĐT:</span> {selectedReport.customerPhone}</div>
-                      </div>
-                    </div>
-                  </div>
+              </div>
+            </div>
+          </div>
 
                   {/* Station Info */}
                   <div className="space-y-4">
@@ -528,15 +685,15 @@ const AdminReportManagement = () => {
                       <div className="space-y-2">
                         <div><span className="font-medium">Mã trạm:</span> {selectedReport.stationId}</div>
                         <div><span className="font-medium">Tên trạm:</span> {selectedReport.stationName}</div>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
 
                   {/* Report Details */}
                   <div className="md:col-span-2 space-y-4">
                     <h3 className="text-lg font-semibold text-gray-800">Chi tiết báo cáo</h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="space-y-3">
+              <div className="space-y-3">
                         <div>
                           <span className="font-medium">Loại:</span>
                           <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getReportTypeColor(selectedReport.reportType)}`}>
@@ -562,11 +719,11 @@ const AdminReportManagement = () => {
                             <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedReport.status)}`}>
                               {getStatusLabel(selectedReport.status)}
                             </span>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
+              </div>
+            </div>
 
                   {/* Assignment & Resolution */}
                   {(selectedReport.assignedTo || selectedReport.resolution) && (
@@ -584,9 +741,9 @@ const AdminReportManagement = () => {
                             </div>
                           )}
                           <div><span className="font-medium">Cập nhật lần cuối:</span> {selectedReport.updatedAt}</div>
-                        </div>
                       </div>
                     </div>
+                  </div>
                   )}
                 </div>
               </div>
@@ -618,7 +775,7 @@ const AdminReportManagement = () => {
                       </option>
                     ))}
                   </select>
-                </div>
+                  </div>
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={cancelAssign}
@@ -632,7 +789,7 @@ const AdminReportManagement = () => {
                   >
                     Phân công
                   </button>
-                </div>
+                      </div>
               </div>
             </div>
           </div>
@@ -657,7 +814,7 @@ const AdminReportManagement = () => {
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Nhập giải pháp đã thực hiện..."
                   />
-                </div>
+                  </div>
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={cancelResolve}
