@@ -8,8 +8,9 @@ const TransactionManagement = () => {
       id: 1,
       customerId: "CUST001",
       customerName: "Nguyễn Văn A",
-      batteryIn: "Battery A - 5000mAh",
-      batteryOut: "Battery B - 3000mAh",
+      batteryIn: "Battery A",
+      batteryOut: "Chưa có",
+      slot: 5,
       status: "completed",
       payment: 50000,
       timestamp: "2024-01-15 14:30:00",
@@ -18,74 +19,14 @@ const TransactionManagement = () => {
       id: 2,
       customerId: "CUST002",
       customerName: "Trần Thị B",
-      batteryIn: "Battery C - 7000mAh",
-      batteryOut: "Battery A - 5000mAh",
+      batteryIn: "Battery C",
+      batteryOut: "Chưa có",
+      slot: 8,
       status: "pending",
       payment: 0,
       timestamp: "2024-01-15 15:15:00",
     },
   ]);
-
-  const [newTransaction, setNewTransaction] = useState({
-    customerId: "",
-    customerName: "",
-    batteryIn: "",
-    batteryOut: "",
-    payment: 0,
-  });
-
-  // Dữ liệu mẫu cho các loại pin
-  const batteryCategories = [
-    {
-      id: 1,
-      model: "Battery A",
-      capacity: "5000mAh",
-      full: 20,
-      charging: 5,
-      maintenance: 1,
-    },
-    {
-      id: 2,
-      model: "Battery B",
-      capacity: "3000mAh",
-      full: 15,
-      charging: 4,
-      maintenance: 1,
-    },
-    {
-      id: 3,
-      model: "Battery C",
-      capacity: "7000mAh",
-      full: 10,
-      charging: 3,
-      maintenance: 1,
-    },
-  ];
-
-  // Hàm xử lý giao dịch mới
-  const handleNewTransaction = () => {
-    if (
-      newTransaction.customerId &&
-      newTransaction.customerName &&
-      newTransaction.batteryIn &&
-      newTransaction.batteryOut
-    ) {
-      const transaction = {
-        ...newTransaction,
-        id: transactions.length + 1,
-        status: "pending",
-        timestamp: new Date().toLocaleString("vi-VN"),
-      };
-      setTransactions([transaction, ...transactions]);
-      setNewTransaction({
-        customerId: "",
-        customerName: "",
-        batteryIn: "",
-        batteryOut: "",
-        payment: 0,
-      });
-    }
-  };
 
   // Hàm xác nhận giao dịch
   const confirmTransaction = (id) => {
@@ -105,152 +46,26 @@ const TransactionManagement = () => {
 
   return (
     <StaffLayout>
-      <div className="p-5 bg-gray-50 min-h-screen font-sans">
+      <div className="p-6 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
-            <h1 className="text-3xl font-semibold m-0">
-              Quản lý Giao dịch Đổi Pin
-            </h1>
+            <h1 className="text-3xl font-semibold m-0">Quản lý Giao dịch</h1>
             <p className="text-indigo-100 mt-2">
-              Quản lý và theo dõi các giao dịch đổi pin tại trạm
+              Xem và quản lý các giao dịch đổi pin tại trạm
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Nhân viên: Nguyễn Văn Staff
+              Quản lý: Nguyễn Văn Staff
             </span>
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Trạm: BSS-001
+              Mã trạm: BSS-001
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Form tạo giao dịch mới */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-gray-800 mb-5 text-xl font-semibold">
-              Tạo giao dịch mới
-            </h2>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label className="mb-2 font-medium text-gray-600">
-                    Mã khách hàng:
-                  </label>
-                  <input
-                    type="text"
-                    value={newTransaction.customerId}
-                    onChange={(e) =>
-                      setNewTransaction({
-                        ...newTransaction,
-                        customerId: e.target.value,
-                      })
-                    }
-                    placeholder="Nhập mã khách hàng"
-                    className="p-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="mb-2 font-medium text-gray-600">
-                    Tên khách hàng:
-                  </label>
-                  <input
-                    type="text"
-                    value={newTransaction.customerName}
-                    onChange={(e) =>
-                      setNewTransaction({
-                        ...newTransaction,
-                        customerName: e.target.value,
-                      })
-                    }
-                    placeholder="Nhập tên khách hàng"
-                    className="p-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label className="mb-2 font-medium text-gray-600">
-                    Pin trả về:
-                  </label>
-                  <select
-                    value={newTransaction.batteryIn}
-                    onChange={(e) =>
-                      setNewTransaction({
-                        ...newTransaction,
-                        batteryIn: e.target.value,
-                      })
-                    }
-                    className="p-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                  >
-                    <option value="">Chọn pin trả về</option>
-                    {batteryCategories.map((cat) => (
-                      <option
-                        key={cat.id}
-                        value={`${cat.model} - ${cat.capacity}`}
-                      >
-                        {cat.model} - {cat.capacity}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label className="mb-2 font-medium text-gray-600">
-                    Pin nhận về:
-                  </label>
-                  <select
-                    value={newTransaction.batteryOut}
-                    onChange={(e) =>
-                      setNewTransaction({
-                        ...newTransaction,
-                        batteryOut: e.target.value,
-                      })
-                    }
-                    className="p-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                  >
-                    <option value="">Chọn pin nhận về</option>
-                    {batteryCategories.map((cat) => (
-                      <option
-                        key={cat.id}
-                        value={`${cat.model} - ${cat.capacity}`}
-                      >
-                        {cat.model} - {cat.capacity}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex flex-col">
-                  <label className="mb-2 font-medium text-gray-600">
-                    Phí đổi pin (VNĐ):
-                  </label>
-                  <input
-                    type="number"
-                    value={newTransaction.payment}
-                    onChange={(e) =>
-                      setNewTransaction({
-                        ...newTransaction,
-                        payment: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="50000"
-                    className="p-3 border border-gray-300 rounded-md text-sm transition-colors focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <button
-                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
-                    onClick={handleNewTransaction}
-                  >
-                    Tạo giao dịch
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
           {/* Thống kê nhanh */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
@@ -298,10 +113,7 @@ const TransactionManagement = () => {
                     Tên KH
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Pin trả về
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Pin nhận về
+                    Slot
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
                     Trạng thái
@@ -327,10 +139,9 @@ const TransactionManagement = () => {
                       {transaction.customerName}
                     </td>
                     <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {transaction.batteryIn}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {transaction.batteryOut}
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                        Slot {transaction.slot}
+                      </span>
                     </td>
                     <td className="p-3 text-left border-b border-gray-200 text-sm">
                       <span

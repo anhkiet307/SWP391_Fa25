@@ -1,38 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminLayout from "../component/AdminLayout";
 import { showSuccess, showError } from "../../../utils/toast";
 
-const AdminAddStation = () => {
+const AdminAddStaff = () => {
   const [formData, setFormData] = useState({
+    staffId: "",
     name: "",
-    stationId: "",
-    address: "",
-    position: { lat: "", lng: "" },
-    manager: "",
+    email: "",
+    password: "",
     phone: "",
-    batteryCapacity: 0,
+    role: "Nhân viên",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Force reset form on component mount
+  useEffect(() => {
+    setFormData({
+      staffId: "",
+      name: "",
+      email: "",
+      password: "",
+      phone: "",
+      role: "Nhân viên",
+    });
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle position fields separately
-    if (name === 'lat' || name === 'lng') {
+    // Tự động cập nhật mật khẩu khi số điện thoại thay đổi
+    if (name === 'phone') {
       setFormData({
         ...formData,
-        position: {
-          ...formData.position,
-          [name]: value,
-        },
+        [name]: value,
+        password: value, // Mật khẩu mặc định = số điện thoại
       });
     } else {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
     }
   };
 
@@ -47,22 +56,21 @@ const AdminAddStation = () => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      showSuccess("Thêm trạm mới thành công!");
-      
+
+      showSuccess("Thêm nhân viên mới thành công!");
+
       // Reset form
       setFormData({
+        staffId: "",
         name: "",
-        stationId: "",
-        address: "",
-        position: { lat: "", lng: "" },
-        manager: "",
+        email: "",
+        password: "",
         phone: "",
-        batteryCapacity: 0,
+        role: "Nhân viên",
       });
       setShowPreview(false);
     } catch (error) {
-      showError("Có lỗi xảy ra khi thêm trạm mới!");
+      showError("Có lỗi xảy ra khi thêm nhân viên mới!");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,12 +112,12 @@ const AdminAddStation = () => {
                         />
                       </svg>
                     </div>
-          <div>
-                      <h1 className="text-2xl font-bold mb-1">Thêm Trạm Đổi Pin Mới</h1>
+                    <div>
+                      <h1 className="text-2xl font-bold mb-1">Thêm Nhân viên Mới</h1>
                       <p className="text-white text-opacity-90 text-sm">
-              Tạo trạm đổi pin mới trong hệ thống
-            </p>
-          </div>
+                        Tạo tài khoản nhân viên mới trong hệ thống
+                      </p>
+                    </div>
                   </div>
                   
                   {/* Stats Cards */}
@@ -123,7 +131,7 @@ const AdminAddStation = () => {
                     <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
                       <div className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Thêm trạm mới</span>
+                        <span className="text-xs font-medium">Thêm nhân viên mới</span>
                       </div>
                     </div>
                   </div>
@@ -188,10 +196,26 @@ const AdminAddStation = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <form onSubmit={handlePreview} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tên trạm */}
+              {/* Mã nhân viên */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên trạm <span className="text-red-500">*</span>
+                  Mã nhân viên <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="staffId"
+                  value={formData.staffId}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="STAFF001"
+                  required
+                />
+              </div>
+
+              {/* Tên */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tên <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -199,81 +223,39 @@ const AdminAddStation = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Trạm Đổi Pin Quận 1"
+                  placeholder="Nguyễn Văn B"
                   required
                 />
               </div>
 
-              {/* Mã trạm */}
+              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã trạm <span className="text-red-500">*</span>
+                  Email <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  name="stationId"
-                  value={formData.stationId}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="BSS-001"
+                  placeholder="staff@email.com"
                   required
                 />
               </div>
 
-              {/* Vị trí trạm */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vị trí trạm (Tọa độ) <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-              <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Latitude (Vĩ độ)
-                </label>
-                <input
-                      type="number"
-                      name="lat"
-                      value={formData.position.lat}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="21.0333"
-                      step="any"
-                  required
-                />
-              </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Longitude (Kinh độ)
-                </label>
-                <input
-                      type="number"
-                      name="lng"
-                      value={formData.position.lng}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="105.8333"
-                      step="any"
-                  required
-                />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Ví dụ: Hà Nội (21.0333, 105.8333) | TP.HCM (10.7769, 106.7009)
-                </p>
-              </div>
-
-              {/* Quản lý */}
+              {/* Mật khẩu */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quản lý trạm <span className="text-red-500">*</span>
+                  Mật khẩu <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  name="manager"
-                  value={formData.manager}
+                  type="password"
+                  name="password"
+                  value={formData.password}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Nguyễn Văn Manager"
+                  placeholder="Nhập mật khẩu"
                   required
                 />
               </div>
@@ -294,37 +276,24 @@ const AdminAddStation = () => {
                 />
               </div>
 
-              {/* Sức chứa pin */}
+              {/* Vai trò */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sức chứa pin <span className="text-red-500">*</span>
+                  Vai trò <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  name="batteryCapacity"
-                  value={formData.batteryCapacity}
+                <select
+                  name="role"
+                  value={formData.role}
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="60"
-                  min="1"
                   required
-                />
-              </div>
-
-              {/* Địa chỉ */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Địa chỉ <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="123 Nguyễn Huệ, Quận 1, TP.HCM"
-                  required
-                />
+                >
+                  <option value="Nhân viên">Nhân viên</option>
+                  <option value="Khách hàng">Khách hàng</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Chọn vai trò phù hợp cho tài khoản mới
+                </p>
               </div>
             </div>
 
@@ -354,7 +323,7 @@ const AdminAddStation = () => {
               <div className="p-4 border-b border-gray-100 rounded-t-3xl">
                 <div className="flex items-center justify-center relative">
                   <h2 className="text-xl font-bold text-gray-900 text-center">
-                    Xác nhận thông tin trạm
+                    Xác nhận thông tin nhân viên
                   </h2>
                   <button
                     onClick={handleEditForm}
@@ -379,7 +348,7 @@ const AdminAddStation = () => {
 
               {/* Modal Content */}
               <div className="p-6">
-                {/* Station Icon & Status */}
+                {/* Staff Icon & Status */}
                 <div className="text-center mb-4">
                   <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
                     <svg
@@ -392,18 +361,18 @@ const AdminAddStation = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                       />
                     </svg>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
-                    {formData.name || "Chưa có tên trạm"}
+                    {formData.name || "Chưa có tên nhân viên"}
                   </div>
                 </div>
 
-                {/* Station Info Cards */}
+                {/* Staff Info Cards */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  {/* Tên trạm */}
+                  {/* Mã nhân viên */}
                   <div className="bg-green-50 rounded-lg p-3 border border-green-100">
                     <div className="flex items-center mb-1">
                       <svg
@@ -416,19 +385,19 @@ const AdminAddStation = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                         />
                       </svg>
                       <span className="text-base font-medium text-green-600">
-                        Tên trạm
+                        Mã nhân viên
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.name || "Chưa nhập"}
+                      {formData.staffId || "Chưa nhập"}
                     </div>
                   </div>
 
-                  {/* Mã trạm */}
+                  {/* Tên */}
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                     <div className="flex items-center mb-1">
                       <svg
@@ -441,19 +410,19 @@ const AdminAddStation = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
                       <span className="text-base font-medium text-blue-600">
-                        Mã trạm
+                        Tên
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.stationId || "Chưa nhập"}
+                      {formData.name || "Chưa nhập"}
                     </div>
                   </div>
 
-                  {/* Quản lý */}
+                  {/* Email */}
                   <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
                     <div className="flex items-center mb-1">
                       <svg
@@ -466,19 +435,44 @@ const AdminAddStation = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                         />
                       </svg>
                       <span className="text-base font-medium text-orange-600">
-                        Quản lý
+                        Email
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.manager || "Chưa nhập"}
+                      {formData.email || "Chưa nhập"}
                     </div>
                   </div>
 
-                  {/* SĐT */}
+                  {/* Mật khẩu */}
+                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                    <div className="flex items-center mb-1">
+                      <svg
+                        className="w-3 h-3 text-purple-600 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                      <span className="text-base font-medium text-purple-600">
+                        Mật khẩu
+                      </span>
+                    </div>
+                    <div className="text-base font-semibold text-gray-900">
+                      {formData.password ? "••••••••" : "Chưa nhập"}
+                    </div>
+                  </div>
+
+                  {/* Số điện thoại */}
                   <div className="bg-cyan-50 rounded-lg p-3 border border-cyan-100">
                     <div className="flex items-center mb-1">
                       <svg
@@ -495,15 +489,15 @@ const AdminAddStation = () => {
                         />
                       </svg>
                       <span className="text-base font-medium text-cyan-600">
-                        SĐT
+                        Số điện thoại
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.phone || "Chưa nhập"}
                     </div>
-            </div>
+                  </div>
 
-                  {/* Sức chứa */}
+                  {/* Vai trò */}
                   <div className="bg-pink-50 rounded-lg p-3 border border-pink-100">
                     <div className="flex items-center mb-1">
                       <svg
@@ -516,79 +510,15 @@ const AdminAddStation = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
                       <span className="text-base font-medium text-pink-600">
-                        Sức chứa
-                      </span>
-            </div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formData.batteryCapacity || 0} pin
-            </div>
-            </div>
-
-                  {/* Vị trí trạm */}
-                  <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
-                    <div className="flex items-center mb-1">
-                      <svg
-                        className="w-3 h-3 text-indigo-600 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                        />
-                      </svg>
-                      <span className="text-base font-medium text-indigo-600">
-                        Vị trí trạm
-                      </span>
-            </div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formData.position.lat && formData.position.lng 
-                        ? `${formData.position.lat}, ${formData.position.lng}`
-                        : "Chưa nhập tọa độ"
-                      }
-            </div>
-                    {formData.position.lat && formData.position.lng && (
-                      <div className="text-xs text-indigo-600 mt-1">
-                        📍 Lat: {formData.position.lat} | Lng: {formData.position.lng}
-              </div>
-            )}
-                  </div>
-
-                  {/* Địa chỉ */}
-                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-100 col-span-2">
-                    <div className="flex items-center mb-1">
-                      <svg
-                        className="w-3 h-3 text-purple-600 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      <span className="text-base font-medium text-purple-600">
-                        Địa chỉ
+                        Vai trò
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.address || "Chưa nhập"}
+                      {formData.role || "Chưa chọn"}
                     </div>
                   </div>
                 </div>
@@ -608,11 +538,11 @@ const AdminAddStation = () => {
                     disabled={isSubmitting}
                     className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
                   >
-                    {isSubmitting ? "Đang tạo..." : "Tạo trạm"}
+                    {isSubmitting ? "Đang tạo..." : "Tạo tài khoản"}
                   </button>
                 </div>
-          </div>
-        </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -620,4 +550,4 @@ const AdminAddStation = () => {
   );
 };
 
-export default AdminAddStation;
+export default AdminAddStaff;

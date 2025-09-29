@@ -2,166 +2,303 @@ import React, { useState } from "react";
 import StaffLayout from "./component/StaffLayout";
 
 const StationManagement = () => {
-  // State cho quản lý trạm
-  const [stations, setStations] = useState([
+  // Thông tin trạm hiện tại
+  const [currentStation] = useState({
+    id: 1,
+    stationId: "BSS-001",
+    name: "Trạm Đổi Pin Quận 1",
+    address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
+    status: "active",
+    manager: "Nguyễn Văn Staff",
+    phone: "0901234567",
+    totalSlots: 15,
+    totalTransactions: 1250,
+    monthlyRevenue: 62500000,
+    lastMaintenance: "2024-01-10",
+    nextMaintenance: "2024-02-10",
+  });
+
+  // State cho quản lý slot pin
+  const [slots, setSlots] = useState([
     {
       id: 1,
-      stationId: "BSS-001",
-      name: "Trạm Đổi Pin Quận 1",
-      address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-      status: "active",
-      manager: "Nguyễn Văn Staff",
-      phone: "0901234567",
-      batteryCapacity: 60,
-      batteryFull: 45,
-      batteryCharging: 12,
-      batteryMaintenance: 3,
-      totalTransactions: 1250,
-      monthlyRevenue: 62500000,
-      lastMaintenance: "2024-01-10",
-      nextMaintenance: "2024-02-10",
+      slotNumber: 1,
+      batteryType: "Battery A",
+      batteryCapacity: 100,
+      batteryHealth: 95,
+      batteryId: "BAT-A-001",
+      status: "Đã đặt",
+      lastCharged: "2024-01-20",
     },
     {
       id: 2,
-      stationId: "BSS-002",
-      name: "Trạm Đổi Pin Quận 2",
-      address: "456 Nguyễn Thị Minh Khai, Quận 2, TP.HCM",
-      status: "active",
-      manager: "Trần Thị Manager",
-      phone: "0907654321",
-      batteryCapacity: 80,
-      batteryFull: 60,
-      batteryCharging: 15,
-      batteryMaintenance: 5,
-      totalTransactions: 1890,
-      monthlyRevenue: 94500000,
-      lastMaintenance: "2024-01-05",
-      nextMaintenance: "2024-02-05",
+      slotNumber: 2,
+      batteryType: "Battery A",
+      batteryCapacity: 85,
+      batteryHealth: 88,
+      batteryId: "BAT-A-002",
+      status: "Đang sạc",
+      lastCharged: "2024-01-19",
     },
     {
       id: 3,
-      stationId: "BSS-003",
-      name: "Trạm Đổi Pin Quận 3",
-      address: "789 Lê Văn Sỹ, Quận 3, TP.HCM",
-      status: "maintenance",
-      manager: "Lê Văn Tech",
-      phone: "0909876543",
-      batteryCapacity: 50,
-      batteryFull: 30,
-      batteryCharging: 8,
-      batteryMaintenance: 12,
-      totalTransactions: 980,
-      monthlyRevenue: 49000000,
-      lastMaintenance: "2024-01-15",
-      nextMaintenance: "2024-01-25",
+      slotNumber: 3,
+      batteryType: "Battery A",
+      batteryCapacity: 92,
+      batteryHealth: 90,
+      batteryId: "BAT-A-003",
+      status: "Đầy",
+      lastCharged: "2024-01-18",
+    },
+    {
+      id: 4,
+      slotNumber: 4,
+      batteryType: "Battery A",
+      batteryCapacity: 78,
+      batteryHealth: 82,
+      batteryId: "BAT-A-004",
+      status: "Đang sạc",
+      lastCharged: "2024-01-17",
+    },
+    {
+      id: 5,
+      slotNumber: 5,
+      batteryType: "Battery A",
+      batteryCapacity: 95,
+      batteryHealth: 92,
+      batteryId: "BAT-A-005",
+      status: "Đã đặt",
+      lastCharged: "2024-01-16",
+    },
+    {
+      id: 6,
+      slotNumber: 6,
+      batteryType: "Battery B",
+      batteryCapacity: 88,
+      batteryHealth: 85,
+      batteryId: "BAT-B-001",
+      status: "Đang bảo dưỡng",
+      lastCharged: "2024-01-15",
+    },
+    {
+      id: 7,
+      slotNumber: 7,
+      batteryType: "Battery B",
+      batteryCapacity: 100,
+      batteryHealth: 98,
+      batteryId: "BAT-B-002",
+      status: "Đầy",
+      lastCharged: "2024-01-14",
+    },
+    {
+      id: 8,
+      slotNumber: 8,
+      batteryType: "Battery B",
+      batteryCapacity: 75,
+      batteryHealth: 80,
+      batteryId: "BAT-B-003",
+      status: "Đang sạc",
+      lastCharged: "2024-01-13",
+    },
+    {
+      id: 9,
+      slotNumber: 9,
+      batteryType: "Battery B",
+      batteryCapacity: 90,
+      batteryHealth: 87,
+      batteryId: "BAT-B-004",
+      status: "Đã đặt",
+      lastCharged: "2024-01-12",
+    },
+    {
+      id: 10,
+      slotNumber: 10,
+      batteryType: "Battery B",
+      batteryCapacity: 96,
+      batteryHealth: 94,
+      batteryId: "BAT-B-005",
+      status: "Đầy",
+      lastCharged: "2024-01-11",
+    },
+    {
+      id: 11,
+      slotNumber: 11,
+      batteryType: "Battery C",
+      batteryCapacity: 82,
+      batteryHealth: 79,
+      batteryId: "BAT-C-001",
+      status: "Đang sạc",
+      lastCharged: "2024-01-10",
+    },
+    {
+      id: 12,
+      slotNumber: 12,
+      batteryType: "Battery C",
+      batteryCapacity: 87,
+      batteryHealth: 84,
+      batteryId: "BAT-C-002",
+      status: "Đã đặt",
+      lastCharged: "2024-01-09",
+    },
+    {
+      id: 13,
+      slotNumber: 13,
+      batteryType: "Battery C",
+      batteryCapacity: 93,
+      batteryHealth: 91,
+      batteryId: "BAT-C-003",
+      status: "Đầy",
+      lastCharged: "2024-01-08",
+    },
+    {
+      id: 14,
+      slotNumber: 14,
+      batteryType: "Battery C",
+      batteryCapacity: 89,
+      batteryHealth: 86,
+      batteryId: "BAT-C-004",
+      status: "Đang bảo dưỡng",
+      lastCharged: "2024-01-07",
+    },
+    {
+      id: 15,
+      slotNumber: 15,
+      batteryType: "Battery C",
+      batteryCapacity: 91,
+      batteryHealth: 88,
+      batteryId: "BAT-C-005",
+      status: "Đã đặt",
+      lastCharged: "2024-01-06",
     },
   ]);
 
-  const [selectedStation, setSelectedStation] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [newStation, setNewStation] = useState({
-    stationId: "",
-    name: "",
-    address: "",
-    manager: "",
-    phone: "",
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [showBatteryForm, setShowBatteryForm] = useState(false);
+  const [showStatusForm, setShowStatusForm] = useState(false);
+  const [newBattery, setNewBattery] = useState({
     batteryCapacity: 0,
+    batteryHealth: 0,
+    batteryId: "",
+    status: "Đầy",
   });
+  const [newStatus, setNewStatus] = useState("Đầy");
 
   // Tính tổng thống kê
   const totalStats = {
-    totalStations: stations.length,
-    activeStations: stations.filter((s) => s.status === "active").length,
-    maintenanceStations: stations.filter((s) => s.status === "maintenance")
-      .length,
-    totalBatteries: stations.reduce((sum, s) => sum + s.batteryCapacity, 0),
-    totalTransactions: stations.reduce(
-      (sum, s) => sum + s.totalTransactions,
-      0
-    ),
-    totalRevenue: stations.reduce((sum, s) => sum + s.monthlyRevenue, 0),
+    totalSlots: slots.length,
+    fullSlots: slots.filter((s) => s.status === "Đầy").length,
+    chargingSlots: slots.filter((s) => s.status === "Đang sạc").length,
+    maintenanceSlots: slots.filter((s) => s.status === "Đang bảo dưỡng").length,
+    reservedSlots: slots.filter((s) => s.status === "Đã đặt").length,
+    averageBatteryHealth:
+      slots.reduce((sum, s) => sum + s.batteryHealth, 0) / slots.length || 0,
+    totalTransactions: currentStation.totalTransactions,
+    monthlyRevenue: currentStation.monthlyRevenue,
   };
 
-  // Hàm thêm trạm mới
-  const handleAddStation = () => {
-    if (newStation.stationId && newStation.name && newStation.address) {
-      const station = {
-        ...newStation,
-        id: stations.length + 1,
-        status: "active",
-        batteryFull: Math.floor(newStation.batteryCapacity * 0.75),
-        batteryCharging: Math.floor(newStation.batteryCapacity * 0.2),
-        batteryMaintenance: Math.floor(newStation.batteryCapacity * 0.05),
-        totalTransactions: 0,
-        monthlyRevenue: 0,
-        lastMaintenance: new Date().toISOString().split("T")[0],
-        nextMaintenance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-      };
-      setStations([...stations, station]);
-      setNewStation({
-        stationId: "",
-        name: "",
-        address: "",
-        manager: "",
-        phone: "",
+  // Hàm cập nhật thông tin pin
+  const handleUpdateBattery = () => {
+    if (newBattery.batteryCapacity > 0 && newBattery.batteryHealth > 0) {
+      setSlots(
+        slots.map((slot) =>
+          slot.id === selectedSlot.id
+            ? {
+                ...slot,
+                batteryCapacity: newBattery.batteryCapacity,
+                batteryHealth: newBattery.batteryHealth,
+                status: newBattery.status,
+                lastCharged: new Date().toISOString().split("T")[0],
+              }
+            : slot
+        )
+      );
+      setNewBattery({
         batteryCapacity: 0,
+        batteryHealth: 0,
+        batteryId: "",
+        status: "Đầy",
       });
-      setShowAddForm(false);
+      setShowBatteryForm(false);
+      setSelectedSlot(null);
     }
   };
 
-  // Hàm cập nhật trạm
-  const handleUpdateStation = (id, updates) => {
-    setStations(
-      stations.map((station) =>
-        station.id === id ? { ...station, ...updates } : station
-      )
-    );
-    setShowEditForm(false);
-    setSelectedStation(null);
-  };
-
-  // Hàm xóa trạm
-  const handleDeleteStation = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa trạm này?")) {
-      setStations(stations.filter((station) => station.id !== id));
+  // Hàm cập nhật trạng thái slot
+  // Lưu ý: Trạng thái "Đã đặt" chỉ được set tự động bởi hệ thống, không thể chỉnh sửa thủ công
+  const handleStatusChange = (slotId, newStatus) => {
+    // Không cho phép thay đổi trạng thái "Đã đặt" thủ công
+    if (newStatus === "Đã đặt") {
+      return;
     }
-  };
 
-  // Hàm thay đổi trạng thái trạm
-  const toggleStationStatus = (id) => {
-    setStations(
-      stations.map((station) =>
-        station.id === id
+    setSlots(
+      slots.map((slot) =>
+        slot.id === slotId
           ? {
-              ...station,
-              status: station.status === "active" ? "maintenance" : "active",
+              ...slot,
+              status: newStatus,
+              lastCharged: new Date().toISOString().split("T")[0],
             }
-          : station
+          : slot
       )
     );
+  };
+
+  // Hàm mở form cập nhật pin
+  const openBatteryForm = (slot) => {
+    setSelectedSlot(slot);
+    setNewBattery({
+      batteryCapacity: slot.batteryCapacity,
+      batteryHealth: slot.batteryHealth,
+      batteryId: slot.batteryId,
+      status: slot.status,
+    });
+    setShowBatteryForm(true);
+  };
+
+  // Hàm mở form chỉnh sửa trạng thái
+  const handleStatusEdit = (slot) => {
+    setSelectedSlot(slot);
+    setNewStatus(slot.status);
+    setShowStatusForm(true);
+  };
+
+  // Hàm cập nhật trạng thái
+  const handleUpdateStatus = () => {
+    if (newStatus && newStatus !== "Đã đặt") {
+      setSlots(
+        slots.map((slot) =>
+          slot.id === selectedSlot.id
+            ? {
+                ...slot,
+                status: newStatus,
+                lastCharged: new Date().toISOString().split("T")[0],
+              }
+            : slot
+        )
+      );
+      setShowStatusForm(false);
+      setSelectedSlot(null);
+    }
   };
 
   return (
     <StaffLayout>
-      <div className="p-5 bg-gray-50 min-h-screen font-sans">
+      <div className="p-6 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
           <div>
             <h1 className="text-3xl font-semibold m-0">Quản lý Trạm Đổi Pin</h1>
             <p className="text-indigo-100 mt-2">
-              Quản lý và theo dõi tất cả các trạm đổi pin trong hệ thống
+              {currentStation.name} - {currentStation.address}
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Admin: Quản trị hệ thống
+              Quản lý: {currentStation.manager}
             </span>
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Tổng số trạm: {totalStats.totalStations}
+              Mã trạm: {currentStation.stationId}
             </span>
           </div>
         </div>
@@ -169,23 +306,31 @@ const StationManagement = () => {
         {/* Thống kê tổng quan */}
         <div className="mb-8">
           <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
-            Tổng quan hệ thống
+            Tổng quan trạm
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Tổng trạm
+                Tổng slot
               </h3>
               <div className="text-4xl font-bold m-0 text-blue-500">
-                {totalStats.totalStations}
+                {totalStats.totalSlots}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Đang hoạt động
+                Đầy
               </h3>
               <div className="text-4xl font-bold m-0 text-green-500">
-                {totalStats.activeStations}
+                {totalStats.fullSlots}
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Đang sạc
+              </h3>
+              <div className="text-4xl font-bold m-0 text-yellow-500">
+                {totalStats.chargingSlots}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
@@ -193,31 +338,15 @@ const StationManagement = () => {
                 Bảo dưỡng
               </h3>
               <div className="text-4xl font-bold m-0 text-red-500">
-                {totalStats.maintenanceStations}
+                {totalStats.maintenanceSlots}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Tổng pin
+                Đã đặt
               </h3>
               <div className="text-4xl font-bold m-0 text-purple-500">
-                {totalStats.totalBatteries}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Giao dịch
-              </h3>
-              <div className="text-4xl font-bold m-0 text-orange-500">
-                {totalStats.totalTransactions.toLocaleString("vi-VN")}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Doanh thu
-              </h3>
-              <div className="text-4xl font-bold m-0 text-green-600">
-                {(totalStats.totalRevenue / 1000000).toFixed(1)}M
+                {totalStats.reservedSlots}
               </div>
             </div>
           </div>
@@ -226,268 +355,188 @@ const StationManagement = () => {
         {/* Actions */}
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-gray-800 text-2xl font-semibold">
-            Danh sách trạm đổi pin
+            Quản lý Slot Pin
           </h2>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
-          >
-            + Thêm trạm mới
-          </button>
         </div>
 
-        {/* Danh sách trạm */}
+        {/* Danh sách slot pin */}
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Mã trạm
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Tên trạm
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Địa chỉ
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Trạng thái
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Quản lý
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Pin/Tổng
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Giao dịch
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Doanh thu
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {stations.map((station) => (
-                  <tr key={station.id} className="hover:bg-gray-50">
-                    <td className="p-3 text-left border-b border-gray-200 text-sm font-medium">
-                      {station.stationId}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.name}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.address}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {slots.map((slot) => (
+              <div
+                key={slot.id}
+                className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  slot.batteryType === "Battery A"
+                    ? "border-green-300 bg-green-50 hover:bg-green-100"
+                    : slot.batteryType === "Battery B"
+                    ? "border-purple-300 bg-purple-50 hover:bg-purple-100"
+                    : "border-orange-300 bg-orange-50 hover:bg-orange-100"
+                }`}
+                onClick={() => openBatteryForm(slot)}
+              >
+                <div className="text-center">
+                  <div className="text-lg font-bold text-gray-800 mb-2">
+                    Slot {slot.slotNumber}
+                  </div>
+                  <div className="text-xs font-medium mb-2 px-2 py-1 rounded-full bg-white bg-opacity-70">
+                    {slot.batteryType}
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-sm">
+                      <span className="font-medium">Dung lượng:</span>{" "}
+                      {slot.batteryCapacity}%
+                    </div>
+                    <div className="text-sm">
+                      <span className="font-medium">Sức khỏe:</span>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          station.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                        className={`ml-1 ${
+                          slot.batteryHealth >= 90
+                            ? "text-green-600"
+                            : slot.batteryHealth >= 70
+                            ? "text-yellow-600"
+                            : "text-red-600"
                         }`}
                       >
-                        {station.status === "active"
-                          ? "Hoạt động"
-                          : "Bảo dưỡng"}
+                        {slot.batteryHealth}%
                       </span>
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div>
-                        <div className="font-medium">{station.manager}</div>
-                        <div className="text-gray-500 text-xs">
-                          {station.phone}
-                        </div>
+                    </div>
+                    <div className="text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Trạng thái:</span>
+                        {slot.status !== "Đã đặt" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusEdit(slot);
+                            }}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
+                            title="Chỉnh sửa trạng thái"
+                          >
+                            ✏️
+                          </button>
+                        )}
                       </div>
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="text-center">
-                          <div className="text-green-600 font-bold">
-                            {station.batteryFull}
-                          </div>
-                          <div className="text-xs text-gray-500">Đầy</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-yellow-600 font-bold">
-                            {station.batteryCharging}
-                          </div>
-                          <div className="text-xs text-gray-500">Sạc</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-red-600 font-bold">
-                            {station.batteryMaintenance}
-                          </div>
-                          <div className="text-xs text-gray-500">Bảo dưỡng</div>
-                        </div>
-                        <div className="text-center ml-2">
-                          <div className="font-bold">
-                            {station.batteryCapacity}
-                          </div>
-                          <div className="text-xs text-gray-500">Tổng</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {station.totalTransactions.toLocaleString("vi-VN")}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          className="bg-blue-500 text-white border-0 py-1.5 px-3 rounded cursor-pointer text-xs transition-colors hover:bg-blue-600"
-                          onClick={() => setSelectedStation(station)}
-                        >
-                          Chi tiết
-                        </button>
-                        <button
-                          className="bg-green-500 text-white border-0 py-1.5 px-3 rounded cursor-pointer text-xs transition-colors hover:bg-green-600"
-                          onClick={() => {
-                            setSelectedStation(station);
-                            setShowEditForm(true);
-                          }}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className={`border-0 py-1.5 px-3 rounded cursor-pointer text-xs transition-colors ${
-                            station.status === "active"
-                              ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                              : "bg-green-500 text-white hover:bg-green-600"
+                      <div className="mt-1">
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            slot.status === "Đầy"
+                              ? "bg-green-100 text-green-800"
+                              : slot.status === "Đang sạc"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : slot.status === "Đang bảo dưỡng"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-purple-100 text-purple-800"
                           }`}
-                          onClick={() => toggleStationStatus(station.id)}
                         >
-                          {station.status === "active"
-                            ? "Bảo dưỡng"
-                            : "Kích hoạt"}
-                        </button>
-                        <button
-                          className="bg-red-500 text-white border-0 py-1.5 px-3 rounded cursor-pointer text-xs transition-colors hover:bg-red-600"
-                          onClick={() => handleDeleteStation(station.id)}
-                        >
-                          Xóa
-                        </button>
+                          {slot.status === "Đầy" && "🟢"}
+                          {slot.status === "Đang sạc" && "🟡"}
+                          {slot.status === "Đang bảo dưỡng" && "🔴"}
+                          {slot.status === "Đã đặt" && "🟣"}
+                          <span className="ml-1">{slot.status}</span>
+                        </span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openBatteryForm(slot);
+                      }}
+                      className="w-full bg-indigo-500 text-white py-1 px-2 rounded text-xs hover:bg-indigo-600 transition-colors"
+                    >
+                      Chi tiết
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Modal thêm trạm mới */}
-        {showAddForm && (
+        {/* Modal cập nhật thông tin pin */}
+        {showBatteryForm && selectedSlot && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4">Thêm trạm mới</h3>
+              <h3 className="text-xl font-semibold mb-4">
+                Cập nhật thông tin pin - Slot {selectedSlot.slotNumber}
+              </h3>
+              <div className="mb-4 p-3 bg-gray-100 rounded-md">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Loại pin:</span>{" "}
+                  {selectedSlot.batteryType}
+                </div>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mã trạm:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.stationId}
-                    onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
-                        stationId: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="BSS-004"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Tên trạm:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.name}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, name: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Trạm Đổi Pin Quận 4"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Địa chỉ:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.address}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, address: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="123 Đường ABC, Quận 4, TP.HCM"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Quản lý:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.manager}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, manager: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Nguyễn Văn Manager"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại:
-                  </label>
-                  <input
-                    type="text"
-                    value={newStation.phone}
-                    onChange={(e) =>
-                      setNewStation({ ...newStation, phone: e.target.value })
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="0901234567"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sức chứa pin:
+                    Dung lượng pin (%):
                   </label>
                   <input
                     type="number"
-                    value={newStation.batteryCapacity}
+                    min="0"
+                    max="100"
+                    value={newBattery.batteryCapacity}
                     onChange={(e) =>
-                      setNewStation({
-                        ...newStation,
+                      setNewBattery({
+                        ...newBattery,
                         batteryCapacity: parseInt(e.target.value) || 0,
                       })
                     }
                     className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="60"
+                    placeholder="85"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tình trạng sức khỏe pin (%):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={newBattery.batteryHealth}
+                    onChange={(e) =>
+                      setNewBattery({
+                        ...newBattery,
+                        batteryHealth: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="90"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trạng thái slot:
+                  </label>
+                  <select
+                    value={newBattery.status}
+                    onChange={(e) =>
+                      setNewBattery({
+                        ...newBattery,
+                        status: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="Đầy">Đầy</option>
+                    <option value="Đang sạc">Đang sạc</option>
+                    <option value="Đang bảo dưỡng">Đang bảo dưỡng</option>
+                  </select>
                 </div>
               </div>
               <div className="flex gap-2 mt-6">
                 <button
-                  onClick={handleAddStation}
+                  onClick={handleUpdateBattery}
                   className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
                 >
-                  Thêm
+                  Cập nhật
                 </button>
                 <button
-                  onClick={() => setShowAddForm(false)}
+                  onClick={() => {
+                    setShowBatteryForm(false);
+                    setSelectedSlot(null);
+                  }}
                   className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
                 >
                   Hủy
@@ -497,110 +546,66 @@ const StationManagement = () => {
           </div>
         )}
 
-        {/* Modal chi tiết trạm */}
-        {selectedStation && !showEditForm && (
+        {/* Modal chỉnh sửa trạng thái */}
+        {showStatusForm && selectedSlot && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
               <h3 className="text-xl font-semibold mb-4">
-                Chi tiết trạm {selectedStation.stationId}
+                Chỉnh sửa trạng thái - Slot {selectedSlot.slotNumber}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-700">
-                    Thông tin cơ bản
-                  </h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Tên:</span>{" "}
-                      {selectedStation.name}
-                    </div>
-                    <div>
-                      <span className="font-medium">Địa chỉ:</span>{" "}
-                      {selectedStation.address}
-                    </div>
-                    <div>
-                      <span className="font-medium">Quản lý:</span>{" "}
-                      {selectedStation.manager}
-                    </div>
-                    <div>
-                      <span className="font-medium">SĐT:</span>{" "}
-                      {selectedStation.phone}
-                    </div>
-                    <div>
-                      <span className="font-medium">Trạng thái:</span>
-                      <span
-                        className={`ml-2 px-2 py-1 rounded text-xs ${
-                          selectedStation.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {selectedStation.status === "active"
-                          ? "Hoạt động"
-                          : "Bảo dưỡng"}
-                      </span>
-                    </div>
-                  </div>
+              <div className="mb-4 p-3 bg-gray-100 rounded-md">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Loại pin:</span>{" "}
+                  {selectedSlot.batteryType}
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Thống kê pin</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Tổng pin:</span>{" "}
-                      {selectedStation.batteryCapacity}
-                    </div>
-                    <div>
-                      <span className="font-medium">Pin đầy:</span>{" "}
-                      {selectedStation.batteryFull}
-                    </div>
-                    <div>
-                      <span className="font-medium">Đang sạc:</span>{" "}
-                      {selectedStation.batteryCharging}
-                    </div>
-                    <div>
-                      <span className="font-medium">Bảo dưỡng:</span>{" "}
-                      {selectedStation.batteryMaintenance}
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">
-                    Thống kê kinh doanh
-                  </h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Tổng giao dịch:</span>{" "}
-                      {selectedStation.totalTransactions.toLocaleString(
-                        "vi-VN"
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-medium">Doanh thu tháng:</span>{" "}
-                      {(selectedStation.monthlyRevenue / 1000000).toFixed(1)}M
-                      VNĐ
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700">Bảo dưỡng</h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Lần cuối:</span>{" "}
-                      {selectedStation.lastMaintenance}
-                    </div>
-                    <div>
-                      <span className="font-medium">Lần tiếp theo:</span>{" "}
-                      {selectedStation.nextMaintenance}
-                    </div>
-                  </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  <span className="font-medium">Trạng thái hiện tại:</span>{" "}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      selectedSlot.status === "Đầy"
+                        ? "bg-green-100 text-green-800"
+                        : selectedSlot.status === "Đang sạc"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : selectedSlot.status === "Đang bảo dưỡng"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-purple-100 text-purple-800"
+                    }`}
+                  >
+                    {selectedSlot.status}
+                  </span>
                 </div>
               </div>
-              <div className="flex justify-end mt-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trạng thái mới:
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="Đầy">Đầy</option>
+                    <option value="Đang sạc">Đang sạc</option>
+                    <option value="Đang bảo dưỡng">Đang bảo dưỡng</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-6">
                 <button
-                  onClick={() => setSelectedStation(null)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
+                  onClick={handleUpdateStatus}
+                  className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
                 >
-                  Đóng
+                  Cập nhật
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStatusForm(false);
+                    setSelectedSlot(null);
+                  }}
+                  className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
+                >
+                  Hủy
                 </button>
               </div>
             </div>
