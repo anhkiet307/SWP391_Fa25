@@ -1,110 +1,220 @@
 import React, { useState } from "react";
 import AdminLayout from "../component/AdminLayout";
-import { showSuccess, showInfo, showWarning } from "../../../utils/toast";
+import { showSuccess, showError } from "../../../utils/toast";
 
 const AdminReportManagement = () => {
-  // State cho báo cáo
-  const [selectedReport, setSelectedReport] = useState("revenue");
-  const [dateRange, setDateRange] = useState({
-    from: "01/01/2024",
-    to: "31/01/2024",
-  });
+  const [reports, setReports] = useState([
+    {
+      id: 1,
+      customerName: "Lê Văn C",
+      customerEmail: "levanc@email.com",
+      customerPhone: "0901234567",
+      stationId: "BSS-001",
+      stationName: "Trạm Quận 1",
+      reportType: "Lỗi kỹ thuật",
+      title: "Pin không sạc được",
+      description: "Pin không sạc được, màn hình hiển thị lỗi E001. Đã thử nhiều lần nhưng vẫn không được.",
+      priority: "high",
+      status: "pending",
+      createdAt: "15/01/2024 16:00",
+      updatedAt: "15/01/2024 16:00",
+      assignedTo: null,
+      resolution: null,
+    },
+    {
+      id: 2,
+      customerName: "Trần Thị B",
+      customerEmail: "tranthib@email.com",
+      customerPhone: "0902345678",
+      stationId: "BSS-002",
+      stationName: "Trạm Quận 2",
+      reportType: "Góp ý dịch vụ",
+      title: "Thời gian chờ quá lâu",
+      description: "Thời gian chờ quá lâu, cần cải thiện tốc độ xử lý. Khách hàng phải chờ hơn 30 phút.",
+      priority: "normal",
+      status: "in_progress",
+      createdAt: "15/01/2024 15:15",
+      updatedAt: "15/01/2024 15:30",
+      assignedTo: "Nguyễn Văn A",
+      resolution: null,
+    },
+    {
+      id: 3,
+      customerName: "Nguyễn Văn A",
+      customerEmail: "nguyenvana@email.com",
+      customerPhone: "0903456789",
+      stationId: "BSS-001",
+      stationName: "Trạm Quận 1",
+      reportType: "Lỗi kỹ thuật",
+      title: "Máy đổi pin bị kẹt",
+      description: "Máy đổi pin bị kẹt, không thể lấy pin ra. Pin bị mắc kẹt trong slot 3.",
+      priority: "urgent",
+      status: "resolved",
+      createdAt: "15/01/2024 14:30",
+      updatedAt: "15/01/2024 16:45",
+      assignedTo: "Lê Văn Tech",
+      resolution: "Đã khắc phục bằng cách reset hệ thống. Pin đã được lấy ra thành công.",
+    },
+    {
+      id: 4,
+      customerName: "Phạm Thị D",
+      customerEmail: "phamthid@email.com",
+      customerPhone: "0904567890",
+      stationId: "BSS-003",
+      stationName: "Trạm Quận 3",
+      reportType: "Khiếu nại",
+      title: "Phí dịch vụ không đúng",
+      description: "Bị tính phí 150k thay vì 100k như thông báo. Cần kiểm tra lại hệ thống tính phí.",
+      priority: "high",
+      status: "pending",
+      createdAt: "15/01/2024 13:20",
+      updatedAt: "15/01/2024 13:20",
+      assignedTo: null,
+      resolution: null,
+    },
+    {
+      id: 5,
+      customerName: "Hoàng Văn E",
+      customerEmail: "hoangvane@email.com",
+      customerPhone: "0905678901",
+      stationId: "BSS-002",
+      stationName: "Trạm Quận 2",
+      reportType: "Góp ý dịch vụ",
+      title: "Cần thêm trạm ở khu vực",
+      description: "Khu vực này cần thêm trạm đổi pin. Hiện tại chỉ có 1 trạm, không đủ phục vụ.",
+      priority: "low",
+      status: "in_progress",
+      createdAt: "15/01/2024 12:10",
+      updatedAt: "15/01/2024 14:00",
+      assignedTo: "Trần Văn Manager",
+      resolution: null,
+    },
+  ]);
 
-  // Dữ liệu báo cáo doanh thu
-  const revenueData = {
-    totalRevenue: 2500000000,
-    monthlyGrowth: 15.5,
-    dailyAverage: 8064516,
-    topStations: [
-      {
-        stationId: "BSS-001",
-        name: "Trạm Quận 1",
-        revenue: 62500000,
-        transactions: 1250,
-      },
-      {
-        stationId: "BSS-002",
-        name: "Trạm Quận 2",
-        revenue: 94500000,
-        transactions: 1890,
-      },
-      {
-        stationId: "BSS-003",
-        name: "Trạm Quận 3",
-        revenue: 49000000,
-        transactions: 980,
-      },
-    ],
-    dailyRevenue: [
-      { date: "01/01/2024", revenue: 7500000, transactions: 150 },
-      { date: "02/01/2024", revenue: 8200000, transactions: 164 },
-      { date: "03/01/2024", revenue: 9100000, transactions: 182 },
-      { date: "04/01/2024", revenue: 8800000, transactions: 176 },
-      { date: "05/01/2024", revenue: 9500000, transactions: 190 },
-    ],
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [reportToAssign, setReportToAssign] = useState(null);
+  const [reportToResolve, setReportToResolve] = useState(null);
+  const [assignedTo, setAssignedTo] = useState("");
+  const [resolution, setResolution] = useState("");
+
+  const staffMembers = [
+    "Nguyễn Văn A",
+    "Lê Văn Tech",
+    "Trần Văn Manager",
+    "Phạm Văn Support",
+    "Hoàng Văn Engineer",
+  ];
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "urgent": return "bg-red-100 text-red-800";
+      case "high": return "bg-orange-100 text-orange-800";
+      case "normal": return "bg-blue-100 text-blue-800";
+      case "low": return "bg-gray-100 text-gray-800";
+      default: return "bg-blue-100 text-blue-800";
+    }
   };
 
-  // Dữ liệu báo cáo tần suất đổi pin
-  const frequencyData = {
-    totalSwaps: 15680,
-    averageSwapsPerUser: 6.3,
-    peakHours: [
-      { hour: "07:00-09:00", swaps: 1250, percentage: 8.0 },
-      { hour: "12:00-14:00", swaps: 1890, percentage: 12.1 },
-      { hour: "17:00-19:00", swaps: 2340, percentage: 14.9 },
-      { hour: "19:00-21:00", swaps: 2100, percentage: 13.4 },
-    ],
-    batteryTypes: [
-      { type: "Battery A - 5000mAh", swaps: 6280, percentage: 40.1 },
-      { type: "Battery B - 3000mAh", swaps: 4704, percentage: 30.0 },
-      { type: "Battery C - 7000mAh", swaps: 4696, percentage: 29.9 },
-    ],
+  const getPriorityLabel = (priority) => {
+    switch (priority) {
+      case "urgent": return "Khẩn cấp";
+      case "high": return "Cao";
+      case "normal": return "Bình thường";
+      case "low": return "Thấp";
+      default: return "Bình thường";
+    }
   };
 
-  // Dữ liệu báo cáo sức khỏe pin
-  const batteryHealthData = {
-    averageHealth: 85.2,
-    healthDistribution: [
-      { range: "90-100%", count: 1200, percentage: 40.0 },
-      { range: "80-89%", count: 900, percentage: 30.0 },
-      { range: "70-79%", count: 600, percentage: 20.0 },
-      { range: "60-69%", count: 240, percentage: 8.0 },
-      { range: "<60%", count: 60, percentage: 2.0 },
-    ],
-    maintenanceNeeded: 45,
-    replacementNeeded: 12,
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "resolved": return "bg-green-100 text-green-800";
+      case "in_progress": return "bg-blue-100 text-blue-800";
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-yellow-100 text-yellow-800";
+    }
   };
 
-  // Dữ liệu báo cáo khách hàng
-  const customerData = {
-    totalCustomers: 2500,
-    activeCustomers: 2100,
-    newCustomers: 150,
-    customerRetention: 84.0,
-    averageSpending: 1000000,
-    topCustomers: [
-      { name: "Nguyễn Văn A", transactions: 45, spending: 2250000 },
-      { name: "Trần Thị B", transactions: 38, spending: 1900000 },
-      { name: "Lê Văn C", transactions: 32, spending: 1600000 },
-    ],
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "resolved": return "Đã giải quyết";
+      case "in_progress": return "Đang xử lý";
+      case "pending": return "Chờ xử lý";
+      default: return "Chờ xử lý";
+    }
   };
 
-  // Hàm xuất báo cáo
-  const exportReport = (format) => {
-    showSuccess(`Đang xuất báo cáo ${selectedReport} định dạng ${format}...`);
-    // Simulate export process
-    setTimeout(() => {
-      showSuccess(`Đã xuất báo cáo ${selectedReport} thành công!`);
-    }, 2000);
+  const getReportTypeColor = (type) => {
+    switch (type) {
+      case "Lỗi kỹ thuật": return "bg-red-100 text-red-800";
+      case "Góp ý dịch vụ": return "bg-blue-100 text-blue-800";
+      case "Khiếu nại": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
   };
 
-  // Hàm tạo báo cáo tùy chỉnh
-  const generateCustomReport = () => {
-    showInfo("Đang tạo báo cáo tùy chỉnh...");
-    // Simulate custom report generation
-    setTimeout(() => {
-      showSuccess("Báo cáo tùy chỉnh đã được tạo thành công!");
-    }, 1500);
+  const handleViewDetail = (report) => {
+    setSelectedReport(report);
+    setShowDetailModal(true);
+  };
+
+  const handleAssignReport = (report) => {
+    setReportToAssign(report);
+    setAssignedTo(report.assignedTo || "");
+    setShowAssignModal(true);
+  };
+
+  const handleResolveReport = (report) => {
+    setReportToResolve(report);
+    setResolution(report.resolution || "");
+    setShowResolveModal(true);
+  };
+
+  const confirmAssign = () => {
+    if (reportToAssign && assignedTo) {
+      setReports(reports.map(report => 
+        report.id === reportToAssign.id 
+          ? { ...report, assignedTo, status: "in_progress", updatedAt: new Date().toLocaleString("vi-VN") }
+          : report
+      ));
+      showSuccess("Đã phân công report thành công!");
+      setShowAssignModal(false);
+      setReportToAssign(null);
+      setAssignedTo("");
+    }
+  };
+
+  const confirmResolve = () => {
+    if (reportToResolve && resolution) {
+      setReports(reports.map(report => 
+        report.id === reportToResolve.id 
+          ? { ...report, status: "resolved", resolution, updatedAt: new Date().toLocaleString("vi-VN") }
+          : report
+      ));
+      showSuccess("Đã giải quyết report thành công!");
+      setShowResolveModal(false);
+      setReportToResolve(null);
+      setResolution("");
+    }
+  };
+
+  const cancelAssign = () => {
+    setShowAssignModal(false);
+    setReportToAssign(null);
+    setAssignedTo("");
+  };
+
+  const cancelResolve = () => {
+    setShowResolveModal(false);
+    setReportToResolve(null);
+    setResolution("");
+  };
+
+  const closeDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedReport(null);
   };
 
   return (
@@ -135,16 +245,16 @@ const AdminReportManagement = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
                     </div>
-                    <div>
-                      <h1 className="text-2xl font-bold mb-1">Báo cáo & Thống kê</h1>
+          <div>
+                      <h1 className="text-2xl font-bold mb-1">Quản lý Report</h1>
                       <p className="text-white text-opacity-90 text-sm">
-                        Phân tích và báo cáo hiệu suất hệ thống trạm đổi pin
-                      </p>
-                    </div>
+                        Quản lý các báo cáo và phản hồi từ khách hàng
+            </p>
+          </div>
                   </div>
                   
                   {/* Stats Cards */}
@@ -158,11 +268,11 @@ const AdminReportManagement = () => {
                     <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
                       <div className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Kỳ báo cáo: {dateRange.from} - {dateRange.to}</span>
+                        <span className="text-xs font-medium">Tổng report: {reports.length}</span>
                       </div>
                     </div>
-                  </div>
-                </div>
+          </div>
+        </div>
 
                 {/* Right Content - Admin Profile */}
                 <div className="ml-6">
@@ -182,14 +292,14 @@ const AdminReportManagement = () => {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                      </div>
-                      <div>
+              </div>
+              <div>
                         <p className="text-white font-semibold text-sm">Admin System</p>
                         <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
-                      </div>
-                    </div>
+              </div>
+            </div>
                     
-                    <button
+              <button
                       onClick={() => {
                         localStorage.removeItem('stationMenuOpen');
                         localStorage.removeItem('userMenuOpen');
@@ -211,477 +321,514 @@ const AdminReportManagement = () => {
                         />
                       </svg>
                       <span className="text-sm">Đăng xuất</span>
-                    </button>
+              </button>
+            </div>
+          </div>
+        </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="mb-8">
+          <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+            Tổng quan report
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Tổng report
+              </h3>
+              <div className="text-4xl font-bold m-0 text-blue-500">
+                {reports.length}
+                  </div>
+                </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Chờ xử lý
+              </h3>
+              <div className="text-4xl font-bold m-0 text-yellow-500">
+                {reports.filter(r => r.status === "pending").length}
+                  </div>
+                </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Đang xử lý
+              </h3>
+              <div className="text-4xl font-bold m-0 text-blue-500">
+                {reports.filter(r => r.status === "in_progress").length}
+                  </div>
+                </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Đã giải quyết
+              </h3>
+              <div className="text-4xl font-bold m-0 text-green-500">
+                {reports.filter(r => r.status === "resolved").length}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Date Range và Report Type */}
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-          <div className="flex flex-wrap gap-4 items-center justify-between">
-            <div className="flex gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Từ ngày:
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.from}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, from: e.target.value })
-                  }
-                  className="p-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Đến ngày:
-                </label>
-                <input
-                  type="date"
-                  value={dateRange.to}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, to: e.target.value })
-                  }
-                  className="p-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => exportReport("PDF")}
-                className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
-              >
-                📄 Xuất PDF
-              </button>
-              <button
-                onClick={() => exportReport("Excel")}
-                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
-              >
-                📊 Xuất Excel
-              </button>
-              <button
-                onClick={generateCustomReport}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-              >
-                ⚙️ Báo cáo tùy chỉnh
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Report Type Tabs */}
-        <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-200 p-1 rounded-lg w-fit">
-            <button
-              onClick={() => setSelectedReport("revenue")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selectedReport === "revenue"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              💰 Doanh thu
-            </button>
-            <button
-              onClick={() => setSelectedReport("frequency")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selectedReport === "frequency"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              📈 Tần suất đổi pin
-            </button>
-            <button
-              onClick={() => setSelectedReport("battery")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selectedReport === "battery"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              🔋 Sức khỏe pin
-            </button>
-            <button
-              onClick={() => setSelectedReport("customer")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                selectedReport === "customer"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              👥 Khách hàng
-            </button>
-          </div>
-        </div>
-
-        {/* Báo cáo Doanh thu */}
-        {selectedReport === "revenue" && (
-          <div className="space-y-8">
-            {/* Tổng quan doanh thu */}
+        {/* Báo cáo & Thống kê */}
+        <div className="mb-8">
+          <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+            Báo cáo & Thống kê
+          </h2>
+          
+          {/* Doanh thu & Số lượt đổi pin */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Tổng quan doanh thu
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">
-                    {(revenueData.totalRevenue / 1000000).toFixed(1)}M
-                  </div>
-                  <div className="text-sm text-green-700">Tổng doanh thu</div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Doanh thu & Số lượt đổi pin</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">2,450</div>
+                  <div className="text-sm text-green-700 font-medium">Lượt đổi pin</div>
+                  <div className="text-xs text-green-600 mt-1">+12% so với tháng trước</div>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">
-                    +{revenueData.monthlyGrowth}%
-                  </div>
-                  <div className="text-sm text-blue-700">Tăng trưởng tháng</div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">245M</div>
+                  <div className="text-sm text-blue-700 font-medium">Doanh thu (VNĐ)</div>
+                  <div className="text-xs text-blue-600 mt-1">+8% so với tháng trước</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {(revenueData.dailyAverage / 1000000).toFixed(1)}M
-                  </div>
-                  <div className="text-sm text-purple-700">Trung bình/ngày</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {revenueData.topStations.length}
-                  </div>
-                  <div className="text-sm text-orange-700">Trạm hoạt động</div>
+              </div>
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Trung bình mỗi ngày:</span>
+                  <span className="font-semibold text-gray-800">82 lượt đổi / 8.2M VNĐ</span>
                 </div>
               </div>
             </div>
 
-            {/* Top trạm doanh thu */}
+            {/* Tần suất đổi pin & Giờ cao điểm */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Top trạm doanh thu</h2>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Tần suất đổi pin & Giờ cao điểm</h3>
+              <div className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-purple-700">Giờ cao điểm</span>
+                    <span className="text-lg font-bold text-purple-800">17:00 - 19:00</span>
+                  </div>
+                  <div className="w-full bg-purple-200 rounded-full h-2">
+                    <div className="bg-purple-500 h-2 rounded-full" style={{width: '85%'}}></div>
+                  </div>
+                  <div className="text-xs text-purple-600 mt-1">85% tải trọng</div>
+                </div>
+                
+                <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-orange-700">Giờ thấp điểm</span>
+                    <span className="text-lg font-bold text-orange-800">02:00 - 06:00</span>
+                  </div>
+                  <div className="w-full bg-orange-200 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full" style={{width: '25%'}}></div>
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">25% tải trọng</div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">156</div>
+                    <div className="text-xs text-gray-600">Thứ 2</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">189</div>
+                    <div className="text-xs text-gray-600">Thứ 3</div>
+                  </div>
+                  <div className="p-2 bg-gray-50 rounded">
+                    <div className="text-lg font-bold text-gray-800">203</div>
+                    <div className="text-xs text-gray-600">Thứ 4</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Dự báo nhu cầu */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">AI Dự báo nhu cầu sử dụng trạm đổi pin</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Dự báo tuần tới */}
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="font-semibold text-blue-800">Tuần tới</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-900 mb-2">1,850 lượt</div>
+                <div className="text-sm text-blue-700">Dự kiến tăng 15%</div>
+                <div className="mt-2 text-xs text-blue-600">
+                  <div>• Thứ 2-4: Cao điểm</div>
+                  <div>• Thứ 7-CN: Thấp điểm</div>
+                </div>
+              </div>
+
+              {/* Dự báo tháng tới */}
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-semibold text-green-800">Tháng tới</span>
+                </div>
+                <div className="text-2xl font-bold text-green-900 mb-2">7,200 lượt</div>
+                <div className="text-sm text-green-700">Dự kiến tăng 8%</div>
+                <div className="mt-2 text-xs text-green-600">
+                  <div>• Doanh thu: 288M VNĐ</div>
+                  <div>• Trung bình: 240 lượt/ngày</div>
+                </div>
+              </div>
+
+              {/* Khuyến nghị AI */}
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="font-semibold text-purple-800">Khuyến nghị</span>
+                </div>
+                <div className="space-y-2 text-sm text-purple-700">
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Tăng số pin tại BSS-001</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Mở thêm trạm ở Quận 7</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>Bảo dưỡng vào 2-4h sáng</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Biểu đồ dự báo đơn giản */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Xu hướng dự báo 7 ngày tới</h4>
+              <div className="flex items-end gap-2 h-20">
+                {[65, 78, 85, 92, 88, 95, 82].map((height, index) => (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    <div 
+                      className="w-full bg-gradient-to-t from-indigo-400 to-indigo-500 rounded-t"
+                      style={{height: `${height}%`}}
+                    ></div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][index]}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Reports Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">Danh sách Report</h2>
+          </div>
+          
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                      <th className="p-4 text-left font-semibold text-base">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Khách hàng
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Trạm
                       </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Doanh thu
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Loại
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tiêu đề
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Độ ưu tiên
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Trạng thái
                       </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Giao dịch
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ngày tạo
                       </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Trung bình/GD
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hành động
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {revenueData.topStations.map((station, index) => (
-                      <tr
-                        key={station.stationId}
-                        className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                        }`}
-                      >
-                        <td className="p-4 border-b border-gray-200">
+              <tbody className="bg-white divide-y divide-gray-200">
+                {reports.map((report, index) => (
+                  <tr key={report.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="font-bold text-base text-indigo-600">
-                              {station.stationId}
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">
-                              {station.name}
-                            </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {report.customerName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {report.customerEmail}
+                        </div>
                           </div>
                         </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-bold text-base text-green-600">
-                            {(station.revenue / 1000000).toFixed(1)}M VNĐ
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {report.stationId}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {report.stationName}
+                        </div>
                           </div>
                         </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-semibold text-base text-gray-800">
-                            {station.transactions.toLocaleString("vi-VN")}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getReportTypeColor(report.reportType)}`}>
+                        {report.reportType}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs truncate">
+                        {report.title}
                           </div>
                         </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-semibold text-base text-gray-800">
-                            {(
-                              station.revenue / station.transactions
-                            ).toLocaleString("vi-VN")}{" "}
-                            VNĐ
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Biểu đồ doanh thu theo ngày */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Doanh thu theo ngày
-              </h2>
-              <div className="space-y-3">
-                {revenueData.dailyRevenue.map((day) => (
-                  <div
-                    key={day.date}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="font-medium">{day.date}</div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">
-                        {day.transactions} giao dịch
-                      </div>
-                      <div className="font-bold text-green-600">
-                        {(day.revenue / 1000000).toFixed(1)}M VNĐ
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Báo cáo Tần suất đổi pin */}
-        {selectedReport === "frequency" && (
-          <div className="space-y-8">
-            {/* Tổng quan tần suất */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Tổng quan tần suất đổi pin
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {frequencyData.totalSwaps.toLocaleString("vi-VN")}
-                  </div>
-                  <div className="text-sm text-blue-700">Tổng lượt đổi pin</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">
-                    {frequencyData.averageSwapsPerUser}
-                  </div>
-                  <div className="text-sm text-green-700">TB/khách hàng</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {frequencyData.peakHours.length}
-                  </div>
-                  <div className="text-sm text-purple-700">Giờ cao điểm</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Giờ cao điểm */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Giờ cao điểm</h2>
-              <div className="space-y-3">
-                {frequencyData.peakHours.map((hour, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="font-medium">{hour.hour}</div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">
-                        {hour.percentage}%
-                      </div>
-                      <div className="font-bold text-blue-600">
-                        {hour.swaps.toLocaleString("vi-VN")} lượt
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Loại pin phổ biến */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Loại pin phổ biến</h2>
-              <div className="space-y-3">
-                {frequencyData.batteryTypes.map((battery, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="font-medium">{battery.type}</div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">
-                        {battery.percentage}%
-                      </div>
-                      <div className="font-bold text-green-600">
-                        {battery.swaps.toLocaleString("vi-VN")} lượt
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Báo cáo Sức khỏe pin */}
-        {selectedReport === "battery" && (
-          <div className="space-y-8">
-            {/* Tổng quan sức khỏe pin */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Tổng quan sức khỏe pin
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">
-                    {batteryHealthData.averageHealth}%
-                  </div>
-                  <div className="text-sm text-green-700">Sức khỏe TB</div>
-                </div>
-                <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <div className="text-3xl font-bold text-yellow-600">
-                    {batteryHealthData.maintenanceNeeded}
-                  </div>
-                  <div className="text-sm text-yellow-700">Cần bảo dưỡng</div>
-                </div>
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-3xl font-bold text-red-600">
-                    {batteryHealthData.replacementNeeded}
-                  </div>
-                  <div className="text-sm text-red-700">Cần thay thế</div>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {batteryHealthData.healthDistribution.reduce(
-                      (sum, item) => sum + item.count,
-                      0
-                    )}
-                  </div>
-                  <div className="text-sm text-blue-700">Tổng pin</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phân bố sức khỏe pin */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Phân bố sức khỏe pin
-              </h2>
-              <div className="space-y-3">
-                {batteryHealthData.healthDistribution.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="font-medium">{item.range}</div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-sm text-gray-600">
-                        {item.percentage}%
-                      </div>
-                      <div className="font-bold text-blue-600">
-                        {item.count.toLocaleString("vi-VN")} pin
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Báo cáo Khách hàng */}
-        {selectedReport === "customer" && (
-          <div className="space-y-8">
-            {/* Tổng quan khách hàng */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">
-                Tổng quan khách hàng
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {customerData.totalCustomers.toLocaleString("vi-VN")}
-                  </div>
-                  <div className="text-sm text-blue-700">Tổng khách hàng</div>
-                </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">
-                    {customerData.activeCustomers.toLocaleString("vi-VN")}
-                  </div>
-                  <div className="text-sm text-green-700">Đang hoạt động</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {customerData.customerRetention}%
-                  </div>
-                  <div className="text-sm text-purple-700">Tỷ lệ giữ chân</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {(customerData.averageSpending / 1000000).toFixed(1)}M
-                  </div>
-                  <div className="text-sm text-orange-700">Chi tiêu TB</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Top khách hàng */}
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4">Top khách hàng</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                      <th className="p-4 text-left font-semibold text-base">
-                        Khách hàng
-                      </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Giao dịch
-                      </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Tổng chi tiêu
-                      </th>
-                      <th className="p-4 text-left font-semibold text-base">
-                        Chi tiêu TB
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customerData.topCustomers.map((customer, index) => (
-                      <tr
-                        key={index}
-                        className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                          index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                        }`}
-                      >
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-bold text-base text-gray-800">
-                            {customer.name}
-                          </div>
-                        </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-semibold text-base text-gray-800">
-                            {customer.transactions}
-                          </div>
-                        </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-bold text-base text-green-600">
-                            {(customer.spending / 1000000).toFixed(1)}M VNĐ
-                          </div>
-                        </td>
-                        <td className="p-4 border-b border-gray-200">
-                          <div className="font-semibold text-base text-gray-800">
-                            {(
-                              customer.spending / customer.transactions
-                            ).toLocaleString("vi-VN")}{" "}
-                            VNĐ
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(report.priority)}`}>
+                        {getPriorityLabel(report.priority)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
+                        {getStatusLabel(report.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {report.createdAt}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleViewDetail(report)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Xem
+                        </button>
+                        {report.status === "pending" && (
+                          <button
+                            onClick={() => handleAssignReport(report)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Phân công
+                          </button>
+                        )}
+                        {report.status === "in_progress" && (
+                          <button
+                            onClick={() => handleResolveReport(report)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Giải quyết
+                          </button>
+                        )}
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedReport && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="p-4 border-b border-gray-100 rounded-t-3xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Chi tiết Report #{selectedReport.id}
+                  </h2>
+                  <button
+                    onClick={closeDetailModal}
+                    className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                      </div>
+                    </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Customer Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Thông tin khách hàng</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="space-y-2">
+                        <div><span className="font-medium">Tên:</span> {selectedReport.customerName}</div>
+                        <div><span className="font-medium">Email:</span> {selectedReport.customerEmail}</div>
+                        <div><span className="font-medium">SĐT:</span> {selectedReport.customerPhone}</div>
+              </div>
+            </div>
+          </div>
+
+                  {/* Station Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Thông tin trạm</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="space-y-2">
+                        <div><span className="font-medium">Mã trạm:</span> {selectedReport.stationId}</div>
+                        <div><span className="font-medium">Tên trạm:</span> {selectedReport.stationName}</div>
+                </div>
+              </div>
+            </div>
+
+                  {/* Report Details */}
+                  <div className="md:col-span-2 space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Chi tiết báo cáo</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="space-y-3">
+                        <div>
+                          <span className="font-medium">Loại:</span>
+                          <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getReportTypeColor(selectedReport.reportType)}`}>
+                            {selectedReport.reportType}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Tiêu đề:</span> {selectedReport.title}
+                        </div>
+                        <div>
+                          <span className="font-medium">Mô tả:</span>
+                          <p className="mt-1 text-gray-700">{selectedReport.description}</p>
+                        </div>
+                        <div className="flex space-x-4">
+                          <div>
+                            <span className="font-medium">Độ ưu tiên:</span>
+                            <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(selectedReport.priority)}`}>
+                              {getPriorityLabel(selectedReport.priority)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="font-medium">Trạng thái:</span>
+                            <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedReport.status)}`}>
+                              {getStatusLabel(selectedReport.status)}
+                            </span>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </div>
+
+                  {/* Assignment & Resolution */}
+                  {(selectedReport.assignedTo || selectedReport.resolution) && (
+                    <div className="md:col-span-2 space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-800">Xử lý</h3>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="space-y-2">
+                          {selectedReport.assignedTo && (
+                            <div><span className="font-medium">Được phân công cho:</span> {selectedReport.assignedTo}</div>
+                          )}
+                          {selectedReport.resolution && (
+                            <div>
+                              <span className="font-medium">Giải pháp:</span>
+                              <p className="mt-1 text-gray-700">{selectedReport.resolution}</p>
+                            </div>
+                          )}
+                          <div><span className="font-medium">Cập nhật lần cuối:</span> {selectedReport.updatedAt}</div>
+                      </div>
+                    </div>
+                  </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Assign Modal */}
+        {showAssignModal && reportToAssign && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Phân công Report #{reportToAssign.id}
+                </h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phân công cho
+                  </label>
+                  <select
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Chọn nhân viên</option>
+                    {staffMembers.map((staff) => (
+                      <option key={staff} value={staff}>
+                        {staff}
+                      </option>
+                    ))}
+                  </select>
+                  </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={cancelAssign}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmAssign}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Phân công
+                  </button>
+                      </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Resolve Modal */}
+        {showResolveModal && reportToResolve && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Giải quyết Report #{reportToResolve.id}
+                </h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Giải pháp
+                  </label>
+                  <textarea
+                    value={resolution}
+                    onChange={(e) => setResolution(e.target.value)}
+                    rows={4}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Nhập giải pháp đã thực hiện..."
+                  />
+                  </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={cancelResolve}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={confirmResolve}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    Giải quyết
+                  </button>
+                </div>
               </div>
             </div>
           </div>

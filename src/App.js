@@ -22,14 +22,12 @@ import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
-import AdminTransactionManagement from "./page/BSS-Admin/transactiondashboard/TransactionManagement.jsx";
-import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManagement.jsx";
 import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
-import AdminAddBattery from "./page/BSS-Admin/stationdashboard/AddBattery.jsx";
-import AdminBatteryManagement from "./page/BSS-Admin/stationdashboard/BatteryManagement.jsx";
+import AdminBatteryDispatch from "./page/BSS-Admin/stationdashboard/BatteryDispatch.jsx";
 import AdminAddCustomer from "./page/BSS-Admin/userdashboard/AddCustomer.jsx";
 import AdminAddStaff from "./page/BSS-Admin/userdashboard/AddStaff.jsx";
 import AdminPackManagement from "./page/BSS-Admin/userdashboard/PackManagement.jsx";
+import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -108,26 +106,12 @@ function App() {
             path="/admin-user-management"
             element={<AdminUserManagement />}
           />
-          <Route
-            path="/admin-transaction-management"
-            element={<AdminTransactionManagement />}
-          />
-          <Route
-            path="/admin-report-management"
-            element={<AdminReportManagement />}
-          />
           <Route path="/admin-add-station" element={<AdminAddStation />} />
-          <Route path="/admin-add-battery" element={<AdminAddBattery />} />
-          <Route
-            path="/admin-manage-battery"
-            element={<AdminBatteryManagement />}
-          />
+          <Route path="/admin-battery-dispatch" element={<AdminBatteryDispatch />} />
           <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
           <Route path="/admin-add-staff" element={<AdminAddStaff />} />
-          <Route
-            path="/admin-battery-packages"
-            element={<AdminPackManagement />}
-          />
+          <Route path="/admin-battery-packages" element={<AdminPackManagement />} />
+          <Route path="/admin-report-management" element={<AdminReportManagement />} />
         </Routes>
       </Router>
     </AuthProvider>
