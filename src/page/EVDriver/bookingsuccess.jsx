@@ -24,6 +24,7 @@ import {
   PhoneOutlined,
   MailOutlined,
 } from "@ant-design/icons";
+import { batteryStations } from "../../data/stations";
 import dayjs from "dayjs";
 
 const { Title, Paragraph, Text } = Typography;
@@ -61,6 +62,16 @@ export default function BookingSuccess() {
 
   const formatVND = (value) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+
+  // Tìm trạm và ổ pin được đặt
+  const selectedStation = batteryStations.find(
+    (station) => station.name === bookingData.station
+  );
+
+  // Tìm ổ pin được đặt từ dữ liệu booking
+  const assignedSlot = selectedStation?.slots?.find(
+    (slot) => slot.id === bookingData.selectedSlot
+  );
 
   return (
     <div
@@ -238,37 +249,51 @@ export default function BookingSuccess() {
                 </Space>
               </Col>
 
-              <Col xs={24} sm={12}>
-                <Space
-                  direction="vertical"
-                  size="small"
-                  style={{ width: "100%" }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
+              {assignedSlot && (
+                <Col xs={24} sm={12}>
+                  <Space
+                    direction="vertical"
+                    size="small"
+                    style={{ width: "100%" }}
                   >
-                    <CarOutlined
-                      style={{ color: "#00083B", fontSize: "18px" }}
-                    />
-                    <Text strong style={{ color: "#00083B" }}>
-                      Loại xe:
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          backgroundColor: "#10b981",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "12px",
+                        }}
+                      >
+                        ⚡
+                      </div>
+                      <Text strong style={{ color: "#00083B" }}>
+                        Ổ pin được đặt:
+                      </Text>
+                    </div>
+                    <Text
+                      style={{
+                        color: "#475569",
+                        fontSize: "16px",
+                        marginLeft: "26px",
+                      }}
+                    >
+                      Ổ pin #{assignedSlot.slotNumber} (SoC: {assignedSlot.soc}
+                      %)
                     </Text>
-                  </div>
-                  <Text
-                    style={{
-                      color: "#475569",
-                      fontSize: "16px",
-                      marginLeft: "26px",
-                    }}
-                  >
-                    {bookingData.vehicle}
-                  </Text>
-                </Space>
-              </Col>
+                  </Space>
+                </Col>
+              )}
             </Row>
 
             <Divider style={{ margin: "20px 0" }} />

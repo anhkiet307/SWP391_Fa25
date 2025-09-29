@@ -101,12 +101,12 @@ export default function Header() {
                     </p>
                     <p className="text-xs text-white/60">{user?.email}</p>
                   </div>
-                  <a
-                    href="#"
+                  <Link
+                    to="/profile"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Thông tin tài khoản
-                  </a>
+                  </Link>
                   <a
                     href="#"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
