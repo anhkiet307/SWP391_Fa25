@@ -26,6 +26,17 @@ const TransactionManagement = () => {
       payment: 0,
       timestamp: "2024-01-15 15:15:00",
     },
+    {
+      id: 3,
+      customerId: "CUST003",
+      customerName: "Lê Văn C",
+      batteryIn: "Battery B",
+      batteryOut: "Chưa có",
+      slot: 12,
+      status: "cancelled",
+      payment: 0,
+      timestamp: "2024-01-15 16:00:00",
+    },
   ]);
 
   // Hàm xác nhận giao dịch
@@ -41,7 +52,9 @@ const TransactionManagement = () => {
 
   // Hàm hủy giao dịch
   const cancelTransaction = (id) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+    setTransactions(
+      transactions.map((t) => (t.id === id ? { ...t, status: "cancelled" } : t))
+    );
   };
 
   return (
@@ -71,7 +84,7 @@ const TransactionManagement = () => {
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
               Thống kê giao dịch
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
                   {transactions.filter((t) => t.status === "completed").length}
@@ -84,9 +97,16 @@ const TransactionManagement = () => {
                 </div>
                 <div className="text-sm text-yellow-700">Chờ xử lý</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg col-span-2">
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">
+                  {transactions.filter((t) => t.status === "cancelled").length}
+                </div>
+                <div className="text-sm text-red-700">Đã hủy</div>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg col-span-3">
                 <div className="text-2xl font-bold text-blue-600">
                   {transactions
+                    .filter((t) => t.status === "completed")
                     .reduce((sum, t) => sum + t.payment, 0)
                     .toLocaleString("vi-VN")}{" "}
                   VNĐ
@@ -148,12 +168,16 @@ const TransactionManagement = () => {
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           transaction.status === "completed"
                             ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
+                            : transaction.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {transaction.status === "completed"
                           ? "Hoàn thành"
-                          : "Chờ xử lý"}
+                          : transaction.status === "pending"
+                          ? "Chờ xử lý"
+                          : "Đã hủy"}
                       </span>
                     </td>
                     <td className="p-3 text-left border-b border-gray-200 text-sm">
@@ -178,6 +202,16 @@ const TransactionManagement = () => {
                             Hủy
                           </button>
                         </div>
+                      )}
+                      {transaction.status === "cancelled" && (
+                        <span className="text-xs text-gray-500 italic">
+                          Đã hủy
+                        </span>
+                      )}
+                      {transaction.status === "completed" && (
+                        <span className="text-xs text-green-600 font-medium">
+                          ✓ Hoàn thành
+                        </span>
                       )}
                     </td>
                   </tr>
