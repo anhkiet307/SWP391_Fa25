@@ -27,7 +27,7 @@ const StationManagement = () => {
       batteryCapacity: 100,
       batteryHealth: 95,
       batteryId: "BAT-A-001",
-      status: "Đầy",
+      status: "Đã đặt",
       lastCharged: "2024-01-20",
     },
     {
@@ -67,7 +67,7 @@ const StationManagement = () => {
       batteryCapacity: 95,
       batteryHealth: 92,
       batteryId: "BAT-A-005",
-      status: "Đầy",
+      status: "Đã đặt",
       lastCharged: "2024-01-16",
     },
     {
@@ -107,7 +107,7 @@ const StationManagement = () => {
       batteryCapacity: 90,
       batteryHealth: 87,
       batteryId: "BAT-B-004",
-      status: "Đầy",
+      status: "Đã đặt",
       lastCharged: "2024-01-12",
     },
     {
@@ -137,7 +137,7 @@ const StationManagement = () => {
       batteryCapacity: 87,
       batteryHealth: 84,
       batteryId: "BAT-C-002",
-      status: "Đầy",
+      status: "Đã đặt",
       lastCharged: "2024-01-09",
     },
     {
@@ -167,29 +167,29 @@ const StationManagement = () => {
       batteryCapacity: 91,
       batteryHealth: 88,
       batteryId: "BAT-C-005",
-      status: "Đầy",
+      status: "Đã đặt",
       lastCharged: "2024-01-06",
     },
   ]);
 
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showBatteryForm, setShowBatteryForm] = useState(false);
+  const [showStatusForm, setShowStatusForm] = useState(false);
   const [newBattery, setNewBattery] = useState({
     batteryCapacity: 0,
     batteryHealth: 0,
     batteryId: "",
     status: "Đầy",
   });
+  const [newStatus, setNewStatus] = useState("Đầy");
 
   // Tính tổng thống kê
   const totalStats = {
     totalSlots: slots.length,
-    batteryA: slots.filter((s) => s.batteryType === "Battery A").length,
-    batteryB: slots.filter((s) => s.batteryType === "Battery B").length,
-    batteryC: slots.filter((s) => s.batteryType === "Battery C").length,
     fullSlots: slots.filter((s) => s.status === "Đầy").length,
     chargingSlots: slots.filter((s) => s.status === "Đang sạc").length,
     maintenanceSlots: slots.filter((s) => s.status === "Đang bảo dưỡng").length,
+    reservedSlots: slots.filter((s) => s.status === "Đã đặt").length,
     averageBatteryHealth:
       slots.reduce((sum, s) => sum + s.batteryHealth, 0) / slots.length || 0,
     totalTransactions: currentStation.totalTransactions,
@@ -224,7 +224,13 @@ const StationManagement = () => {
   };
 
   // Hàm cập nhật trạng thái slot
+  // Lưu ý: Trạng thái "Đã đặt" chỉ được set tự động bởi hệ thống, không thể chỉnh sửa thủ công
   const handleStatusChange = (slotId, newStatus) => {
+    // Không cho phép thay đổi trạng thái "Đã đặt" thủ công
+    if (newStatus === "Đã đặt") {
+      return;
+    }
+
     setSlots(
       slots.map((slot) =>
         slot.id === slotId
@@ -248,6 +254,32 @@ const StationManagement = () => {
       status: slot.status,
     });
     setShowBatteryForm(true);
+  };
+
+  // Hàm mở form chỉnh sửa trạng thái
+  const handleStatusEdit = (slot) => {
+    setSelectedSlot(slot);
+    setNewStatus(slot.status);
+    setShowStatusForm(true);
+  };
+
+  // Hàm cập nhật trạng thái
+  const handleUpdateStatus = () => {
+    if (newStatus && newStatus !== "Đã đặt") {
+      setSlots(
+        slots.map((slot) =>
+          slot.id === selectedSlot.id
+            ? {
+                ...slot,
+                status: newStatus,
+                lastCharged: new Date().toISOString().split("T")[0],
+              }
+            : slot
+        )
+      );
+      setShowStatusForm(false);
+      setSelectedSlot(null);
+    }
   };
 
   return (
@@ -276,7 +308,7 @@ const StationManagement = () => {
           <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
             Tổng quan trạm
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng slot
@@ -311,18 +343,10 @@ const StationManagement = () => {
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Sức khỏe TB
-              </h3>
-              <div className="text-4xl font-bold m-0 text-indigo-500">
-                {totalStats.averageBatteryHealth.toFixed(1)}%
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Doanh thu
+                Đã đặt
               </h3>
               <div className="text-4xl font-bold m-0 text-purple-500">
-                {(totalStats.monthlyRevenue / 1000000).toFixed(1)}M
+                {totalStats.reservedSlots}
               </div>
             </div>
           </div>
@@ -333,10 +357,6 @@ const StationManagement = () => {
           <h2 className="text-gray-800 text-2xl font-semibold">
             Quản lý Slot Pin
           </h2>
-          <div className="text-sm text-gray-600">
-            Nhấp vào slot để xem chi tiết hoặc sử dụng dropdown để cập nhật
-            trạng thái nhanh
-          </div>
         </div>
 
         {/* Danh sách slot pin */}
@@ -382,25 +402,40 @@ const StationManagement = () => {
                       </span>
                     </div>
                     <div className="text-sm">
-                      <span className="font-medium">Trạng thái:</span>
-                      <select
-                        value={slot.status}
-                        onChange={(e) =>
-                          handleStatusChange(slot.id, e.target.value)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                        className={`ml-1 px-2 py-1 rounded text-xs font-medium border-0 ${
-                          slot.status === "Đầy"
-                            ? "bg-green-100 text-green-800"
-                            : slot.status === "Đang sạc"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        <option value="Đầy">Đầy</option>
-                        <option value="Đang sạc">Đang sạc</option>
-                        <option value="Đang bảo dưỡng">Đang bảo dưỡng</option>
-                      </select>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Trạng thái:</span>
+                        {slot.status !== "Đã đặt" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusEdit(slot);
+                            }}
+                            className="text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 px-2 py-1 rounded transition-colors"
+                            title="Chỉnh sửa trạng thái"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                      </div>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            slot.status === "Đầy"
+                              ? "bg-green-100 text-green-800"
+                              : slot.status === "Đang sạc"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : slot.status === "Đang bảo dưỡng"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {slot.status === "Đầy" && "🟢"}
+                          {slot.status === "Đang sạc" && "🟡"}
+                          {slot.status === "Đang bảo dưỡng" && "🔴"}
+                          {slot.status === "Đã đặt" && "🟣"}
+                          <span className="ml-1">{slot.status}</span>
+                        </span>
+                      </div>
                     </div>
                     <button
                       onClick={(e) => {
@@ -500,6 +535,72 @@ const StationManagement = () => {
                 <button
                   onClick={() => {
                     setShowBatteryForm(false);
+                    setSelectedSlot(null);
+                  }}
+                  className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal chỉnh sửa trạng thái */}
+        {showStatusForm && selectedSlot && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+              <h3 className="text-xl font-semibold mb-4">
+                Chỉnh sửa trạng thái - Slot {selectedSlot.slotNumber}
+              </h3>
+              <div className="mb-4 p-3 bg-gray-100 rounded-md">
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">Loại pin:</span>{" "}
+                  {selectedSlot.batteryType}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  <span className="font-medium">Trạng thái hiện tại:</span>{" "}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      selectedSlot.status === "Đầy"
+                        ? "bg-green-100 text-green-800"
+                        : selectedSlot.status === "Đang sạc"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : selectedSlot.status === "Đang bảo dưỡng"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-purple-100 text-purple-800"
+                    }`}
+                  >
+                    {selectedSlot.status}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trạng thái mới:
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="Đầy">Đầy</option>
+                    <option value="Đang sạc">Đang sạc</option>
+                    <option value="Đang bảo dưỡng">Đang bảo dưỡng</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={handleUpdateStatus}
+                  className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
+                >
+                  Cập nhật
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStatusForm(false);
                     setSelectedSlot(null);
                   }}
                   className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"

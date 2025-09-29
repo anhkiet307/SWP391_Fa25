@@ -39,15 +39,6 @@ const TransactionManagement = () => {
     );
   };
 
-  // Hàm cập nhật pin nhận về
-  const updateBatteryOut = (id, batteryOut) => {
-    setTransactions(
-      transactions.map((t) =>
-        t.id === id ? { ...t, batteryOut: batteryOut } : t
-      )
-    );
-  };
-
   // Hàm hủy giao dịch
   const cancelTransaction = (id) => {
     setTransactions(transactions.filter((t) => t.id !== id));
@@ -122,13 +113,7 @@ const TransactionManagement = () => {
                     Tên KH
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Pin trả về
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
                     Slot
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
-                    Pin nhận về
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
                     Trạng thái
@@ -154,26 +139,9 @@ const TransactionManagement = () => {
                       {transaction.customerName}
                     </td>
                     <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      {transaction.batteryIn}
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                         Slot {transaction.slot}
                       </span>
-                    </td>
-                    <td className="p-3 text-left border-b border-gray-200 text-sm">
-                      <select
-                        value={transaction.batteryOut}
-                        onChange={(e) =>
-                          updateBatteryOut(transaction.id, e.target.value)
-                        }
-                        className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="Chưa có">Chưa có</option>
-                        <option value="Battery A">Battery A</option>
-                        <option value="Battery B">Battery B</option>
-                        <option value="Battery C">Battery C</option>
-                      </select>
                     </td>
                     <td className="p-3 text-left border-b border-gray-200 text-sm">
                       <span

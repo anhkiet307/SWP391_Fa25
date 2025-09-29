@@ -141,9 +141,8 @@ const StaffDashboard = () => {
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Phân Bố Kho Pin */}
+        {/* Phân Bố Kho Pin */}
+        <div className="mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
               Phân Bố Kho Pin
@@ -171,77 +170,6 @@ const StaffDashboard = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Thao Tác Nhanh */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-gray-800 mb-5 text-xl font-semibold">
-              Thao Tác Nhanh
-            </h2>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button className="bg-green-500 text-white p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-green-600 transition-colors">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                <span className="text-sm font-medium">Xem Giao dịch</span>
-              </button>
-
-              <button className="bg-white border border-gray-300 text-gray-700 p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-gray-50 transition-colors">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-                <span className="text-sm font-medium">Quản lý Trạm</span>
-              </button>
-
-              <button className="bg-white border border-gray-300 text-gray-700 p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-gray-50 transition-colors">
-                <svg
-                  className="w-6 h-6"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z" />
-                </svg>
-                <span className="text-sm font-medium">Bảo Dưỡng Pin</span>
-              </button>
-
-              <button className="bg-white border border-gray-300 text-gray-700 p-4 rounded-lg flex flex-col items-center space-y-2 hover:bg-gray-50 transition-colors">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">Xem Báo Cáo</span>
-              </button>
             </div>
           </div>
         </div>
