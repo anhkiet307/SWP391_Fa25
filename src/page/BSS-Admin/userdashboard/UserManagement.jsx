@@ -185,8 +185,8 @@ const UserManagement = () => {
   // Hàm xóa người dùng
   const handleDeleteUser = (id) => {
     showConfirm("Bạn có chắc chắn muốn xóa người dùng này?", () => {
-      setUsers(users.filter((user) => user.id !== id));
-      showSuccess("Đã xóa người dùng thành công!");
+        setUsers(users.filter((user) => user.id !== id));
+        showSuccess("Đã xóa người dùng thành công!");
     });
   };
 
@@ -483,8 +483,8 @@ const UserManagement = () => {
                 </thead>
                 <tbody>
                   {users.map((user, index) => (
-                    <tr
-                      key={user.id}
+                    <tr 
+                      key={user.id} 
                       className={`hover:bg-indigo-50 transition-colors duration-200 ${
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
@@ -516,17 +516,17 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          <span
+                        <span
                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
-                              user.status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
+                            user.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
                             {user.status === "active"
                               ? "Hoạt động"
                               : "Tạm khóa"}
-                          </span>
+                        </span>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
@@ -737,8 +737,8 @@ const UserManagement = () => {
                 </thead>
                 <tbody>
                   {staff.map((staffMember, index) => (
-                    <tr
-                      key={staffMember.id}
+                    <tr 
+                      key={staffMember.id} 
                       className={`hover:bg-indigo-50 transition-colors duration-200 ${
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}

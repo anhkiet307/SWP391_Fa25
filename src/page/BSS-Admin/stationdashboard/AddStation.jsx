@@ -29,10 +29,10 @@ const AdminAddStation = () => {
         },
       });
     } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
     }
   };
 
@@ -47,9 +47,9 @@ const AdminAddStation = () => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      
       showSuccess("Thêm trạm mới thành công!");
-
+      
       // Reset form
       setFormData({
         name: "",
@@ -104,12 +104,12 @@ const AdminAddStation = () => {
                         />
                       </svg>
                     </div>
-                    <div>
+          <div>
                       <h1 className="text-2xl font-bold mb-1">Thêm Trạm Đổi Pin Mới</h1>
                       <p className="text-white text-opacity-90 text-sm">
-                        Tạo trạm đổi pin mới trong hệ thống
-                      </p>
-                    </div>
+              Tạo trạm đổi pin mới trong hệ thống
+            </p>
+          </div>
                   </div>
                   
                   {/* Stats Cards */}
@@ -226,35 +226,35 @@ const AdminAddStation = () => {
                   Vị trí trạm (Tọa độ) <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+              <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">
                       Latitude (Vĩ độ)
-                    </label>
-                    <input
+                </label>
+                <input
                       type="number"
                       name="lat"
                       value={formData.position.lat}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="21.0333"
                       step="any"
-                      required
-                    />
-                  </div>
+                  required
+                />
+              </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">
                       Longitude (Kinh độ)
-                    </label>
-                    <input
+                </label>
+                <input
                       type="number"
                       name="lng"
                       value={formData.position.lng}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="105.8333"
                       step="any"
-                      required
-                    />
+                  required
+                />
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
@@ -501,7 +501,7 @@ const AdminAddStation = () => {
                     <div className="text-base font-semibold text-gray-900">
                       {formData.phone || "Chưa nhập"}
                     </div>
-                  </div>
+            </div>
 
                   {/* Sức chứa */}
                   <div className="bg-pink-50 rounded-lg p-3 border border-pink-100">
@@ -522,11 +522,11 @@ const AdminAddStation = () => {
                       <span className="text-base font-medium text-pink-600">
                         Sức chứa
                       </span>
-                    </div>
+            </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.batteryCapacity || 0} pin
-                    </div>
-                  </div>
+            </div>
+            </div>
 
                   {/* Vị trí trạm */}
                   <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
@@ -547,18 +547,18 @@ const AdminAddStation = () => {
                       <span className="text-base font-medium text-indigo-600">
                         Vị trí trạm
                       </span>
-                    </div>
+            </div>
                     <div className="text-base font-semibold text-gray-900">
                       {formData.position.lat && formData.position.lng 
                         ? `${formData.position.lat}, ${formData.position.lng}`
                         : "Chưa nhập tọa độ"
                       }
-                    </div>
+            </div>
                     {formData.position.lat && formData.position.lng && (
                       <div className="text-xs text-indigo-600 mt-1">
                         📍 Lat: {formData.position.lat} | Lng: {formData.position.lng}
-                      </div>
-                    )}
+              </div>
+            )}
                   </div>
 
                   {/* Địa chỉ */}
@@ -611,8 +611,8 @@ const AdminAddStation = () => {
                     {isSubmitting ? "Đang tạo..." : "Tạo trạm"}
                   </button>
                 </div>
-              </div>
-            </div>
+          </div>
+        </div>
           </div>
         )}
       </div>
