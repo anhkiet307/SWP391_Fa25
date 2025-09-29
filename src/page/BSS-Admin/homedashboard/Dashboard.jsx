@@ -15,7 +15,7 @@ const AdminDashboard = () => {
     totalUsers: 2500,
     totalTransactions: 15680,
     monthlyRevenue: 784000000,
-    batteryHealth: 85,
+    stationHealth: 85,
   });
 
   const [stationStats, setStationStats] = useState([
@@ -30,7 +30,7 @@ const AdminDashboard = () => {
       batteryMaintenance: 5,
       totalTransactions: 1890,
       monthlyRevenue: 94500000,
-      batteryHealth: 88,
+      stationHealth: 88,
     },
     {
       id: 2,
@@ -43,7 +43,7 @@ const AdminDashboard = () => {
       batteryMaintenance: 5,
       totalTransactions: 1250,
       monthlyRevenue: 62500000,
-      batteryHealth: 92,
+      stationHealth: 92,
     },
     {
       id: 3,
@@ -56,40 +56,40 @@ const AdminDashboard = () => {
       batteryMaintenance: 22,
       totalTransactions: 980,
       monthlyRevenue: 49000000,
-      batteryHealth: 75,
+      stationHealth: 75,
     },
   ]);
 
-  const [recentTransactions, setRecentTransactions] = useState([
+  const [recentReports, setRecentReports] = useState([
     {
       id: 1,
       customerName: "Lê Văn C",
       stationId: "BSS-001",
-      batteryIn: "Battery B - 3000mAh",
-      batteryOut: "Battery C - 7000mAh",
-      amount: 100000,
+      reportType: "Lỗi kỹ thuật",
+      description: "Pin không sạc được, màn hình hiển thị lỗi",
       timestamp: "15/01/2024 16:00",
       status: "pending",
+      priority: "high",
     },
     {
       id: 2,
       customerName: "Trần Thị B",
       stationId: "BSS-002",
-      batteryIn: "Battery C - 7000mAh",
-      batteryOut: "Battery A - 5000mAh",
-      amount: 75000,
+      reportType: "Góp ý dịch vụ",
+      description: "Thời gian chờ quá lâu, cần cải thiện",
       timestamp: "15/01/2024 15:15",
-      status: "completed",
+      status: "in_progress",
+      priority: "normal",
     },
     {
       id: 3,
       customerName: "Nguyễn Văn A",
       stationId: "BSS-001",
-      batteryIn: "Battery A - 5000mAh",
-      batteryOut: "Battery B - 3000mAh",
-      amount: 50000,
+      reportType: "Lỗi kỹ thuật",
+      description: "Máy đổi pin bị kẹt, không thể lấy pin ra",
       timestamp: "15/01/2024 14:30",
-      status: "completed",
+      status: "resolved",
+      priority: "urgent",
     },
   ]);
 
@@ -270,10 +270,10 @@ const AdminDashboard = () => {
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Sức khỏe pin
+                Sức khỏe trạm
               </h3>
               <div className="text-4xl font-bold m-0 text-yellow-500">
-                {systemStats.batteryHealth}%
+                {systemStats.stationHealth}%
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
@@ -293,122 +293,73 @@ const AdminDashboard = () => {
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
               Thống kê trạm
             </h2>
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full border-collapse bg-white rounded-lg overflow-hidden mt-4">
-                <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                    <th className="p-4 text-left font-semibold text-base">
-                      Trạm
-                    </th>
-                    <th className="p-4 text-left font-semibold text-base">
-                      Trạng thái
-                    </th>
-                    <th className="p-4 text-left font-semibold text-base">
-                      Pin/Tổng
-                    </th>
-                    <th className="p-4 text-left font-semibold text-base">
-                      Sức khỏe
-                    </th>
-                    <th className="p-4 text-left font-semibold text-base">
-                      Doanh thu
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stationStats.map((station, index) => (
-                    <tr
-                      key={station.id}
-                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
-                    >
-                      <td className="p-4 border-b border-gray-200">
-                        <div>
-                          <div className="font-bold text-base text-indigo-600">
-                            {station.stationId}
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {station.name}
-                          </div>
+            <div className="space-y-3 flex-1 mt-8">
+              {stationStats.map((station, index) => (
+                <div
+                  key={station.id}
+                  className={`flex items-center justify-between p-4 rounded-lg border-l-4 transition-all duration-200 hover:shadow-md ${
+                    station.status === "active"
+                      ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
+                      : "border-red-400 bg-gradient-to-r from-red-50 to-white hover:from-red-100"
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {station.stationId.charAt(station.stationId.length - 1)}
+                      </div>
+                      <div>
+                        <div className="font-bold text-base text-gray-800">
+                          {station.stationId}
                         </div>
-                      </td>
-                      <td className="p-4 border-b border-gray-200">
-                        <span
-                          className={`px-3 py-2 rounded-full text-sm font-semibold ${
-                            station.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {station.status === "active"
-                            ? "Hoạt động"
-                            : "Bảo dưỡng"}
+                        <div className="text-sm text-indigo-600 font-medium">
+                          {station.name}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 mb-2 pl-13">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          station.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                        }`}>
+                          {station.status === "active" ? "Hoạt động" : "Bảo dưỡng"}
                         </span>
-                      </td>
-                      <td className="p-4 border-b border-gray-200">
-                        <div className="flex items-center gap-3">
-                          <div className="text-center">
-                            <div className="text-green-600 font-bold text-base">
-                              {station.batteryFull}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Đầy
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-yellow-600 font-bold text-base">
-                              {station.batteryCharging}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Sạc
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-red-600 font-bold text-base">
-                              {station.batteryMaintenance}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Bảo dưỡng
-                            </div>
-                          </div>
-                          <div className="text-center ml-3 pl-3 border-l border-gray-300">
-                            <div className="font-bold text-base text-gray-800">
-                              {station.batteryCapacity}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Tổng
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-gray-200">
-                        <div className="flex items-center">
-                          <div className="w-20 bg-gray-200 rounded-full h-3 mr-3">
-                            <div
-                              className={`h-3 rounded-full transition-all duration-300 ${
-                                station.batteryHealth >= 80
-                                  ? "bg-green-500"
-                                  : station.batteryHealth >= 60
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                              }`}
-                              style={{ width: `${station.batteryHealth}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm font-bold text-gray-800">
-                            {station.batteryHealth}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4 border-b border-gray-200">
-                        <div className="font-bold text-base text-green-600">
-                          {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <span className="text-gray-600">•</span>
+                        <span className="text-gray-600 text-xs">
+                          Sức khỏe: {station.stationHealth}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500 pl-13">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        Doanh thu: {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right ml-4">
+                    <div className="flex items-center">
+                      <div className="w-16 bg-gray-200 rounded-full h-3 mr-3">
+                        <div
+                          className={`h-3 rounded-full transition-all duration-300 ${
+                            station.stationHealth >= 80
+                              ? "bg-green-500"
+                              : station.stationHealth >= 60
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
+                          }`}
+                          style={{ width: `${station.stationHealth}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-bold text-gray-800">
+                        {station.stationHealth}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="mt-6 text-center">
               <button
@@ -420,119 +371,89 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Giao dịch gần đây */}
+          {/* Report gần đây */}
           <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
-              Giao dịch gần đây
+              Report gần đây
             </h2>
             <div className="space-y-3 flex-1 mt-8">
-              {recentTransactions.map((transaction, index) => (
+              {recentReports.map((report, index) => (
                 <div
-                  key={transaction.id}
-                  className={`flex items-center justify-between p-5 rounded-lg border-l-4 transition-all duration-200 hover:shadow-md ${
-                    transaction.status === "completed"
+                  key={report.id}
+                  className={`flex items-center justify-between p-4 rounded-lg border-l-4 transition-all duration-200 hover:shadow-md ${
+                    report.status === "resolved"
                       ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
+                      : report.status === "in_progress"
+                      ? "border-blue-400 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100"
                       : "border-yellow-400 bg-gradient-to-r from-yellow-50 to-white hover:from-yellow-100"
                   }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {transaction.customerName.charAt(0)}
+                        {report.customerName.charAt(0)}
                       </div>
                       <div>
                         <div className="font-bold text-base text-gray-800">
-                          {transaction.customerName}
+                          {report.customerName}
                         </div>
                         <div className="text-sm text-indigo-600 font-medium">
-                          {transaction.stationId}
+                          {report.stationId}
                         </div>
                       </div>
                     </div>
                     <div className="text-sm text-gray-700 mb-2 pl-13">
                       <div className="flex items-center gap-2">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                          Vào: {transaction.batteryIn}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          report.priority === "urgent" ? "bg-red-100 text-red-800" :
+                          report.priority === "high" ? "bg-orange-100 text-orange-800" :
+                          "bg-blue-100 text-blue-800"
+                        }`}>
+                          {report.reportType}
                         </span>
-                        <svg
-                          className="w-4 h-4 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 8l4 4m0 0l-4 4m4-4H3"
-                          />
-                        </svg>
-                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                          Ra: {transaction.batteryOut}
+                        <span className="text-gray-600">•</span>
+                        <span className="text-gray-600 text-xs">
+                          {report.description.length > 50 ? report.description.substring(0, 50) + "..." : report.description}
                         </span>
                       </div>
                     </div>
                     <div className="text-sm text-gray-500 pl-13">
                       <div className="flex items-center gap-2">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        {transaction.timestamp}
+                        {report.timestamp}
                       </div>
                     </div>
                   </div>
                   <div className="text-right ml-4">
-                    <div className="font-bold text-lg text-green-600 mb-2">
-                      {transaction.amount.toLocaleString("vi-VN")} VNĐ
-                    </div>
                     <span
                       className={`px-3 py-2 rounded-full text-sm font-semibold inline-flex items-center gap-1 ${
-                        transaction.status === "completed"
+                        report.status === "resolved"
                           ? "bg-green-100 text-green-800"
+                          : report.status === "in_progress"
+                          ? "bg-blue-100 text-blue-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {transaction.status === "completed" ? (
+                      {report.status === "resolved" ? (
                         <>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Hoàn thành
+                          Đã giải quyết
+                        </>
+                      ) : report.status === "in_progress" ? (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Đang xử lý
                         </>
                       ) : (
                         <>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           Chờ xử lý
                         </>
@@ -544,10 +465,10 @@ const AdminDashboard = () => {
             </div>
             <div className="mt-6 text-center">
               <button
-                onClick={() => navigate("/admin-transaction-management")}
+                onClick={() => navigate("/admin-report-management")}
                 className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
-                Xem tất cả giao dịch
+                Xem tất cả report
               </button>
             </div>
           </div>
