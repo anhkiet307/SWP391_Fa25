@@ -2,7 +2,7 @@ import React, { useCallback, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Typography, Space, Button, Tag } from "antd";
+import { Typography, Space, Button, Tag, Rate } from "antd";
 import {
   PoweroffOutlined,
   EnvironmentOutlined,
@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import { batteryStations, districts } from "../data/stations";
 import { useNavigate } from "react-router-dom";
+import RatingModal from "./RatingModal";
 
 const { Title, Paragraph } = Typography;
 
@@ -407,6 +408,8 @@ function Map() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [mapCenter, setMapCenter] = useState([16.0, 108.0]); // Trung tâm Việt Nam
   const [mapZoom, setMapZoom] = useState(6);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingStation, setRatingStation] = useState(null);
 
   // Hàm lấy vị trí hiện tại của người dùng
   const getUserLocation = useCallback(() => {
@@ -477,34 +480,19 @@ function Map() {
     );
   }, []);
 
-  // Hàm chọn trạm sạc
-  const selectStation = useCallback(
-    (station) => {
-      if (userLocation) {
-        const distance = calculateDistance(
-          userLocation[0],
-          userLocation[1],
-          station.position[0],
-          station.position[1]
-        );
-        setSelectedStation({ ...station, distance });
-        setShowStationPopup(true);
+  // Hàm mở modal đánh giá
+  const openRatingModal = useCallback((station) => {
+    setRatingStation(station);
+    setShowRatingModal(true);
+  }, []);
 
-        // Tự động ẩn popup sau 5 giây
-        setTimeout(() => {
-          setShowStationPopup(false);
-        }, 5000);
-      } else {
-        // Nếu chưa định vị, vẫn cho phép chọn nhưng không có khoảng cách
-        setSelectedStation(station);
-        setShowStationPopup(true);
-
-        setTimeout(() => {
-          setShowStationPopup(false);
-        }, 5000);
-      }
+  // Hàm xử lý gửi đánh giá
+  const handleRatingSubmit = useCallback(
+    (rating) => {
+      console.log(`Đánh giá trạm ${ratingStation?.name}: ${rating} sao`);
+      // Ở đây có thể gọi API để lưu đánh giá
     },
-    [userLocation]
+    [ratingStation]
   );
 
   // Hàm chuyển đến trang booking với trạm đã chọn
@@ -948,6 +936,68 @@ function Map() {
                               )}
                             </div>
                           </div>
+
+                          {/* Hiển thị đánh giá */}
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              marginBottom: "12px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "50%",
+                                background:
+                                  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginRight: "8px",
+                              }}
+                            >
+                              <StarOutlined
+                                style={{ fontSize: "10px", color: "white" }}
+                              />
+                            </div>
+                            <div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  fontWeight: "600",
+                                  color: "#00083B",
+                                  marginBottom: "2px",
+                                }}
+                              >
+                                Đánh giá
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <Rate
+                                  disabled
+                                  value={station.rating}
+                                  style={{ fontSize: "12px" }}
+                                />
+                                <span
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#475569",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  {station.rating} ({station.totalRatings} đánh
+                                  giá)
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
                         <div style={{ marginBottom: "16px" }}>
@@ -1204,7 +1254,7 @@ function Map() {
                           </div>
                         </div>
 
-                        {/* Nút chọn trạm, đặt lịch và chỉ đường */}
+                        {/* Nút đánh giá, đặt lịch và chỉ đường */}
                         <div
                           style={{
                             display: "flex",
@@ -1213,42 +1263,7 @@ function Map() {
                           }}
                         >
                           <button
-                            onClick={() => selectStation(station)}
-                            style={{
-                              flex: 1,
-                              minWidth: "80px",
-                              background:
-                                "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                              color: "white",
-                              padding: "10px 12px",
-                              borderRadius: "12px",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              border: "none",
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "6px",
-                              boxShadow: "0 4px 8px rgba(0, 8, 59, 0.2)",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.transform = "translateY(-2px)";
-                              e.target.style.boxShadow =
-                                "0 6px 12px rgba(0, 8, 59, 0.3)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.transform = "translateY(0)";
-                              e.target.style.boxShadow =
-                                "0 4px 8px rgba(0, 8, 59, 0.2)";
-                            }}
-                          >
-                            <AimOutlined style={{ fontSize: "12px" }} />
-                            <span>Chọn</span>
-                          </button>
-                          <button
-                            onClick={() => goToBooking(station)}
+                            onClick={() => openRatingModal(station)}
                             style={{
                               flex: 1,
                               minWidth: "80px",
@@ -1277,6 +1292,41 @@ function Map() {
                               e.target.style.transform = "translateY(0)";
                               e.target.style.boxShadow =
                                 "0 4px 8px rgba(245, 158, 11, 0.2)";
+                            }}
+                          >
+                            <StarOutlined style={{ fontSize: "12px" }} />
+                            <span>Đánh giá</span>
+                          </button>
+                          <button
+                            onClick={() => goToBooking(station)}
+                            style={{
+                              flex: 1,
+                              minWidth: "80px",
+                              background:
+                                "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                              color: "white",
+                              padding: "10px 12px",
+                              borderRadius: "12px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(0, 8, 59, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(0, 8, 59, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(0, 8, 59, 0.2)";
                             }}
                           >
                             <CalendarOutlined style={{ fontSize: "12px" }} />
@@ -1350,6 +1400,14 @@ function Map() {
           </div>
         </div>
       </div>
+
+      {/* Modal đánh giá */}
+      <RatingModal
+        visible={showRatingModal}
+        onCancel={() => setShowRatingModal(false)}
+        station={ratingStation}
+        onSubmit={handleRatingSubmit}
+      />
     </div>
   );
 }

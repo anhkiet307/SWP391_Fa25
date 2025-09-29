@@ -54,7 +54,7 @@ L.Icon.Default.mergeOptions({
 // Tạo icon tùy chỉnh
 const createBatteryIcon = (color) => {
   return L.divIcon({
-    className: "custom-battery-icon",
+    className: "custom-slottery-icon",
     html: `
       <div style="
         background-color: ${color};
@@ -172,12 +172,14 @@ export default function Booking() {
   const [selectedDate, setSelectedDate] = useState(null);
   const summaryCardRef = useRef(null);
   const [summaryCardHeight, setSummaryCardHeight] = useState(null);
+  const [visibleSlots, setVisibleSlots] = useState(6);
+  const slotsPerLoad = 6;
 
   const [formValues, setFormValues] = useState({
     station: null,
     date: null,
     time: null,
-    vehicle: null,
+    selectedSlot: null,
   });
 
   // Set default date for "today" tab
@@ -192,7 +194,7 @@ export default function Booking() {
   const watchedStation = formValues.station;
   const watchedDate = formValues.date;
   const watchedTime = formValues.time;
-  const watchedVehicle = formValues.vehicle;
+  const watchedSelectedSlot = formValues.selectedSlot;
 
   const serviceFee = 50000;
   const formatVND = (value) =>
@@ -203,45 +205,36 @@ export default function Booking() {
   const selectedStationData = stations.find(
     (s) => s.name === formValues.station
   );
-  const stationInventory = selectedStationData?.inventory || [];
+  const stationSlots = selectedStationData?.slots || [];
 
-  const selectedVehicleObj = (user?.vehicles || []).find(
-    (v) => v.name === watchedVehicle
+  // Tìm ổ pin được chọn
+  const selectedSlotObj = stationSlots.find(
+    (slot) => slot.id === watchedSelectedSlot
   );
-
-  const compatibleBatteryType =
-    selectedVehicleObj?.type || selectedVehicleObj?.battery || null;
 
   // Thống kê tổng quan toàn trạm
-  const totalBatteriesAll = stationInventory.length;
-  const countsByTypeAll = stationInventory.reduce((acc, b) => {
-    acc[b.type] = (acc[b.type] || 0) + 1;
-    return acc;
-  }, {});
-  const availableByTypeAll = stationInventory.reduce((acc, b) => {
-    if (b.status === "available") {
-      acc[b.type] = (acc[b.type] || 0) + 1;
-    }
-    return acc;
-  }, {});
-
-  const compatibleAvailableInventory = stationInventory.filter(
-    (b) =>
-      (!compatibleBatteryType || b.type === compatibleBatteryType) &&
-      b.status === "available"
-  );
-
-  // Thống kê bổ sung: tổng khả dụng toàn trạm và danh sách tương thích đầy đủ
-  const totalAvailableAll = stationInventory.filter(
-    (b) => b.status === "available"
+  const totalSlotsAll = stationSlots.length;
+  const readySlotsAll = stationSlots.filter(
+    (slot) => slot.status === "ready"
   ).length;
-  const compatibleInventoryAll = stationInventory
-    .filter((b) => !compatibleBatteryType || b.type === compatibleBatteryType)
+  const bookedSlotsAll = stationSlots.filter(
+    (slot) => slot.status === "booked"
+  ).length;
+  const chargingSlotsAll = stationSlots.filter(
+    (slot) => slot.status === "charging"
+  ).length;
+  const maintenanceSlotsAll = stationSlots.filter(
+    (slot) => slot.status === "maintenance"
+  ).length;
+
+  // Sắp xếp tất cả ổ pin theo slotNumber từ 1-15
+  const sortedAllSlots = stationSlots
     .slice()
-    .sort((a, b) => {
-      if (a.status !== b.status) return a.status === "available" ? -1 : 1;
-      return b.soc - a.soc;
-    });
+    .sort((a, b) => a.slotNumber - b.slotNumber);
+
+  // Tính toán slots hiển thị
+  const currentSlots = sortedAllSlots.slice(0, visibleSlots);
+  const hasMoreSlots = visibleSlots < sortedAllSlots.length;
 
   useEffect(() => {
     const stationId = searchParams.get("stationId");
@@ -305,7 +298,7 @@ export default function Booking() {
     watchedStation,
     watchedDate,
     watchedTime,
-    watchedVehicle,
+    watchedSelectedSlot,
     selectedTimeSlot,
     isBooking,
   ]);
@@ -521,6 +514,24 @@ export default function Booking() {
     setFormValues((prev) => ({ ...prev, ...changedValues }));
   };
 
+  // Reset số slots hiển thị khi chọn trạm mới
+  useEffect(() => {
+    setVisibleSlots(6);
+  }, [watchedStation]);
+
+  // Infinite scroll handler
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Khi cuộn gần đến cuối (còn 10px) thì tải thêm
+    if (scrollHeight - scrollTop - clientHeight < 10 && hasMoreSlots) {
+      console.log("Loading more slots...", {
+        visibleSlots,
+        totalSlots: sortedAllSlots.length,
+      });
+      setVisibleSlots(visibleSlots + slotsPerLoad);
+    }
+  };
+
   // Không tự động chuyển thành phố theo trạm gần nhất để tránh làm thay đổi lựa chọn của người dùng
 
   const handleBooking = async (values) => {
@@ -535,8 +546,8 @@ export default function Booking() {
       errors.push("Vui lòng chọn khung giờ");
     }
 
-    if (!values.vehicle) {
-      errors.push("Vui lòng chọn loại xe");
+    if (!values.selectedSlot) {
+      errors.push("Vui lòng chọn ổ pin");
     }
 
     if (activeTab === "future" && !values.date) {
@@ -860,23 +871,23 @@ export default function Booking() {
           >
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative overflow-hidden"
-              style={{ height: 1050 }}
+              style={{ height: 700 }}
             >
               {/* Simple Decorative Elements */}
               <div className="absolute -top-[30px] -right-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
               <div className="absolute -bottom-[20px] -left-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
 
               <div
-                className="text-center mb-8"
+                className="text-center mb-2"
                 style={{ position: "relative", zIndex: 1 }}
               >
                 <Title
-                  level={2}
-                  className="mb-2 text-[#00083B] text-[28px] font-semibold"
+                  level={4}
+                  className="mb-0 text-[#00083B] text-[18px] font-semibold"
                 >
                   Chọn Thông Tin Đặt Lịch
                 </Title>
-                <Paragraph className="text-slate-500 text-[16px]">
+                <Paragraph className="text-slate-500 text-[12px]">
                   Điền đầy đủ thông tin để đặt lịch đổi pin
                 </Paragraph>
               </div>
@@ -898,15 +909,15 @@ export default function Booking() {
                   }
                 }}
                 style={{
-                  marginBottom: "32px",
+                  marginBottom: "20px",
                   position: "relative",
                   zIndex: 1,
                 }}
                 tabBarStyle={{
                   background: "rgba(0, 8, 59, 0.05)",
                   borderRadius: "12px",
-                  padding: "8px",
-                  marginBottom: "24px",
+                  padding: "6px",
+                  marginBottom: "16px",
                 }}
               >
                 <TabPane
@@ -986,12 +997,16 @@ export default function Booking() {
                         <Form.Item
                           name="station"
                           label={
-                            <Space>
+                            <Space size="small">
                               <EnvironmentOutlined
-                                style={{ color: "#00083B" }}
+                                style={{ color: "#00083B", fontSize: "14px" }}
                               />
                               <span
-                                style={{ color: "#00083B", fontWeight: "600" }}
+                                style={{
+                                  color: "#00083B",
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                }}
                               >
                                 Chọn trạm đổi pin
                               </span>
@@ -1330,12 +1345,16 @@ export default function Booking() {
                         <Form.Item
                           name="time"
                           label={
-                            <Space>
+                            <Space size="small">
                               <ClockCircleOutlined
-                                style={{ color: "#00083B" }}
+                                style={{ color: "#00083B", fontSize: "14px" }}
                               />
                               <span
-                                style={{ color: "#00083B", fontWeight: "600" }}
+                                style={{
+                                  color: "#00083B",
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                }}
                               >
                                 Chọn giờ (8:00 - 20:00)
                               </span>
@@ -1364,161 +1383,6 @@ export default function Booking() {
                             ))}
                           </Select>
                           {/* Thông tin xe hiển thị dưới Select xe, không đặt ở đây */}
-                        </Form.Item>
-                      </Col>
-
-                      {/* Thông tin người dùng + chọn loại xe (tab Đổi trong ngày) */}
-                      <Col xs={24}>
-                        <div
-                          style={{
-                            marginTop: 8,
-                            marginBottom: 8,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 18,
-                              background: "#00083B",
-                              color: "white",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {(user?.name || "U").charAt(0)}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 700, color: "#00083B" }}>
-                              {user?.name || "User"}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
-                              {user?.email}
-                            </div>
-                          </div>
-                        </div>
-                        <Form.Item
-                          name="vehicle"
-                          label={
-                            <span style={{ color: "#00083B", fontWeight: 600 }}>
-                              Chọn loại xe đã liên kết
-                            </span>
-                          }
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn loại xe!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            placeholder="-- Chọn loại xe --"
-                            size="large"
-                            style={{ borderRadius: 12 }}
-                            value={form.getFieldValue("vehicle")}
-                            onChange={(value) => {
-                              form.setFieldsValue({ vehicle: value });
-                              setFormValues((prev) => ({
-                                ...prev,
-                                vehicle: value,
-                              }));
-                            }}
-                          >
-                            {(user?.vehicles || []).map((v) => (
-                              <Option key={v.id} value={v.name}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 12,
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontWeight: 600,
-                                      whiteSpace: "nowrap",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                    }}
-                                  >
-                                    {v.name} - {v.plate || "-"}
-                                  </span>
-                                  <span
-                                    style={{ fontSize: 12, color: "#64748b" }}
-                                  >
-                                    {v.type || v.battery}
-                                  </span>
-                                </div>
-                              </Option>
-                            ))}
-                          </Select>
-                          {watchedVehicle && (
-                            <Card
-                              size="small"
-                              style={{
-                                marginTop: 8,
-                                borderRadius: 12,
-                                background:
-                                  "linear-gradient(135deg, rgba(0,8,59,0.04) 0%, rgba(0,8,59,0.02) 100%)",
-                                border: "1px solid rgba(0,8,59,0.1)",
-                              }}
-                              bodyStyle={{ padding: 12 }}
-                            >
-                              <div
-                                style={{
-                                  display: "grid",
-                                  gridTemplateColumns: "110px 1fr",
-                                  rowGap: 6,
-                                  fontSize: 13,
-                                  color: "#0f172a",
-                                }}
-                              >
-                                <span style={{ color: "#64748b" }}>Xe</span>
-                                <span style={{ fontWeight: 700 }}>
-                                  {watchedVehicle}
-                                </span>
-                                <span style={{ color: "#64748b" }}>
-                                  Biển số
-                                </span>
-                                <span>
-                                  {(() => {
-                                    const v = (user?.vehicles || []).find(
-                                      (x) => x.name === watchedVehicle
-                                    );
-                                    return v?.plate || "-";
-                                  })()}
-                                </span>
-                                <span style={{ color: "#64748b" }}>Pin xe</span>
-                                <span>
-                                  {(() => {
-                                    const v = (user?.vehicles || []).find(
-                                      (x) => x.name === watchedVehicle
-                                    );
-                                    return v?.type || v?.battery || "-";
-                                  })()}
-                                </span>
-                                <span style={{ color: "#64748b" }}>
-                                  Mã số Pin
-                                </span>
-                                <span>
-                                  {(() => {
-                                    const v = (user?.vehicles || []).find(
-                                      (x) => x.name === watchedVehicle
-                                    );
-                                    return v?.currentBattery
-                                      ? `${v.currentBattery.id}`
-                                      : "-";
-                                  })()}
-                                </span>
-                              </div>
-                            </Card>
-                          )}
                         </Form.Item>
                       </Col>
                     </Row>
@@ -1604,12 +1468,16 @@ export default function Booking() {
                         <Form.Item
                           name="station"
                           label={
-                            <Space>
+                            <Space size="small">
                               <EnvironmentOutlined
-                                style={{ color: "#00083B" }}
+                                style={{ color: "#00083B", fontSize: "14px" }}
                               />
                               <span
-                                style={{ color: "#00083B", fontWeight: "600" }}
+                                style={{
+                                  color: "#00083B",
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                }}
                               >
                                 Chọn trạm đổi pin
                               </span>
@@ -1946,10 +1814,16 @@ export default function Booking() {
                         <Form.Item
                           name="date"
                           label={
-                            <Space>
-                              <CalendarOutlined style={{ color: "#00083B" }} />
+                            <Space size="small">
+                              <CalendarOutlined
+                                style={{ color: "#00083B", fontSize: "14px" }}
+                              />
                               <span
-                                style={{ color: "#00083B", fontWeight: "600" }}
+                                style={{
+                                  color: "#00083B",
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                }}
                               >
                                 Chọn ngày
                               </span>
@@ -1989,12 +1863,16 @@ export default function Booking() {
                         <Form.Item
                           name="time"
                           label={
-                            <Space>
+                            <Space size="small">
                               <ClockCircleOutlined
-                                style={{ color: "#00083B" }}
+                                style={{ color: "#00083B", fontSize: "14px" }}
                               />
                               <span
-                                style={{ color: "#00083B", fontWeight: "600" }}
+                                style={{
+                                  color: "#00083B",
+                                  fontWeight: "600",
+                                  fontSize: "14px",
+                                }}
                               >
                                 Chọn giờ (8:00 - 20:00)
                               </span>
@@ -2024,141 +1902,6 @@ export default function Booking() {
                           </Select>
                         </Form.Item>
                       </Col>
-
-                      {/* Thông tin người dùng + chọn loại xe */}
-                      <Col xs={24}>
-                        <div
-                          style={{
-                            marginTop: 8,
-                            marginBottom: 8,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: 18,
-                              background: "#00083B",
-                              color: "white",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {(user?.name || "U").charAt(0)}
-                          </div>
-                          <div>
-                            <div style={{ fontWeight: 700, color: "#00083B" }}>
-                              {user?.name || "User"}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#64748b" }}>
-                              {user?.email}
-                            </div>
-                          </div>
-                        </div>
-                        <Form.Item
-                          name="vehicle"
-                          label={
-                            <span style={{ color: "#00083B", fontWeight: 600 }}>
-                              Chọn loại xe đã liên kết
-                            </span>
-                          }
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn loại xe!",
-                            },
-                          ]}
-                        >
-                          <Select
-                            placeholder="-- Chọn loại xe --"
-                            size="large"
-                            style={{ borderRadius: 12 }}
-                            value={form.getFieldValue("vehicle")}
-                            onChange={(value) => {
-                              form.setFieldsValue({ vehicle: value });
-                              setFormValues((prev) => ({
-                                ...prev,
-                                vehicle: value,
-                              }));
-                            }}
-                          >
-                            {(user?.vehicles || []).map((v) => (
-                              <Option key={v.id} value={v.name}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                  }}
-                                >
-                                  <span>{v.name}</span>
-                                  <div style={{ display: "flex", gap: 10 }}>
-                                    <span
-                                      style={{
-                                        fontSize: 12,
-                                        color: "#64748b",
-                                      }}
-                                    >
-                                      {v.type || v.battery}
-                                    </span>
-                                    {v.currentBattery && (
-                                      <span
-                                        style={{
-                                          fontSize: 12,
-                                          color: "#059669",
-                                        }}
-                                      >
-                                        {`ID ${v.currentBattery.id}`}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </Option>
-                            ))}
-                          </Select>
-                          {/* Thông tin xe và pin hiện tại dưới phần chọn xe (tab hôm nay) */}
-                          {watchedVehicle && (
-                            <div style={{ marginTop: 8 }}>
-                              <div style={{ fontSize: 12, color: "#475569" }}>
-                                <strong>Xe:</strong>{" "}
-                                {(() => {
-                                  const v = (user?.vehicles || []).find(
-                                    (x) => x.name === watchedVehicle
-                                  );
-                                  return v?.plate
-                                    ? `${watchedVehicle} • ${v.plate}`
-                                    : watchedVehicle;
-                                })()}
-                              </div>
-                              <div style={{ fontSize: 12, color: "#475569" }}>
-                                <strong>Pin xe:</strong>{" "}
-                                {(() => {
-                                  const v = (user?.vehicles || []).find(
-                                    (x) => x.name === watchedVehicle
-                                  );
-                                  return v?.type || v?.battery || "-";
-                                })()}
-                              </div>
-                              <div style={{ fontSize: 12, color: "#475569" }}>
-                                <strong>Mã số Pin hiện tại:</strong>{" "}
-                                {(() => {
-                                  const v = (user?.vehicles || []).find(
-                                    (x) => x.name === watchedVehicle
-                                  );
-                                  return v?.currentBattery
-                                    ? `${v.currentBattery.id}`
-                                    : "-";
-                                })()}
-                              </div>
-                            </div>
-                          )}
-                        </Form.Item>
-                      </Col>
                     </Row>
 
                     {/* Action Buttons removed per request */}
@@ -2166,184 +1909,7 @@ export default function Booking() {
                 </TabPane>
               </Tabs>
             </Card>
-            {/* Inventory card moved to bottom full width */}
-            {false && selectedStationData && watchedVehicle && (
-              <Card
-                style={{
-                  marginTop: 16,
-                  borderRadius: 16,
-                  background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
-                  border: "1px solid rgba(0,8,59,0.08)",
-                  boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
-                }}
-                bodyStyle={{ padding: 20 }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: "#10b981",
-                    }}
-                  />
-                  <span
-                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
-                  >
-                    Tồn kho pin tại trạm đã chọn
-                  </span>
-                </div>
-                <div style={{ color: "#475569", fontSize: 14 }}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
-                      <div style={{ fontWeight: 700 }}>
-                        {selectedStationData.name}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Tổng pin / Khả dụng
-                      </div>
-                      <div style={{ fontWeight: 700 }}>
-                        {totalBatteriesAll} / {totalAvailableAll}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <strong>Tổng quan theo loại:</strong>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fill, minmax(160px, 1fr))",
-                        gap: 8,
-                        marginTop: 8,
-                      }}
-                    >
-                      {Object.keys(countsByTypeAll).map((type) => (
-                        <div
-                          key={type}
-                          style={{
-                            border: `2px solid ${
-                              compatibleBatteryType === type
-                                ? "#06b6d4"
-                                : "rgba(0,8,59,0.1)"
-                            }`,
-                            borderRadius: 10,
-                            padding: 10,
-                            background:
-                              compatibleBatteryType === type
-                                ? "rgba(6,182,212,0.06)"
-                                : "transparent",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontWeight: 800,
-                              color:
-                                compatibleBatteryType === type
-                                  ? "#0e7490"
-                                  : "#0f172a",
-                            }}
-                          >
-                            {type}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#64748b" }}>
-                            Khả dụng: {availableByTypeAll[type] || 0}/
-                            {countsByTypeAll[type]}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>
-                      Danh sách chi tiết
-                      {compatibleBatteryType
-                        ? ` (loại tương thích: ${compatibleBatteryType})`
-                        : ""}
-                      :
-                    </strong>
-                  </div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(200px, 1fr))",
-                      gap: 12,
-                    }}
-                  >
-                    {compatibleInventoryAll.slice().map((bat) => (
-                      <div
-                        key={bat.id}
-                        style={{
-                          border: "1px solid rgba(0,8,59,0.1)",
-                          borderRadius: 12,
-                          padding: 12,
-                          background: "rgba(0, 8, 59, 0.03)",
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
-                          {bat.type}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          Mã số Pin: {bat.id}
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 13 }}>
-                          SoH: <strong>{bat.soh}%</strong>
-                        </div>
-                        <div style={{ fontSize: 13 }}>
-                          SoC: <strong>{bat.soc}%</strong>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color:
-                              bat.status === "available"
-                                ? "#059669"
-                                : "#a16207",
-                          }}
-                        >
-                          Trạng thái:{" "}
-                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            )}
           </Col>
-
           {/* Right Side - Map + Summary */}
           <Col
             xs={24}
@@ -2353,14 +1919,14 @@ export default function Booking() {
             <div>
               <Card
                 className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative"
-                style={{ height: 1050, overflow: "hidden" }}
+                style={{ height: 700, overflow: "hidden" }}
               >
                 {/* Simple Decorative Elements */}
                 <div className="absolute -top-[30px] -left-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
                 <div className="absolute -bottom-[20px] -right-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
 
                 <div
-                  className="text-center mb-8"
+                  className="text-center mb-2"
                   style={{ position: "relative", zIndex: 1 }}
                 >
                   <div
@@ -2368,21 +1934,21 @@ export default function Booking() {
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: "64px",
-                      height: "64px",
+                      width: "40px",
+                      height: "40px",
                       borderRadius: "50%",
                       background:
                         "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      marginBottom: "16px",
+                      marginBottom: "8px",
                       boxShadow: "0 8px 20px rgba(0, 8, 59, 0.15)",
                     }}
                   >
                     <EnvironmentOutlined
-                      style={{ fontSize: "28px", color: "white" }}
+                      style={{ fontSize: "16px", color: "white" }}
                     />
                   </div>
                   <Title
-                    level={3}
+                    level={4}
                     style={{
                       margin: 0,
                       color: "#00083B",
@@ -2393,107 +1959,12 @@ export default function Booking() {
                   >
                     Vị trí của bạn
                   </Title>
-                  <div
-                    style={{
-                      color: "#64748b",
-                      fontSize: "12px",
-                      marginTop: 4,
-                    }}
-                  >
-                    Tìm trạm đổi pin gần nhất
-                  </div>
                 </div>
-
-                {/* Location Info */}
-                {nearestStation && (
-                  <div
-                    style={{
-                      position: "relative",
-                      zIndex: 1,
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <Card
-                      size="small"
-                      style={{
-                        borderRadius: "18px",
-                        background:
-                          "linear-gradient(135deg, rgba(0,8,59,0.65) 0%, rgba(2,12,80,0.45) 100%)",
-                        border: "1px solid rgba(56, 189, 248, 0.35)",
-                        boxShadow:
-                          "0 12px 30px rgba(2, 8, 23, 0.45), 0 6px 14px rgba(2, 8, 23, 0.25)",
-                        backdropFilter: "blur(6px)",
-                      }}
-                      bodyStyle={{ padding: "16px" }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <Space>
-                          <div
-                            style={{
-                              width: "34px",
-                              height: "34px",
-                              borderRadius: "50%",
-                              background:
-                                "linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              boxShadow: "0 6px 14px rgba(34,211,238,0.35)",
-                            }}
-                          >
-                            <StarOutlined
-                              style={{ color: "white", fontSize: "16px" }}
-                            />
-                          </div>
-                          <div>
-                            <div
-                              style={{
-                                color: "#e2e8f0",
-                                fontSize: "12px",
-                                letterSpacing: "0.02em",
-                              }}
-                            >
-                              Trạm gần nhất
-                            </div>
-                            <div
-                              style={{
-                                color: "#ffffff",
-                                fontWeight: 700,
-                                fontSize: "16px",
-                              }}
-                            >
-                              {nearestStation.name}
-                            </div>
-                          </div>
-                        </Space>
-                        <div
-                          className="px-2 py-1 rounded-md text-[10px] font-semibold border"
-                          style={{
-                            color: "#22d3ee",
-                            borderColor: "rgba(34,211,238,0.4)",
-                            background: "rgba(34,211,238,0.08)",
-                          }}
-                        >
-                          NEARBY
-                        </div>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                          {nearestStation.address}
-                        </div>
-                        <div className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-200 font-semibold">
-                          🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                )}
 
                 {/* Map */}
                 <div
                   style={{
-                    height: "560px",
+                    height: "400px",
                     borderRadius: "16px",
                     overflow: "hidden",
                     position: "relative",
@@ -3238,9 +2709,11 @@ export default function Booking() {
                         <span style={{ color: "#0f172a" }}>
                           {watchedTime || "Chưa chọn"}
                         </span>
-                        <span>Loại xe:</span>
+                        <span>Ổ pin đã chọn:</span>
                         <span style={{ color: "#0f172a" }}>
-                          {watchedVehicle || "Chưa chọn"}
+                          {selectedSlotObj
+                            ? `Ổ pin #${selectedSlotObj.slotNumber}`
+                            : "Chưa chọn"}
                         </span>
                         <span style={{ color: "#10b981", fontWeight: 700 }}>
                           Phí dịch vụ:
@@ -3355,7 +2828,7 @@ export default function Booking() {
 
         {/* Bottom grid: Inventory (left) and Booking Summary (right) */}
         <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
-          {selectedStationData && watchedVehicle ? (
+          {selectedStationData ? (
             <Col xs={24} lg={14}>
               <Card
                 style={{
@@ -3363,7 +2836,7 @@ export default function Booking() {
                   background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
                   border: "1px solid rgba(0,8,59,0.08)",
                   boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
-                  height: summaryCardHeight ? summaryCardHeight + 10 : 690,
+                  height: 560,
                 }}
                 bodyStyle={{
                   padding: 20,
@@ -3391,7 +2864,7 @@ export default function Booking() {
                   <span
                     style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
                   >
-                    Tồn kho pin tại trạm đã chọn
+                    Tồn kho ổ pin tại trạm đã chọn
                   </span>
                 </div>
                 <div style={{ color: "#475569", fontSize: 14 }}>
@@ -3425,15 +2898,15 @@ export default function Booking() {
                       }}
                     >
                       <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Tổng pin / Khả dụng
+                        Tổng ổ pin / Sẵn sàng
                       </div>
                       <div style={{ fontWeight: 700 }}>
-                        {totalBatteriesAll} / {totalAvailableAll}
+                        {totalSlotsAll} / {readySlotsAll}
                       </div>
                     </div>
                   </div>
                   <div style={{ marginBottom: 12 }}>
-                    <strong>Tổng quan theo loại:</strong>
+                    <strong>Tổng quan theo trạng thái:</strong>
                     <div
                       style={{
                         display: "grid",
@@ -3443,50 +2916,83 @@ export default function Booking() {
                         marginTop: 8,
                       }}
                     >
-                      {Object.keys(countsByTypeAll).map((type) => (
+                      <div
+                        style={{
+                          border: "2px solid #10b981",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#f0fdf4",
+                        }}
+                      >
                         <div
-                          key={type}
                           style={{
-                            border: `2px solid ${
-                              compatibleBatteryType === type
-                                ? "#06b6d4"
-                                : "rgba(0,8,59,0.1)"
-                            }`,
-                            borderRadius: 10,
-                            padding: 10,
-                            background:
-                              compatibleBatteryType === type
-                                ? "rgba(6,182,212,0.06)"
-                                : "transparent",
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#059669",
                           }}
                         >
-                          <div
-                            style={{
-                              fontWeight: 800,
-                              color:
-                                compatibleBatteryType === type
-                                  ? "#0e7490"
-                                  : "#0f172a",
-                            }}
-                          >
-                            {type}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#64748b" }}>
-                            Khả dụng: {availableByTypeAll[type] || 0}/
-                            {countsByTypeAll[type]}
-                          </div>
+                          Sẵn sàng
                         </div>
-                      ))}
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {readySlotsAll} ổ pin
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          border: "2px solid #f59e0b",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#fffbeb",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#d97706",
+                          }}
+                        >
+                          Đang sạc
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {chargingSlotsAll} ổ pin
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          border: "2px solid #6b7280",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#f9fafb",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#4b5563",
+                          }}
+                        >
+                          Bảo dưỡng
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {maintenanceSlotsAll} ổ pin
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div style={{ marginBottom: 8 }}>
-                    <strong>
-                      Danh sách chi tiết
-                      {compatibleBatteryType
-                        ? ` (loại tương thích: ${compatibleBatteryType})`
-                        : ""}
-                      :
-                    </strong>
+                    <strong>Danh sách chi tiết các ổ pin:</strong>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#64748b",
+                        marginLeft: "8px",
+                      }}
+                    >
+                      (Hiển thị {currentSlots.length}/{sortedAllSlots.length} ổ
+                      pin)
+                    </span>
                   </div>
                   <div
                     style={{
@@ -3496,49 +3002,114 @@ export default function Booking() {
                       gap: 12,
                       flex: 1,
                       minHeight: 0,
-                      maxHeight: 280,
+                      maxHeight: 270,
                       overflowY: "auto",
                       paddingRight: 6,
                     }}
+                    onScroll={handleScroll}
                   >
-                    {compatibleInventoryAll.slice().map((bat) => (
-                      <div
-                        key={bat.id}
-                        style={{
-                          border: "1px solid rgba(0,8,59,0.1)",
-                          borderRadius: 12,
-                          padding: 12,
-                          background: "rgba(0, 8, 59, 0.03)",
-                          height: 130,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
-                          {bat.type}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          Mã số Pin: {bat.id}
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 13 }}>
-                          SoH: <strong>{bat.soh}%</strong>
-                        </div>
-                        <div style={{ fontSize: 13 }}>
-                          SoC: <strong>{bat.soc}%</strong>
-                        </div>
+                    {currentSlots.map((slot) => {
+                      const isSelected = slot.id === watchedSelectedSlot;
+                      const isReady = slot.status === "ready";
+                      const isBooked = slot.status === "booked";
+                      const isCharging = slot.status === "charging";
+                      const isMaintenance = slot.status === "maintenance";
+
+                      return (
                         <div
+                          key={slot.id}
+                          onClick={() => {
+                            if (isReady) {
+                              form.setFieldsValue({ selectedSlot: slot.id });
+                              setFormValues((prev) => ({
+                                ...prev,
+                                selectedSlot: slot.id,
+                              }));
+                            }
+                          }}
                           style={{
-                            fontSize: 12,
-                            color:
-                              bat.status === "available"
-                                ? "#059669"
-                                : "#a16207",
+                            border: isSelected
+                              ? "2px solid #00083B"
+                              : "1px solid rgba(0,8,59,0.1)",
+                            borderRadius: 12,
+                            padding: 12,
+                            background: isSelected
+                              ? "linear-gradient(135deg, rgba(0,8,59,0.1) 0%, rgba(0,8,59,0.05) 100%)"
+                              : isReady
+                              ? "rgba(0, 8, 59, 0.03)"
+                              : "rgba(0, 0, 0, 0.05)",
+                            cursor: isReady ? "pointer" : "not-allowed",
+                            opacity: isReady ? 1 : 0.6,
+                            position: "relative",
+                            height: 130,
+                            overflow: "hidden",
+                            ...(isMaintenance && {
+                              backgroundImage:
+                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)",
+                            }),
                           }}
                         >
-                          Trạng thái:{" "}
-                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
+                          <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                            Ổ pin #{slot.slotNumber}
+                          </div>
+                          <div style={{ marginTop: 6, fontSize: 13 }}>
+                            SoH: <strong>{slot.soh}%</strong>
+                          </div>
+                          <div style={{ fontSize: 13 }}>
+                            SoC: <strong>{slot.soc}%</strong>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: isReady
+                                ? "#059669"
+                                : isCharging
+                                ? "#a16207"
+                                : "#6b7280",
+                              fontWeight: 600,
+                              marginTop: 8,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              backgroundColor: isReady
+                                ? "#dcfce7"
+                                : isCharging
+                                ? "#fef3c7"
+                                : "#f3f4f6",
+                              textAlign: "center",
+                            }}
+                          >
+                            {isReady
+                              ? "Sẵn sàng"
+                              : isBooked
+                              ? "Đã đặt"
+                              : isCharging
+                              ? "Đang sạc"
+                              : "Bảo dưỡng"}
+                          </div>
+                          {isSelected && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                width: 20,
+                                height: 20,
+                                borderRadius: "50%",
+                                backgroundColor: "#00083B",
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 12,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              ✓
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </Card>
@@ -3604,9 +3175,11 @@ export default function Booking() {
                 <span style={{ color: "#0f172a" }}>
                   {watchedTime || "Chưa chọn"}
                 </span>
-                <span>Loại xe:</span>
+                <span>Ổ pin đã chọn:</span>
                 <span style={{ color: "#0f172a" }}>
-                  {watchedVehicle || "Chưa chọn"}
+                  {selectedSlotObj
+                    ? `Ổ pin #${selectedSlotObj.slotNumber}`
+                    : "Chưa chọn"}
                 </span>
                 <span style={{ color: "#10b981", fontWeight: 700 }}>
                   Phí dịch vụ:
@@ -3738,7 +3311,7 @@ export default function Booking() {
         </Row>
 
         {/* Removed obsolete full-width inventory duplicate */}
-        {false && selectedStationData && watchedVehicle && (
+        {false && selectedStationData && watchedSelectedSlot && (
           <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
             <Col xs={24} lg={24}>
               <Card style={{ borderRadius: 16 }} bodyStyle={{ padding: 20 }}>
@@ -3761,7 +3334,7 @@ export default function Booking() {
                   <span
                     style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
                   >
-                    Tồn kho pin tại trạm đã chọn
+                    Tồn kho ổ pin tại trạm đã chọn
                   </span>
                 </div>
                 <div style={{ color: "#475569", fontSize: 14 }}>
@@ -3795,15 +3368,15 @@ export default function Booking() {
                       }}
                     >
                       <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Tổng pin / Khả dụng
+                        Tổng ổ pin / Sẵn sàng
                       </div>
                       <div style={{ fontWeight: 700 }}>
-                        {totalBatteriesAll} / {totalAvailableAll}
+                        {totalSlotsAll} / {readySlotsAll}
                       </div>
                     </div>
                   </div>
                   <div style={{ marginBottom: 12 }}>
-                    <strong>Tổng quan theo loại:</strong>
+                    <strong>Tổng quan theo trạng thái:</strong>
                     <div
                       style={{
                         display: "grid",
@@ -3813,50 +3386,83 @@ export default function Booking() {
                         marginTop: 8,
                       }}
                     >
-                      {Object.keys(countsByTypeAll).map((type) => (
+                      <div
+                        style={{
+                          border: "2px solid #10b981",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#f0fdf4",
+                        }}
+                      >
                         <div
-                          key={type}
                           style={{
-                            border: `2px solid ${
-                              compatibleBatteryType === type
-                                ? "#06b6d4"
-                                : "rgba(0,8,59,0.1)"
-                            }`,
-                            borderRadius: 10,
-                            padding: 10,
-                            background:
-                              compatibleBatteryType === type
-                                ? "rgba(6,182,212,0.06)"
-                                : "transparent",
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#059669",
                           }}
                         >
-                          <div
-                            style={{
-                              fontWeight: 800,
-                              color:
-                                compatibleBatteryType === type
-                                  ? "#0e7490"
-                                  : "#0f172a",
-                            }}
-                          >
-                            {type}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#64748b" }}>
-                            Khả dụng: {availableByTypeAll[type] || 0}/
-                            {countsByTypeAll[type]}
-                          </div>
+                          Sẵn sàng
                         </div>
-                      ))}
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {readySlotsAll} ổ pin
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          border: "2px solid #f59e0b",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#fffbeb",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#d97706",
+                          }}
+                        >
+                          Đang sạc
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {chargingSlotsAll} ổ pin
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          border: "2px solid #6b7280",
+                          borderRadius: 10,
+                          padding: 10,
+                          backgroundColor: "#f9fafb",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 800,
+                            color: "#4b5563",
+                          }}
+                        >
+                          Bảo dưỡng
+                        </div>
+                        <div style={{ fontSize: 12, color: "#64748b" }}>
+                          {maintenanceSlotsAll} ổ pin
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div style={{ marginBottom: 8 }}>
-                    <strong>
-                      Danh sách chi tiết
-                      {compatibleBatteryType
-                        ? ` (loại tương thích: ${compatibleBatteryType})`
-                        : ""}
-                      :
-                    </strong>
+                    <strong>Danh sách chi tiết các ổ pin:</strong>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#64748b",
+                        marginLeft: "8px",
+                      }}
+                    >
+                      (Hiển thị {currentSlots.length}/{sortedAllSlots.length} ổ
+                      pin)
+                    </span>
                   </div>
                   <div
                     style={{
@@ -3864,45 +3470,119 @@ export default function Booking() {
                       gridTemplateColumns:
                         "repeat(auto-fill, minmax(200px, 1fr))",
                       gap: 12,
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                      paddingRight: "8px",
                     }}
                   >
-                    {compatibleInventoryAll.slice().map((bat) => (
-                      <div
-                        key={bat.id}
-                        style={{
-                          border: "1px solid rgba(0,8,59,0.1)",
-                          borderRadius: 12,
-                          padding: 12,
-                          background: "rgba(0, 8, 59, 0.03)",
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: "#0f172a" }}>
-                          {bat.type}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          Mã số Pin: {bat.id}
-                        </div>
-                        <div style={{ marginTop: 6, fontSize: 13 }}>
-                          SoH: <strong>{bat.soh}%</strong>
-                        </div>
-                        <div style={{ fontSize: 13 }}>
-                          SoC: <strong>{bat.soc}%</strong>
-                        </div>
+                    {currentSlots.map((slot) => {
+                      const isSelected = slot.id === watchedSelectedSlot;
+                      const isReady = slot.status === "ready";
+                      const isBooked = slot.status === "booked";
+                      const isCharging = slot.status === "charging";
+                      const isMaintenance = slot.status === "maintenance";
+
+                      return (
                         <div
+                          key={slot.id}
+                          onClick={() => {
+                            if (isReady) {
+                              form.setFieldsValue({ selectedSlot: slot.id });
+                              setFormValues((prev) => ({
+                                ...prev,
+                                selectedSlot: slot.id,
+                              }));
+                            }
+                          }}
                           style={{
-                            fontSize: 12,
-                            color:
-                              bat.status === "available"
-                                ? "#059669"
-                                : "#a16207",
+                            border: isSelected
+                              ? "2px solid #00083B"
+                              : "1px solid rgba(0,8,59,0.1)",
+                            borderRadius: 12,
+                            padding: 12,
+                            background: isSelected
+                              ? "linear-gradient(135deg, rgba(0,8,59,0.1) 0%, rgba(0,8,59,0.05) 100%)"
+                              : isReady
+                              ? "rgba(0, 8, 59, 0.03)"
+                              : "rgba(0, 0, 0, 0.05)",
+                            cursor: isReady ? "pointer" : "not-allowed",
+                            opacity: isReady ? 1 : 0.6,
+                            position: "relative",
+                            ...(isMaintenance && {
+                              backgroundImage:
+                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)",
+                            }),
                           }}
                         >
-                          Trạng thái:{" "}
-                          {bat.status === "available" ? "Sẵn sàng" : "Đang sạc"}
+                          <div style={{ fontWeight: 700, color: "#0f172a" }}>
+                            Ổ pin #{slot.slotNumber}
+                          </div>
+                          <div style={{ marginTop: 6, fontSize: 13 }}>
+                            SoH: <strong>{slot.soh}%</strong>
+                          </div>
+                          <div style={{ fontSize: 13 }}>
+                            SoC: <strong>{slot.soc}%</strong>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: isReady
+                                ? "#059669"
+                                : isCharging
+                                ? "#a16207"
+                                : "#6b7280",
+                              fontWeight: 600,
+                              marginTop: 8,
+                              padding: "4px 8px",
+                              borderRadius: 6,
+                              backgroundColor: isReady
+                                ? "#dcfce7"
+                                : isCharging
+                                ? "#fef3c7"
+                                : "#f3f4f6",
+                              textAlign: "center",
+                            }}
+                          >
+                            {isReady
+                              ? "Sẵn sàng"
+                              : isBooked
+                              ? "Đã đặt"
+                              : isCharging
+                              ? "Đang sạc"
+                              : "Bảo dưỡng"}
+                          </div>
+                          {isSelected && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 8,
+                                right: 8,
+                                width: 20,
+                                height: 20,
+                                borderRadius: "50%",
+                                backgroundColor: "#00083B",
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 12,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              ✓
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                  {sortedAllSlots.length > 6 && (
+                    <div style={{ textAlign: "center", marginTop: "12px" }}>
+                      <span style={{ color: "#64748b", fontSize: "12px" }}>
+                        Hiển thị 6/15 ổ pin. Cuộn để xem thêm.
+                      </span>
+                    </div>
+                  )}
                 </div>
               </Card>
             </Col>
