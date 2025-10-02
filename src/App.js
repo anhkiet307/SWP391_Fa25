@@ -17,6 +17,7 @@ import StaffDashboard from "./page/BSS-Staff/Dashboard.jsx";
 import TransactionManagement from "./page/BSS-Staff/TransactionManagement.jsx";
 import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
+import BookingHistory from "./page/EVDriver/bookingHistory.jsx";
 import Profile from "./page/profile.jsx";
 
 // Admin pages
@@ -65,6 +66,14 @@ function App() {
           />
           <Route path="/booking" element={<Booking />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
+          <Route
+            path="/booking-history"
+            element={
+              <MainLayout>
+                <BookingHistory />
+              </MainLayout>
+            }
+          />
           <Route
             path="/profile"
             element={

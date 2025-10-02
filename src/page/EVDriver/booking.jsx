@@ -182,14 +182,12 @@ export default function Booking() {
     selectedSlot: null,
   });
 
-  // Set default date for "today" tab
+  // Chỉ cho phép đặt trong ngày: luôn dùng ngày hôm nay
   useEffect(() => {
-    if (activeTab === "today") {
-      const today = dayjs();
-      setSelectedDate(today);
-      setFormValues((prev) => ({ ...prev, date: today }));
-    }
-  }, [activeTab]);
+    const today = dayjs();
+    setSelectedDate(today);
+    setFormValues((prev) => ({ ...prev, date: today }));
+  }, []);
 
   const watchedStation = formValues.station;
   const watchedDate = formValues.date;
@@ -214,8 +212,9 @@ export default function Booking() {
 
   // Thống kê tổng quan toàn trạm
   const totalSlotsAll = stationSlots.length;
+  // Sẵn sàng = không bảo dưỡng và đã đầy 100%
   const readySlotsAll = stationSlots.filter(
-    (slot) => slot.status === "ready"
+    (slot) => slot.status !== "maintenance" && (slot.soc || 0) === 100
   ).length;
   const bookedSlotsAll = stationSlots.filter(
     (slot) => slot.status === "booked"
@@ -288,6 +287,52 @@ export default function Booking() {
   };
 
   const timeSlots = generateTimeSlots();
+
+  // Demo dự đoán khả dụng theo giờ (tạm thời giả lập, sẽ chuyển sang lấy từ BE)
+  const bufferMinutesWorstCase = 100; // 100 phút sạc từ 0% -> 100%
+  const existingBookings = ["08:00", "10:00"]; // giả lập có người đặt 08:00 và 10:00 trong ngày
+
+  const parseHHmm = (hhmm) => {
+    const [hh, mm] = (hhmm || "").split(":");
+    const h = parseInt(hh, 10);
+    const m = parseInt(mm, 10);
+    if (Number.isNaN(h) || Number.isNaN(m)) return 0;
+    return h * 60 + m;
+  };
+
+  const formatHHmm = (totalMinutes) => {
+    const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+    const mm = String(totalMinutes % 60).padStart(2, "0");
+    return `${hh}:${mm}`;
+  };
+
+  // Tính thời điểm sớm nhất có ít nhất 1 pin đạt 100%
+  const now = dayjs();
+  const nowMinutes = now.hour() * 60 + now.minute();
+  const etaFromSlots = (selectedStationData?.slots || []).map((slot) => {
+    // Các trạng thái bảo dưỡng/coi như không khả dụng vô thời hạn
+    if (slot.status === "maintenance") return Number.POSITIVE_INFINITY;
+    // Với mọi ổ pin, giả định có thể sạc ngay bây giờ với tốc độ 1%/phút
+    const remainingToFull = Math.max(0, 100 - (slot.soc || 0));
+    return nowMinutes + remainingToFull;
+  });
+
+  // Ảnh hưởng các đặt chỗ hiện có (demo): sau mỗi đặt, cần 100 phút mới có pin full
+  const etaFromExistingBookings = existingBookings.map((t) => {
+    const end = parseHHmm(t) + bufferMinutesWorstCase; // t + 100 phút
+    return Math.max(end, nowMinutes);
+  });
+
+  const combinedEtas = [...etaFromSlots, ...etaFromExistingBookings];
+  const earliestAvailableMinutes = combinedEtas.length
+    ? Math.min(...combinedEtas)
+    : nowMinutes; // nếu không có dữ liệu, cho phép ngay bây giờ
+
+  const isTimeDisabled = (slotLabel) => {
+    const start = (slotLabel || "").split(" - ")[0];
+    const startMins = parseHHmm(start);
+    return startMins < earliestAvailableMinutes;
+  };
 
   // Đồng bộ chiều cao: đo chiều cao card Tóm tắt để áp cho card Tồn kho
   useEffect(() => {
@@ -499,15 +544,11 @@ export default function Booking() {
     getUserLocation();
   }, []);
 
-  // Set default date for today tab on component mount
+  // Đặt mặc định ngày hôm nay vào form
   useEffect(() => {
-    if (activeTab === "today") {
-      const today = dayjs();
-      setSelectedDate(today);
-      form.setFieldsValue({ date: today });
-      setFormValues((prev) => ({ ...prev, date: today }));
-    }
-  }, []);
+    const today = dayjs();
+    form.setFieldsValue({ date: today });
+  }, [form]);
 
   // Handler để cập nhật formValues
   const handleFormChange = (changedValues, allValues) => {
@@ -546,13 +587,7 @@ export default function Booking() {
       errors.push("Vui lòng chọn khung giờ");
     }
 
-    if (!values.selectedSlot) {
-      errors.push("Vui lòng chọn ổ pin");
-    }
-
-    if (activeTab === "future" && !values.date) {
-      errors.push("Vui lòng chọn ngày đặt lịch");
-    }
+    // Không còn chọn ổ pin và chọn ngày trước
 
     if (errors.length > 0) {
       setValidationErrors(errors);
@@ -566,12 +601,8 @@ export default function Booking() {
     // Chuẩn hóa dữ liệu trước khi điều hướng (serialize date)
     const normalizedValues = {
       ...values,
-      date:
-        activeTab === "today"
-          ? dayjs().format("YYYY-MM-DD")
-          : values?.date
-          ? dayjs(values.date).format("YYYY-MM-DD")
-          : null,
+      date: dayjs().format("YYYY-MM-DD"),
+      selectedSlot: undefined,
     };
     setBookingData(normalizedValues);
 
@@ -1013,7 +1044,10 @@ export default function Booking() {
                             </Space>
                           }
                           rules={[
-                            { required: true, message: "Vui lòng chọn trạm!" },
+                            {
+                              required: true,
+                              message: "Vui lòng chọn trạm!",
+                            },
                           ]}
                         >
                           <div>
@@ -1376,11 +1410,38 @@ export default function Booking() {
                               }));
                             }}
                           >
-                            {timeSlots.map((time, index) => (
-                              <Option key={index} value={time}>
-                                {time}
-                              </Option>
-                            ))}
+                            {timeSlots.map((time, index) => {
+                              const disabled = isTimeDisabled(time);
+                              const availableCount = readySlotsAll; // demo: số ổ sẵn sàng hiện tại
+                              return (
+                                <Option
+                                  key={index}
+                                  value={time}
+                                  disabled={disabled}
+                                >
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <span>{time}</span>
+                                    <span
+                                      style={{
+                                        fontSize: 12,
+                                        color: disabled ? "#dc2626" : "#059669",
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {disabled
+                                        ? "Không khả dụng"
+                                        : `Khả dụng: ${availableCount}`}
+                                    </span>
+                                  </div>
+                                </Option>
+                              );
+                            })}
                           </Select>
                           {/* Thông tin xe hiển thị dưới Select xe, không đặt ở đây */}
                         </Form.Item>
@@ -1396,296 +1457,240 @@ export default function Booking() {
                   </Form>
                 </TabPane>
 
-                <TabPane
-                  tab={
-                    <Space size="middle">
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          background:
-                            activeTab === "future"
-                              ? "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)"
-                              : "rgba(0, 8, 59, 0.1)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "all 0.3s ease",
-                        }}
-                      >
-                        <CalendarOutlined
-                          style={{
-                            color: activeTab === "future" ? "white" : "#00083B",
-                            fontSize: "18px",
-                          }}
-                        />
-                      </div>
-                      <div>
+                {false && (
+                  <TabPane
+                    tab={
+                      <Space size="middle">
                         <div
                           style={{
-                            color: "#00083B",
-                            fontWeight: "600",
-                            fontSize: "16px",
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            background:
+                              activeTab === "future"
+                                ? "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)"
+                                : "rgba(0, 8, 59, 0.1)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.3s ease",
                           }}
                         >
-                          Đặt trước
+                          <CalendarOutlined
+                            style={{
+                              color:
+                                activeTab === "future" ? "white" : "#00083B",
+                              fontSize: "18px",
+                            }}
+                          />
                         </div>
-                        <div style={{ color: "#64748b", fontSize: "12px" }}>
-                          3 ngày tới
+                        <div>
+                          <div
+                            style={{
+                              color: "#00083B",
+                              fontWeight: "600",
+                              fontSize: "16px",
+                            }}
+                          >
+                            Đặt trước
+                          </div>
+                          <div style={{ color: "#64748b", fontSize: "12px" }}>
+                            3 ngày tới
+                          </div>
                         </div>
-                      </div>
-                    </Space>
-                  }
-                  key="future"
-                >
-                  <Alert
-                    message={
-                      <Space>
-                        <CalendarOutlined style={{ color: "#00083B" }} />
-                        <span style={{ fontWeight: "600" }}>
-                          Đặt lịch trước
-                        </span>
                       </Space>
                     }
-                    description="Đặt lịch đổi pin trong vòng 3 ngày tới. Thời gian hoạt động: 8:00 - 20:00"
-                    type="success"
-                    showIcon
-                    style={{
-                      marginBottom: "16px",
-                      borderRadius: "16px",
-                      background:
-                        "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%)",
-                      border: "1px solid rgba(16, 185, 129, 0.2)",
-                    }}
-                  />
-
-                  <Form
-                    form={form}
-                    onFinish={handleBooking}
-                    onValuesChange={handleFormChange}
-                    layout="vertical"
-                    size="large"
+                    key="future"
                   >
-                    <Row gutter={[24, 24]}>
-                      {/* Station Selection */}
-                      <Col xs={24}>
-                        <Form.Item
-                          name="station"
-                          label={
-                            <Space size="small">
-                              <EnvironmentOutlined
-                                style={{ color: "#00083B", fontSize: "14px" }}
-                              />
-                              <span
-                                style={{
-                                  color: "#00083B",
-                                  fontWeight: "600",
-                                  fontSize: "14px",
+                    <Alert
+                      message={
+                        <Space>
+                          <CalendarOutlined style={{ color: "#00083B" }} />
+                          <span style={{ fontWeight: "600" }}>
+                            Đặt lịch trước
+                          </span>
+                        </Space>
+                      }
+                      description="Đặt lịch đổi pin trong vòng 3 ngày tới. Thời gian hoạt động: 8:00 - 20:00"
+                      type="success"
+                      showIcon
+                      style={{
+                        marginBottom: "16px",
+                        borderRadius: "16px",
+                        background:
+                          "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%)",
+                        border: "1px solid rgba(16, 185, 129, 0.2)",
+                      }}
+                    />
+
+                    <Form
+                      form={form}
+                      onFinish={handleBooking}
+                      onValuesChange={handleFormChange}
+                      layout="vertical"
+                      size="large"
+                    >
+                      <Row gutter={[24, 24]}>
+                        {/* Station Selection */}
+                        <Col xs={24}>
+                          <Form.Item
+                            name="station"
+                            label={
+                              <Space size="small">
+                                <EnvironmentOutlined
+                                  style={{ color: "#00083B", fontSize: "14px" }}
+                                />
+                                <span
+                                  style={{
+                                    color: "#00083B",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  Chọn trạm đổi pin
+                                </span>
+                              </Space>
+                            }
+                            rules={[
+                              {
+                                required: true,
+                                message: "Vui lòng chọn trạm!",
+                              },
+                            ]}
+                          >
+                            <div>
+                              {nearestStation && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    form.setFieldsValue({
+                                      station: nearestStation.name,
+                                    });
+                                    setFormValues((prev) => ({
+                                      ...prev,
+                                      station: nearestStation.name,
+                                    }));
+                                  }}
+                                  className="w-full mb-3 text-left"
+                                >
+                                  <div className="p-[2px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_6px_14px_rgba(34,211,238,0.25)]">
+                                    <div className="flex items-center gap-3 rounded-full px-4 py-2 bg-[#0b1448]/90 border border-white/10">
+                                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/40">
+                                        <AimOutlined
+                                          style={{
+                                            fontSize: 16,
+                                            color: "#67e8f9",
+                                          }}
+                                        />
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-[11px] leading-none text-cyan-200/80">
+                                          Vị trí gần nhất
+                                        </div>
+                                        <div className="text-white font-semibold truncate">
+                                          {nearestStation.name}
+                                        </div>
+                                      </div>
+                                      {nearestStation?.distance !==
+                                        undefined && (
+                                        <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-cyan-200 border border-cyan-400/40 bg-cyan-500/10">
+                                          {nearestStation.distance.toFixed(1)}{" "}
+                                          km
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </button>
+                              )}
+
+                              {/* City toggle */}
+                              <div className="flex items-center gap-2 mb-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedCity("HN")}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                                    selectedCity === "HN"
+                                      ? "bg-cyan-600 text-white border-cyan-500"
+                                      : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
+                                  }`}
+                                >
+                                  Hà Nội
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedCity("HCM")}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                                    selectedCity === "HCM"
+                                      ? "bg-cyan-600 text-white border-cyan-500"
+                                      : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
+                                  }`}
+                                >
+                                  TP.HCM
+                                </button>
+                                <span className="ml-2 text-xs text-slate-500">
+                                  Chọn thành phố để lọc danh sách trạm
+                                </span>
+                              </div>
+                              <Select
+                                placeholder="-- Chọn trạm --"
+                                size="large"
+                                style={{ borderRadius: "12px" }}
+                                dropdownStyle={{
+                                  borderRadius: 12,
+                                  padding: 8,
+                                  background:
+                                    "linear-gradient(135deg,#ffffff,#f8fbff)",
+                                  boxShadow:
+                                    "0 12px 24px rgba(0,8,59,0.12), 0 4px 10px rgba(0,8,59,0.08)",
                                 }}
-                              >
-                                Chọn trạm đổi pin
-                              </span>
-                            </Space>
-                          }
-                          rules={[
-                            { required: true, message: "Vui lòng chọn trạm!" },
-                          ]}
-                        >
-                          <div>
-                            {nearestStation && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  form.setFieldsValue({
-                                    station: nearestStation.name,
-                                  });
+                                onDropdownVisibleChange={undefined}
+                                optionLabelProp="label"
+                                showSearch
+                                filterOption={(input, option) =>
+                                  (option?.value || "")
+                                    .toLowerCase()
+                                    .includes((input || "").toLowerCase())
+                                }
+                                value={form.getFieldValue("station")}
+                                onChange={(value) => {
+                                  // Update both form value and formValues state
+                                  form.setFieldsValue({ station: value });
                                   setFormValues((prev) => ({
                                     ...prev,
-                                    station: nearestStation.name,
+                                    station: value,
                                   }));
                                 }}
-                                className="w-full mb-3 text-left"
                               >
-                                <div className="p-[2px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_6px_14px_rgba(34,211,238,0.25)]">
-                                  <div className="flex items-center gap-3 rounded-full px-4 py-2 bg-[#0b1448]/90 border border-white/10">
-                                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/40">
-                                      <AimOutlined
-                                        style={{
-                                          fontSize: 16,
-                                          color: "#67e8f9",
-                                        }}
-                                      />
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-[11px] leading-none text-cyan-200/80">
-                                        Vị trí gần nhất
-                                      </div>
-                                      <div className="text-white font-semibold truncate">
-                                        {nearestStation.name}
-                                      </div>
-                                    </div>
-                                    {nearestStation?.distance !== undefined && (
-                                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-cyan-200 border border-cyan-400/40 bg-cyan-500/10">
-                                        {nearestStation.distance.toFixed(1)} km
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </button>
-                            )}
+                                {(() => {
+                                  const items = stations
+                                    .filter((s) =>
+                                      selectedCity === "HN"
+                                        ? s.city === "Hà Nội"
+                                        : s.city === "TP.HCM"
+                                    )
+                                    .map((s) => ({
+                                      ...s,
+                                      distance: userLocation
+                                        ? calculateDistance(
+                                            userLocation[0],
+                                            userLocation[1],
+                                            s.position[0],
+                                            s.position[1]
+                                          )
+                                        : Number.POSITIVE_INFINITY,
+                                    }))
+                                    .sort(
+                                      (a, b) =>
+                                        (a.distance || 0) - (b.distance || 0)
+                                    );
 
-                            {/* City toggle */}
-                            <div className="flex items-center gap-2 mb-2">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedCity("HN")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                  selectedCity === "HN"
-                                    ? "bg-cyan-600 text-white border-cyan-500"
-                                    : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                }`}
-                              >
-                                Hà Nội
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedCity("HCM")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                  selectedCity === "HCM"
-                                    ? "bg-cyan-600 text-white border-cyan-500"
-                                    : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                }`}
-                              >
-                                TP.HCM
-                              </button>
-                              <span className="ml-2 text-xs text-slate-500">
-                                Chọn thành phố để lọc danh sách trạm
-                              </span>
-                            </div>
-                            <Select
-                              placeholder="-- Chọn trạm --"
-                              size="large"
-                              style={{ borderRadius: "12px" }}
-                              dropdownStyle={{
-                                borderRadius: 12,
-                                padding: 8,
-                                background:
-                                  "linear-gradient(135deg,#ffffff,#f8fbff)",
-                                boxShadow:
-                                  "0 12px 24px rgba(0,8,59,0.12), 0 4px 10px rgba(0,8,59,0.08)",
-                              }}
-                              onDropdownVisibleChange={undefined}
-                              optionLabelProp="label"
-                              showSearch
-                              filterOption={(input, option) =>
-                                (option?.value || "")
-                                  .toLowerCase()
-                                  .includes((input || "").toLowerCase())
-                              }
-                              value={form.getFieldValue("station")}
-                              onChange={(value) => {
-                                // Update both form value and formValues state
-                                form.setFieldsValue({ station: value });
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  station: value,
-                                }));
-                              }}
-                            >
-                              {(() => {
-                                const items = stations
-                                  .filter((s) =>
-                                    selectedCity === "HN"
-                                      ? s.city === "Hà Nội"
-                                      : s.city === "TP.HCM"
-                                  )
-                                  .map((s) => ({
-                                    ...s,
-                                    distance: userLocation
-                                      ? calculateDistance(
-                                          userLocation[0],
-                                          userLocation[1],
-                                          s.position[0],
-                                          s.position[1]
-                                        )
-                                      : Number.POSITIVE_INFINITY,
-                                  }))
-                                  .sort(
-                                    (a, b) =>
-                                      (a.distance || 0) - (b.distance || 0)
-                                  );
-
-                                const nearestId =
-                                  nearestStation?.id || items[0]?.id;
-                                const renderOption = (station, highlight) => (
-                                  <Option
-                                    key={station.id}
-                                    value={station.name}
-                                    label={
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 8,
-                                        }}
-                                      >
-                                        <span style={{ fontWeight: 700 }}>
-                                          {station.name}
-                                        </span>
-                                        {userLocation && (
-                                          <span
-                                            style={{
-                                              padding: "2px 6px",
-                                              borderRadius: 8,
-                                              border:
-                                                "1px solid rgba(34,197,94,0.3)",
-                                              background:
-                                                "rgba(34,197,94,0.08)",
-                                              color: "#15803d",
-                                              fontSize: 10,
-                                              fontWeight: 700,
-                                            }}
-                                          >
-                                            {station.distance.toFixed(1)} km
-                                          </span>
-                                        )}
-                                      </div>
-                                    }
-                                  >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 12,
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          width: 32,
-                                          height: 32,
-                                          borderRadius: 16,
-                                          background: highlight
-                                            ? "linear-gradient(135deg,#06b6d4 0%, #3b82f6 100%)"
-                                            : "linear-gradient(135deg,#22d3ee 0%, #3b82f6 100%)",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          boxShadow:
-                                            "0 6px 12px rgba(34,211,238,0.25)",
-                                          flex: "0 0 auto",
-                                        }}
-                                      >
-                                        <span
-                                          style={{
-                                            color: "white",
-                                            fontSize: 16,
-                                          }}
-                                        >
-                                          ⚡
-                                        </span>
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                  const nearestId =
+                                    nearestStation?.id || items[0]?.id;
+                                  const renderOption = (station, highlight) => (
+                                    <Option
+                                      key={station.id}
+                                      value={station.name}
+                                      label={
                                         <div
                                           style={{
                                             display: "flex",
@@ -1693,230 +1698,301 @@ export default function Booking() {
                                             gap: 8,
                                           }}
                                         >
-                                          <div
-                                            style={{
-                                              fontWeight: 700,
-                                              color: "#0f172a",
-                                              whiteSpace: "nowrap",
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                            }}
-                                          >
+                                          <span style={{ fontWeight: 700 }}>
                                             {station.name}
-                                          </div>
-                                          {highlight && (
+                                          </span>
+                                          {userLocation && (
                                             <span
                                               style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: 4,
-                                                padding: "2px 8px",
-                                                borderRadius: 9999,
-                                                background:
-                                                  "linear-gradient(135deg, rgba(34,211,238,0.25) 0%, rgba(59,130,246,0.25) 100%)",
+                                                padding: "2px 6px",
+                                                borderRadius: 8,
                                                 border:
-                                                  "1px solid rgba(34,211,238,0.6)",
-                                                color: "#06b6d4",
+                                                  "1px solid rgba(34,197,94,0.3)",
+                                                background:
+                                                  "rgba(34,197,94,0.08)",
+                                                color: "#15803d",
                                                 fontSize: 10,
-                                                fontWeight: 800,
-                                                letterSpacing: 0.3,
-                                                boxShadow:
-                                                  "0 0 0 1px rgba(255,255,255,0.1) inset, 0 6px 12px rgba(34,211,238,0.25)",
+                                                fontWeight: 700,
                                               }}
                                             >
-                                              <span style={{ fontSize: 12 }}>
-                                                🎯
-                                              </span>
-                                              <span>Gần nhất</span>
+                                              {station.distance.toFixed(1)} km
                                             </span>
                                           )}
                                         </div>
-                                        <div
-                                          style={{
-                                            fontSize: 12,
-                                            color: "#64748b",
-                                          }}
-                                        >
-                                          {station.address}
-                                        </div>
-                                      </div>
-                                      {userLocation && (
-                                        <span
-                                          style={{
-                                            padding: "2px 8px",
-                                            borderRadius: 8,
-                                            border:
-                                              "1px solid rgba(34,197,94,0.3)",
-                                            background: "rgba(34,197,94,0.08)",
-                                            color: "#15803d",
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                          }}
-                                        >
-                                          {station.distance.toFixed(1)} km
-                                        </span>
-                                      )}
-                                    </div>
-                                  </Option>
-                                );
-
-                                const elements = [];
-                                const nearest = items.find(
-                                  (i) => i.id === nearestId
-                                );
-                                if (nearest) {
-                                  elements.push(
-                                    <Option
-                                      disabled
-                                      key="hdr-nearest"
-                                      value="hdr-nearest"
+                                      }
                                     >
                                       <div
                                         style={{
-                                          fontSize: 11,
-                                          fontWeight: 800,
-                                          letterSpacing: 1,
-                                          color: "#0891b2",
-                                          padding: "6px 8px",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 12,
                                         }}
                                       >
-                                        ĐỀ XUẤT GẦN NHẤT
+                                        <div
+                                          style={{
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: 16,
+                                            background: highlight
+                                              ? "linear-gradient(135deg,#06b6d4 0%, #3b82f6 100%)"
+                                              : "linear-gradient(135deg,#22d3ee 0%, #3b82f6 100%)",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            boxShadow:
+                                              "0 6px 12px rgba(34,211,238,0.25)",
+                                            flex: "0 0 auto",
+                                          }}
+                                        >
+                                          <span
+                                            style={{
+                                              color: "white",
+                                              fontSize: 16,
+                                            }}
+                                          >
+                                            ⚡
+                                          </span>
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 8,
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                fontWeight: 700,
+                                                color: "#0f172a",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                              }}
+                                            >
+                                              {station.name}
+                                            </div>
+                                            {highlight && (
+                                              <span
+                                                style={{
+                                                  display: "inline-flex",
+                                                  alignItems: "center",
+                                                  gap: 4,
+                                                  padding: "2px 8px",
+                                                  borderRadius: 9999,
+                                                  background:
+                                                    "linear-gradient(135deg, rgba(34,211,238,0.25) 0%, rgba(59,130,246,0.25) 100%)",
+                                                  border:
+                                                    "1px solid rgba(34,211,238,0.6)",
+                                                  color: "#06b6d4",
+                                                  fontSize: 10,
+                                                  fontWeight: 800,
+                                                  letterSpacing: 0.3,
+                                                  boxShadow:
+                                                    "0 0 0 1px rgba(255,255,255,0.1) inset, 0 6px 12px rgba(34,211,238,0.25)",
+                                                }}
+                                              >
+                                                <span style={{ fontSize: 12 }}>
+                                                  🎯
+                                                </span>
+                                                <span>Gần nhất</span>
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: 12,
+                                              color: "#64748b",
+                                            }}
+                                          >
+                                            {station.address}
+                                          </div>
+                                        </div>
+                                        {userLocation && (
+                                          <span
+                                            style={{
+                                              padding: "2px 8px",
+                                              borderRadius: 8,
+                                              border:
+                                                "1px solid rgba(34,197,94,0.3)",
+                                              background:
+                                                "rgba(34,197,94,0.08)",
+                                              color: "#15803d",
+                                              fontSize: 12,
+                                              fontWeight: 700,
+                                            }}
+                                          >
+                                            {station.distance.toFixed(1)} km
+                                          </span>
+                                        )}
                                       </div>
                                     </Option>
                                   );
-                                  elements.push(renderOption(nearest, true));
-                                  elements.push(
-                                    <Option
-                                      disabled
-                                      key="sep-nearest"
-                                      value="sep-nearest"
-                                    >
-                                      <div
-                                        style={{
-                                          height: 1,
-                                          background: "#e2e8f0",
-                                          margin: "6px 0",
-                                        }}
-                                      />
-                                    </Option>
+
+                                  const elements = [];
+                                  const nearest = items.find(
+                                    (i) => i.id === nearestId
                                   );
-                                }
+                                  if (nearest) {
+                                    elements.push(
+                                      <Option
+                                        disabled
+                                        key="hdr-nearest"
+                                        value="hdr-nearest"
+                                      >
+                                        <div
+                                          style={{
+                                            fontSize: 11,
+                                            fontWeight: 800,
+                                            letterSpacing: 1,
+                                            color: "#0891b2",
+                                            padding: "6px 8px",
+                                          }}
+                                        >
+                                          ĐỀ XUẤT GẦN NHẤT
+                                        </div>
+                                      </Option>
+                                    );
+                                    elements.push(renderOption(nearest, true));
+                                    elements.push(
+                                      <Option
+                                        disabled
+                                        key="sep-nearest"
+                                        value="sep-nearest"
+                                      >
+                                        <div
+                                          style={{
+                                            height: 1,
+                                            background: "#e2e8f0",
+                                            margin: "6px 0",
+                                          }}
+                                        />
+                                      </Option>
+                                    );
+                                  }
 
-                                items
-                                  .filter((i) => i.id !== nearestId)
-                                  .forEach((i) =>
-                                    elements.push(renderOption(i, false))
-                                  );
-                                return elements;
-                              })()}
-                            </Select>
-                          </div>
-                        </Form.Item>
-                      </Col>
+                                  items
+                                    .filter((i) => i.id !== nearestId)
+                                    .forEach((i) =>
+                                      elements.push(renderOption(i, false))
+                                    );
+                                  return elements;
+                                })()}
+                              </Select>
+                            </div>
+                          </Form.Item>
+                        </Col>
 
-                      {/* Date Selection */}
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          name="date"
-                          label={
-                            <Space size="small">
-                              <CalendarOutlined
-                                style={{ color: "#00083B", fontSize: "14px" }}
-                              />
-                              <span
-                                style={{
-                                  color: "#00083B",
-                                  fontWeight: "600",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                Chọn ngày
-                              </span>
-                            </Space>
-                          }
-                          rules={[
-                            { required: true, message: "Vui lòng chọn ngày!" },
-                          ]}
-                        >
-                          <DatePicker
-                            style={{ width: "100%", borderRadius: "12px" }}
-                            placeholder="Chọn ngày"
-                            size="large"
-                            onChange={(date) => {
-                              setSelectedDate(date);
-                              // Update both form value and formValues state
-                              form.setFieldsValue({ date: date });
-                              setFormValues((prev) => ({
-                                ...prev,
-                                date: date,
-                              }));
-                            }}
-                            disabledDate={(current) => {
-                              const today = dayjs();
-                              const maxDate = dayjs().add(3, "day");
-                              return (
-                                current &&
-                                (current < today || current > maxDate)
-                              );
-                            }}
-                          />
-                        </Form.Item>
-                      </Col>
-
-                      {/* Time Selection */}
-                      <Col xs={24} md={12}>
-                        <Form.Item
-                          name="time"
-                          label={
-                            <Space size="small">
-                              <ClockCircleOutlined
-                                style={{ color: "#00083B", fontSize: "14px" }}
-                              />
-                              <span
-                                style={{
-                                  color: "#00083B",
-                                  fontWeight: "600",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                Chọn giờ (8:00 - 20:00)
-                              </span>
-                            </Space>
-                          }
-                          rules={[
-                            { required: true, message: "Vui lòng chọn giờ!" },
-                          ]}
-                        >
-                          <Select
-                            placeholder="-- Chọn giờ --"
-                            size="large"
-                            style={{ borderRadius: "12px" }}
-                            onChange={(value) => {
-                              setSelectedTimeSlot(value);
-                              setFormValues((prev) => ({
-                                ...prev,
-                                time: value,
-                              }));
-                            }}
+                        {/* Date Selection */}
+                        <Col xs={24} md={12}>
+                          <Form.Item
+                            name="date"
+                            label={
+                              <Space size="small">
+                                <CalendarOutlined
+                                  style={{ color: "#00083B", fontSize: "14px" }}
+                                />
+                                <span
+                                  style={{
+                                    color: "#00083B",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  Chọn ngày
+                                </span>
+                              </Space>
+                            }
+                            rules={[
+                              {
+                                required: true,
+                                message: "Vui lòng chọn ngày!",
+                              },
+                            ]}
                           >
-                            {timeSlots.map((time, index) => (
-                              <Option key={index} value={time}>
-                                {time}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                            <DatePicker
+                              style={{ width: "100%", borderRadius: "12px" }}
+                              placeholder="Chọn ngày"
+                              size="large"
+                              onChange={(date) => {
+                                setSelectedDate(date);
+                                // Update both form value and formValues state
+                                form.setFieldsValue({ date: date });
+                                setFormValues((prev) => ({
+                                  ...prev,
+                                  date: date,
+                                }));
+                              }}
+                              disabledDate={(current) => {
+                                const today = dayjs();
+                                const maxDate = dayjs().add(3, "day");
+                                return (
+                                  current &&
+                                  (current < today || current > maxDate)
+                                );
+                              }}
+                            />
+                          </Form.Item>
+                        </Col>
 
-                    {/* Hidden field for selectedSlot */}
-                    <Form.Item name="selectedSlot" style={{ display: "none" }}>
-                      <input type="hidden" />
-                    </Form.Item>
+                        {/* Time Selection */}
+                        <Col xs={24} md={12}>
+                          <Form.Item
+                            name="time"
+                            label={
+                              <Space size="small">
+                                <ClockCircleOutlined
+                                  style={{ color: "#00083B", fontSize: "14px" }}
+                                />
+                                <span
+                                  style={{
+                                    color: "#00083B",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  Chọn giờ (8:00 - 20:00)
+                                </span>
+                              </Space>
+                            }
+                            rules={[
+                              { required: true, message: "Vui lòng chọn giờ!" },
+                            ]}
+                          >
+                            <Select
+                              placeholder="-- Chọn giờ --"
+                              size="large"
+                              style={{ borderRadius: "12px" }}
+                              onChange={(value) => {
+                                setSelectedTimeSlot(value);
+                                setFormValues((prev) => ({
+                                  ...prev,
+                                  time: value,
+                                }));
+                              }}
+                            >
+                              {timeSlots.map((time, index) => (
+                                <Option key={index} value={time}>
+                                  {time}
+                                </Option>
+                              ))}
+                            </Select>
+                          </Form.Item>
+                        </Col>
+                      </Row>
 
-                    {/* Action Buttons removed per request */}
-                  </Form>
-                </TabPane>
+                      {/* Hidden field for selectedSlot */}
+                      <Form.Item
+                        name="selectedSlot"
+                        style={{ display: "none" }}
+                      >
+                        <input type="hidden" />
+                      </Form.Item>
+
+                      {/* Action Buttons removed per request */}
+                    </Form>
+                  </TabPane>
+                )}
               </Tabs>
             </Card>
           </Col>
@@ -2992,7 +3068,7 @@ export default function Booking() {
                     </div>
                   </div>
                   <div style={{ marginBottom: 8 }}>
-                    <strong>Danh sách chi tiết các ổ pin:</strong>
+                    <strong>Danh sách ổ pin (chỉ xem):</strong>
                     <span
                       style={{
                         fontSize: "12px",
@@ -3000,15 +3076,14 @@ export default function Booking() {
                         marginLeft: "8px",
                       }}
                     >
-                      (Hiển thị {currentSlots.length}/{sortedAllSlots.length} ổ
-                      pin)
+                      Tổng {sortedAllSlots.length} ổ
                     </span>
                   </div>
                   <div
                     style={{
                       display: "grid",
                       gridTemplateColumns:
-                        "repeat(auto-fill, minmax(200px, 1fr))",
+                        "repeat(auto-fill, minmax(220px, 1fr))",
                       gap: 12,
                       flex: 1,
                       minHeight: 0,
@@ -3016,46 +3091,38 @@ export default function Booking() {
                       overflowY: "auto",
                       paddingRight: 6,
                     }}
-                    onScroll={handleScroll}
                   >
-                    {currentSlots.map((slot) => {
-                      const isSelected = slot.id === watchedSelectedSlot;
-                      const isReady = slot.status === "ready";
-                      const isBooked = slot.status === "booked";
-                      const isCharging = slot.status === "charging";
+                    {sortedAllSlots.map((slot) => {
                       const isMaintenance = slot.status === "maintenance";
+                      const socValue = slot.soc || 0;
+                      const isFull = socValue === 100;
+                      const isChargingVisual = !isFull && !isMaintenance;
+
+                      const remainingToFull = Math.max(0, 100 - socValue);
+                      const etaFullMinutes = remainingToFull; // 1%/phút
+                      const etaFullTime = dayjs()
+                        .add(etaFullMinutes, "minute")
+                        .format("HH:mm");
 
                       return (
                         <div
                           key={slot.id}
-                          onClick={() => {
-                            if (isReady) {
-                              form.setFieldsValue({ selectedSlot: slot.id });
-                              setFormValues((prev) => ({
-                                ...prev,
-                                selectedSlot: slot.id,
-                              }));
-                            }
-                          }}
                           style={{
-                            border: isSelected
-                              ? "2px solid #00083B"
-                              : "1px solid rgba(0,8,59,0.1)",
+                            border: "1px solid rgba(0,8,59,0.1)",
                             borderRadius: 12,
                             padding: 12,
-                            background: isSelected
-                              ? "linear-gradient(135deg, rgba(0,8,59,0.1) 0%, rgba(0,8,59,0.05) 100%)"
-                              : isReady
+                            background: isFull
                               ? "rgba(0, 8, 59, 0.03)"
-                              : "rgba(0, 0, 0, 0.05)",
-                            cursor: isReady ? "pointer" : "not-allowed",
-                            opacity: isReady ? 1 : 0.6,
+                              : isChargingVisual
+                              ? "#fff7ed"
+                              : "#f3f4f6",
+                            opacity: isMaintenance ? 0.6 : 1,
                             position: "relative",
-                            height: 130,
+                            height: 140,
                             overflow: "hidden",
                             ...(isMaintenance && {
                               backgroundImage:
-                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)",
+                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.06) 10px, rgba(0,0,0,0.06) 20px)",
                             }),
                           }}
                         >
@@ -3071,50 +3138,39 @@ export default function Booking() {
                           <div
                             style={{
                               fontSize: 12,
-                              color: isReady
+                              color: isFull
                                 ? "#059669"
-                                : isCharging
+                                : isChargingVisual
                                 ? "#a16207"
                                 : "#6b7280",
                               fontWeight: 600,
                               marginTop: 8,
                               padding: "4px 8px",
                               borderRadius: 6,
-                              backgroundColor: isReady
+                              backgroundColor: isFull
                                 ? "#dcfce7"
-                                : isCharging
-                                ? "#fef3c7"
+                                : isChargingVisual
+                                ? "#ffedd5"
                                 : "#f3f4f6",
                               textAlign: "center",
                             }}
                           >
-                            {isReady
-                              ? "Sẵn sàng"
-                              : isBooked
-                              ? "Đã đặt"
-                              : isCharging
-                              ? "Đang sạc"
-                              : "Bảo dưỡng"}
+                            {isMaintenance
+                              ? "Bảo dưỡng"
+                              : isFull
+                              ? "Sẵn sàng (100%)"
+                              : "Đang sạc"}
                           </div>
-                          {isSelected && (
+                          {!isMaintenance && !isFull && (
                             <div
                               style={{
-                                position: "absolute",
-                                top: 8,
-                                right: 8,
-                                width: 20,
-                                height: 20,
-                                borderRadius: "50%",
-                                backgroundColor: "#00083B",
-                                color: "white",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
+                                marginTop: 6,
                                 fontSize: 12,
-                                fontWeight: "bold",
+                                color: "#0f172a",
                               }}
                             >
-                              ✓
+                              ETA đầy 100%: <strong>{etaFullTime}</strong> (
+                              {etaFullMinutes} phút)
                             </div>
                           )}
                         </div>
@@ -3185,12 +3241,7 @@ export default function Booking() {
                 <span style={{ color: "#0f172a" }}>
                   {watchedTime || "Chưa chọn"}
                 </span>
-                <span>Ổ pin đã chọn:</span>
-                <span style={{ color: "#0f172a" }}>
-                  {selectedSlotObj
-                    ? `Ổ pin #${selectedSlotObj.slotNumber}`
-                    : "Chưa chọn"}
-                </span>
+                {/* Bỏ hiển thị ổ pin đã chọn */}
                 <span style={{ color: "#10b981", fontWeight: 700 }}>
                   Phí dịch vụ:
                 </span>
