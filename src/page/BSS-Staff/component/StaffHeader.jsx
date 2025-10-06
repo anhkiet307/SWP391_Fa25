@@ -1,6 +1,9 @@
 import React from "react";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const StaffHeader = () => {
+  const { user } = useAuth();
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -35,25 +38,17 @@ const StaffHeader = () => {
           {/* User Profile */}
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
+              <span className="text-white font-bold text-sm">
+                {user?.name?.charAt(0) || "S"}
+              </span>
             </div>
             <div className="hidden md:block">
               <p className="text-sm font-medium text-gray-800">
-                Nguyễn Văn Staff
+                {user?.name || "Staff"}
               </p>
-              <p className="text-xs text-gray-500">Trạm: BSS-001</p>
+              <p className="text-xs text-gray-500">
+                Staff • {user?.phone || "Chưa có SĐT"}
+              </p>
             </div>
           </div>
         </div>

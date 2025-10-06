@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -10,6 +12,22 @@ export default function Profile() {
     phone: user?.phone || "",
     address: user?.address || "",
   });
+
+  // Kiểm tra authentication khi component mount
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Hiển thị loading nếu chưa xác thực
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+        <div className="text-white">Đang chuyển hướng...</div>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -60,7 +78,13 @@ export default function Profile() {
                 </h2>
                 <p className="text-white/60 text-sm mb-4">{user?.email}</p>
                 <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                  {user?.role === "admin" ? "Quản trị viên" : "Người dùng"}
+                  {user?.role === "admin"
+                    ? "Quản trị viên"
+                    : user?.role === "staff"
+                    ? "Nhân viên"
+                    : user?.role === "evdriver"
+                    ? "Tài xế EV"
+                    : "Người dùng"}
                 </div>
               </div>
             </div>
