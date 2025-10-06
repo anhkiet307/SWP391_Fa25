@@ -1012,135 +1012,388 @@ const UserManagement = () => {
 
         {/* Modal chi tiết người dùng */}
         {selectedUser && !showEditForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-              <h3 className="text-xl font-semibold mb-4">
-                Chi tiết {activeTab === "users" ? "khách hàng" : "nhân viên"}{" "}
-                {selectedUser.userId}
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-700">
-                    Thông tin cơ bản
-                  </h4>
-                  <div className="space-y-2 mt-2">
-                    <div>
-                      <span className="font-medium">Tên:</span>{" "}
-                      {selectedUser.name}
-                    </div>
-                    <div>
-                      <span className="font-medium">Email:</span>{" "}
-                      {selectedUser.email}
-                    </div>
-                    <div>
-                      <span className="font-medium">SĐT:</span>{" "}
-                      {selectedUser.phone}
-                    </div>
-                    <div>
-                      <span className="font-medium">Trạng thái:</span>
-                      <span
-                        className={`ml-2 px-2 py-1 rounded text-xs ${
-                          selectedUser.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-3xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <svg
+                        className="w-7 h-7 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {selectedUser.status === "active"
-                          ? "Hoạt động"
-                          : "Tạm khóa"}
-                      </span>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">
+                        {selectedUser.name}
+                      </h3>
+                      <div className="flex items-center space-x-3 mt-2">
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                          {selectedUser.userId}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                            selectedUser.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {selectedUser.status === "active"
+                            ? "🟢 Hoạt động"
+                            : "🔴 Tạm khóa"}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => setSelectedUser(null)}
+                    className="p-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 border border-gray-200 hover:border-red-200"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                {activeTab === "users" && selectedUser.vehicleInfo && (
-                  <div>
-                    <h4 className="font-medium text-gray-700">
-                      Thông tin phương tiện
-                    </h4>
-                    <div className="space-y-2 mt-2">
-                      <div>
-                        <span className="font-medium">VIN:</span>{" "}
-                        {selectedUser.vehicleInfo.vin}
-                      </div>
-                      <div>
-                        <span className="font-medium">Loại pin:</span>{" "}
-                        {selectedUser.vehicleInfo.batteryType}
-                      </div>
-                      <div>
-                        <span className="font-medium">Lần đổi cuối:</span>{" "}
-                        {selectedUser.vehicleInfo.lastSwap}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {activeTab === "users" && selectedUser.subscription && (
-                  <div>
-                    <h4 className="font-medium text-gray-700">Gói thuê pin</h4>
-                    <div className="space-y-2 mt-2">
-                      <div>
-                        <span className="font-medium">Gói:</span>{" "}
-                        {selectedUser.subscription.plan}
-                      </div>
-                      <div>
-                        <span className="font-medium">Loại:</span>{" "}
-                        {selectedUser.subscription.type}
-                      </div>
-                      <div>
-                        <span className="font-medium">Hết hạn:</span>{" "}
-                        {selectedUser.subscription.expiryDate ||
-                          "Không giới hạn"}
-                      </div>
-                      <div>
-                        <span className="font-medium">Còn lại:</span>{" "}
-                        {selectedUser.subscription.remainingSwaps} lần
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {activeTab === "users" && (
-                  <div>
-                    <h4 className="font-medium text-gray-700">Thống kê</h4>
-                    <div className="space-y-2 mt-2">
-                      <div>
-                        <span className="font-medium">Tổng giao dịch:</span>{" "}
-                        {selectedUser.totalTransactions}
-                      </div>
-                      <div>
-                        <span className="font-medium">Tổng chi tiêu:</span>{" "}
-                        {selectedUser.totalSpent.toLocaleString("vi-VN")} VNĐ
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {activeTab === "staff" && selectedUser.stationId && (
-                  <div>
-                    <h4 className="font-medium text-gray-700">
-                      Thông tin trạm
-                    </h4>
-                    <div className="space-y-2 mt-2">
-                      <div>
-                        <span className="font-medium">Mã trạm:</span>{" "}
-                        {selectedUser.stationId}
-                      </div>
-                      <div>
-                        <span className="font-medium">Tên trạm:</span>{" "}
-                        {selectedUser.stationName}
-                      </div>
-                      <div>
-                        <span className="font-medium">Ngày tuyển:</span>{" "}
-                        {selectedUser.hireDate}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600"
-                >
-                  Đóng
-                </button>
+
+              {/* Content */}
+              <div className="p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {/* Thông tin cơ bản */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
+                    <h4 className="text-base font-bold text-blue-800 mb-3 flex items-center">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Thông tin cơ bản
+                    </h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-3 h-3 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-blue-600">
+                            Họ tên
+                          </div>
+                          <div className="text-sm text-gray-700 mt-1">
+                            {selectedUser.name}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-3 h-3 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-blue-600">
+                            Email
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            {selectedUser.email}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-3 h-3 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-blue-600">
+                            Số điện thoại
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            {selectedUser.phone}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Thông tin phương tiện (chỉ cho khách hàng) */}
+                  {activeTab === "users" && selectedUser.vehicleInfo && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
+                      <h4 className="text-base font-bold text-green-800 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                          />
+                        </svg>
+                        Thông tin phương tiện
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            VIN
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.vehicleInfo.vin}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            Loại pin
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.vehicleInfo.batteryType}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            Lần đổi cuối
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.vehicleInfo.lastSwap || "Chưa có"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Gói thuê pin (chỉ cho khách hàng) */}
+                  {activeTab === "users" && selectedUser.subscription && (
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
+                      <h4 className="text-base font-bold text-purple-800 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        Gói thuê pin
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                          <div className="text-xl font-bold text-purple-600 mb-1">
+                            {selectedUser.subscription.plan}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {selectedUser.subscription.type}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                          <div className="text-xl font-bold text-green-600 mb-1">
+                            {selectedUser.subscription.remainingSwaps}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Lần đổi còn lại
+                          </div>
+                        </div>
+                        {selectedUser.subscription.expiryDate && (
+                          <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                            <div className="text-sm font-bold text-orange-600 mb-1">
+                              {selectedUser.subscription.expiryDate}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Hết hạn
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Thống kê (chỉ cho khách hàng) */}
+                  {activeTab === "users" && (
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-100">
+                      <h4 className="text-base font-bold text-orange-800 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        Thống kê
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                          <div className="text-xl font-bold text-orange-600 mb-1">
+                            {selectedUser.totalTransactions}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Tổng giao dịch
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                          <div className="text-xl font-bold text-green-600 mb-1">
+                            {selectedUser.totalSpent.toLocaleString("vi-VN")} VNĐ
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Tổng chi tiêu
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Thông tin trạm (chỉ cho nhân viên) */}
+                  {activeTab === "staff" && selectedUser.stationId && (
+                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-3 border border-indigo-100">
+                      <h4 className="text-base font-bold text-indigo-800 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                        Thông tin trạm
+                      </h4>
+                      <div className="space-y-2">
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            Mã trạm
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.stationId}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            Tên trạm
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.stationName}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-2 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-600 mb-1">
+                            Ngày tuyển
+                          </div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {selectedUser.hireDate}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quyền hạn (chỉ cho nhân viên) */}
+                  {activeTab === "staff" && selectedUser.permissions && (
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
+                      <h4 className="text-base font-bold text-purple-800 mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                          />
+                        </svg>
+                        Quyền hạn
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedUser.permissions.map((permission, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-white text-gray-700 rounded-full text-sm font-medium shadow-sm"
+                          >
+                            {permission.replace("_", " ")}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
