@@ -15,7 +15,7 @@ export const batteryStations = [
         id: "BD-SLOT-001",
         slotNumber: 1,
         soh: 94,
-        soc: 80,
+        soc: 100,
         status: "ready",
       },
       {
@@ -78,14 +78,14 @@ export const batteryStations = [
         id: "BD-SLOT-010",
         slotNumber: 10,
         soh: 95,
-        soc: 85,
+        soc: 100,
         status: "ready",
       },
       {
         id: "BD-SLOT-011",
         slotNumber: 11,
         soh: 91,
-        soc: 70,
+        soc: 100,
         status: "ready",
       },
       {
@@ -605,7 +605,7 @@ export const batteryStations = [
         id: "Q1-SLOT-001",
         slotNumber: 1,
         soh: 93,
-        soc: 82,
+        soc: 100,
         status: "ready",
       },
       {
@@ -640,7 +640,7 @@ export const batteryStations = [
         id: "Q1-SLOT-006",
         slotNumber: 6,
         soh: 94,
-        soc: 80,
+        soc: 100,
         status: "ready",
       },
       {
@@ -654,7 +654,7 @@ export const batteryStations = [
         id: "Q1-SLOT-008",
         slotNumber: 8,
         soh: 96,
-        soc: 85,
+        soc: 100,
         status: "ready",
       },
       {

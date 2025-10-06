@@ -107,12 +107,12 @@ export default function Header() {
                   >
                     Thông tin tài khoản
                   </Link>
-                  <a
-                    href="#"
+                  <Link
+                    to="/booking-history"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
                   >
                     Lịch sử giao dịch
-                  </a>
+                  </Link>
                   <a
                     href="#"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
