@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import apiService from "../../services/apiService";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -10,8 +11,34 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect về dashboard phù hợp với role
+      if (user.role === "admin") {
+        navigate("/admin-dashboard", { replace: true });
+      } else if (user.role === "staff") {
+        navigate("/staff-dashboard", { replace: true });
+      } else if (user.role === "evdriver") {
+        navigate("/", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Hiển thị loading nếu đang redirect
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Đang chuyển hướng...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -26,47 +53,50 @@ export default function Login() {
     setError("");
 
     try {
-      // Tài khoản giả để test
-      if (formData.username === "user" && formData.password === "user") {
+      // Gọi API login thật
+      const response = await apiService.login({
+        Email: formData.username, // API sử dụng Email thay vì username
+        Password: formData.password,
+      });
+
+      // Kiểm tra response từ API
+      if (response && response.status === "success") {
+        // Lưu thông tin user vào localStorage
+        localStorage.setItem("userInfo", JSON.stringify(response.data));
+
+        // Đăng nhập thành công với thông tin từ API
         await login({
+          userID: response.data.userID,
           username: formData.username,
-          name: "Người dùng",
-          email: "user@voltswap.com",
-          vehicles: [
-            {
-              id: "moto-50",
-              name: "Xe máy điện 50cc",
-              type: "Pin 48V 20Ah",
-              plate: "36A-366.36",
-              currentBattery: { id: "USR-48-001" },
-            },
-            {
-              id: "moto-100",
-              name: "Xe máy điện 100cc",
-              type: "Pin 60V 30Ah",
-              plate: "36A-363.63",
-              currentBattery: { id: "USR-60-001" },
-            },
-          ],
-          role: "user",
+          name: response.data.name,
+          email: response.data.email,
+          phone: response.data.phone,
+          roleID: response.data.roleID,
+          role:
+            response.data.roleID === 1
+              ? "evdriver"
+              : response.data.roleID === 2
+              ? "staff"
+              : "admin",
+          ...response.data, // Thêm các thông tin khác từ API
         });
-        navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
-      } else if (
-        formData.username === "admin" &&
-        formData.password === "admin"
-      ) {
-        await login({
-          username: formData.username,
-          name: "Admin System",
-          email: "admin@voltswap.com",
-          role: "admin",
-        });
-        navigate("/admin-dashboard"); // Chuyển về trang admin sau khi đăng nhập thành công
+
+        // Chuyển hướng dựa trên roleID
+        if (response.data.roleID === 1) {
+          navigate("/"); // EVDriver → trang chủ
+        } else if (response.data.roleID === 2) {
+          navigate("/staff-dashboard"); // Staff → staff dashboard
+        } else if (response.data.roleID === 3) {
+          navigate("/admin-dashboard"); // Admin → admin dashboard
+        } else {
+          navigate("/"); // Fallback
+        }
       } else {
-        setError("Tên đăng nhập hoặc mật khẩu không đúng");
+        setError(response?.message || "Tên đăng nhập hoặc mật khẩu không đúng");
       }
     } catch (err) {
-      setError("Có lỗi xảy ra khi đăng nhập");
+      console.error("Login error:", err);
+      setError("Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +122,7 @@ export default function Login() {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+            <h2 className="mt-6 text-center text-3xl font-bold text-white">
               Đăng nhập tài khoản
             </h2>
             <p className="mt-2 text-center text-sm text-white/80">
@@ -112,15 +142,15 @@ export default function Login() {
                   htmlFor="username"
                   className="block text-sm font-medium text-white/90 mb-2"
                 >
-                  Tên đăng nhập
+                  Email
                 </label>
                 <input
                   id="username"
                   name="username"
-                  type="text"
+                  type="email"
                   required
                   className="appearance-none relative block w-full px-4 py-3 border border-white/20 bg-white/10 text-white placeholder-white/60 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 sm:text-sm"
-                  placeholder="Nhập tên đăng nhập"
+                  placeholder="Nhập email"
                   value={formData.username}
                   onChange={handleChange}
                 />
@@ -235,48 +265,6 @@ export default function Login() {
                   "Đăng nhập"
                 )}
               </button>
-            </div>
-
-            <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-white/20 backdrop-blur-sm">
-              <p className="text-sm text-blue-200 font-semibold mb-3">
-                🔑 Tài khoản test:
-              </p>
-
-              {/* User Account */}
-              <div className="mb-3 p-2 bg-green-500/20 rounded border border-green-400/30">
-                <p className="text-xs text-green-200 font-medium mb-1">
-                  👤 Người dùng:
-                </p>
-                <p className="text-xs text-green-100">
-                  Username:{" "}
-                  <span className="font-mono bg-green-600/50 px-2 py-1 rounded text-white">
-                    user
-                  </span>
-                  {" | "}
-                  Password:{" "}
-                  <span className="font-mono bg-green-600/50 px-2 py-1 rounded text-white">
-                    user
-                  </span>
-                </p>
-              </div>
-
-              {/* Admin Account */}
-              <div className="p-2 bg-red-500/20 rounded border border-red-400/30">
-                <p className="text-xs text-red-200 font-medium mb-1">
-                  ⚡ Quản trị viên:
-                </p>
-                <p className="text-xs text-red-100">
-                  Username:{" "}
-                  <span className="font-mono bg-red-600/50 px-2 py-1 rounded text-white">
-                    admin
-                  </span>
-                  {" | "}
-                  Password:{" "}
-                  <span className="font-mono bg-red-600/50 px-2 py-1 rounded text-white">
-                    admin
-                  </span>
-                </p>
-              </div>
             </div>
           </form>
         </div>

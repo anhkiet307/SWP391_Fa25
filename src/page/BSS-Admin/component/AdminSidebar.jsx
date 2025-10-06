@@ -1,38 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const { user, logout } = useAuth();
+
   // Khởi tạo state từ localStorage, luôn đóng khi mới login
   const [isStationMenuOpen, setIsStationMenuOpen] = useState(() => {
-    const savedState = localStorage.getItem('stationMenuOpen');
+    const savedState = localStorage.getItem("stationMenuOpen");
     if (savedState !== null) {
       return JSON.parse(savedState);
     }
-    
+
     // Luôn đóng khi mới login vào admin
     return false;
   });
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(() => {
-    const savedState = localStorage.getItem('userMenuOpen');
+    const savedState = localStorage.getItem("userMenuOpen");
     if (savedState !== null) {
       return JSON.parse(savedState);
     }
-    
+
     // Luôn đóng khi mới login vào admin
     return false;
   });
 
   // Lưu trạng thái menu vào localStorage khi thay đổi
   useEffect(() => {
-    localStorage.setItem('stationMenuOpen', JSON.stringify(isStationMenuOpen));
+    localStorage.setItem("stationMenuOpen", JSON.stringify(isStationMenuOpen));
   }, [isStationMenuOpen]);
 
   useEffect(() => {
-    localStorage.setItem('userMenuOpen', JSON.stringify(isUserMenuOpen));
+    localStorage.setItem("userMenuOpen", JSON.stringify(isUserMenuOpen));
   }, [isUserMenuOpen]);
 
   const menuItems = [
@@ -182,11 +184,11 @@ const AdminSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav 
+      <nav
         className="mt-6 flex-1 px-3 pb-6 overflow-y-auto custom-scrollbar"
         style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#a5b4fc #f1f5f9'
+          scrollbarWidth: "thin",
+          scrollbarColor: "#a5b4fc #f1f5f9",
         }}
       >
         <div className="mb-6">
@@ -197,8 +199,10 @@ const AdminSidebar = () => {
         <div className="space-y-2">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
-            const hasActiveSubmenu = item.submenu?.some(subItem => location.pathname === subItem.path);
-            
+            const hasActiveSubmenu = item.submenu?.some(
+              (subItem) => location.pathname === subItem.path
+            );
+
             return (
               <div key={item.path}>
                 {item.hasSubmenu ? (
@@ -208,11 +212,11 @@ const AdminSidebar = () => {
                         if (item.path === "/admin-station-management") {
                           setIsStationMenuOpen(!isStationMenuOpen);
                           // Navigate to first submenu item (Danh sách trạm)
-                          navigate('/admin-station-management');
+                          navigate("/admin-station-management");
                         } else if (item.path === "/admin-user-management") {
                           setIsUserMenuOpen(!isUserMenuOpen);
                           // Navigate to first submenu item (Danh sách khách hàng)
-                          navigate('/admin-user-management');
+                          navigate("/admin-user-management");
                         }
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
@@ -224,7 +228,9 @@ const AdminSidebar = () => {
                       <div className="flex items-center">
                         <span
                           className={`mr-3 ${
-                            isActive || hasActiveSubmenu ? "text-white" : "text-gray-400"
+                            isActive || hasActiveSubmenu
+                              ? "text-white"
+                              : "text-gray-400"
                           }`}
                         >
                           {item.icon}
@@ -233,9 +239,12 @@ const AdminSidebar = () => {
                       </div>
                       <svg
                         className={`w-4 h-4 transition-transform duration-300 ${
-                          (item.path === "/admin-station-management" && isStationMenuOpen) ||
-                          (item.path === "/admin-user-management" && isUserMenuOpen)
-                            ? "rotate-180" : ""
+                          (item.path === "/admin-station-management" &&
+                            isStationMenuOpen) ||
+                          (item.path === "/admin-user-management" &&
+                            isUserMenuOpen)
+                            ? "rotate-180"
+                            : ""
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -249,12 +258,15 @@ const AdminSidebar = () => {
                         />
                       </svg>
                     </button>
-                    
-                    {((item.path === "/admin-station-management" && isStationMenuOpen) ||
-                      (item.path === "/admin-user-management" && isUserMenuOpen)) && (
+
+                    {((item.path === "/admin-station-management" &&
+                      isStationMenuOpen) ||
+                      (item.path === "/admin-user-management" &&
+                        isUserMenuOpen)) && (
                       <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
                         {item.submenu.map((subItem) => {
-                          const isSubActive = location.pathname === subItem.path;
+                          const isSubActive =
+                            location.pathname === subItem.path;
                           return (
                             <Link
                               key={subItem.path}
@@ -297,6 +309,51 @@ const AdminSidebar = () => {
         </div>
       </nav>
 
+      {/* User Profile Section */}
+      <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-indigo-50">
+        <div className="flex items-center space-x-3 mb-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-sm">
+              {user?.name?.charAt(0) || "A"}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-800 truncate">
+              {user?.name || "Admin"}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user?.email || "admin@voltswap.com"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+            Admin
+          </span>
+          <button
+            onClick={() => {
+              logout();
+            }}
+            className="flex items-center space-x-1 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

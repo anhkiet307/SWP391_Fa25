@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import StaffLayout from "./component/StaffLayout";
+import { useAuth } from "../../contexts/AuthContext";
 
 const StaffDashboard = () => {
+  const { user } = useAuth();
   // State cho quản lý tồn kho pin
   const [batteryInventory, setBatteryInventory] = useState({
     full: 9,
@@ -87,7 +89,7 @@ const StaffDashboard = () => {
           </div>
           <div className="flex flex-col items-end gap-2">
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Quản lý: Nguyễn Văn Staff
+              Quản lý: {user?.name || "Staff"}
             </span>
             <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
               Mã trạm: BSS-001
