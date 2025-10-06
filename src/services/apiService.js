@@ -29,6 +29,7 @@ class ApiService {
   async makeRequest(url, options = {}) {
     const config = {
       method: "GET",
+      mode: "cors", // Explicitly enable CORS
       headers: this.buildHeaders(options.headers),
       ...options,
     };
