@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../component/AdminLayout";
 import { showSuccess, showError } from "../../../utils/toast";
+import apiService from "../../../services/apiService";
 
 const AdminAddStaff = () => {
   const [formData, setFormData] = useState({
-    staffId: "",
     name: "",
     email: "",
     password: "",
@@ -18,7 +18,6 @@ const AdminAddStaff = () => {
   // Force reset form on component mount
   useEffect(() => {
     setFormData({
-      staffId: "",
       name: "",
       email: "",
       password: "",
@@ -29,13 +28,13 @@ const AdminAddStaff = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    // Tự động cập nhật mật khẩu khi số điện thoại thay đổi
-    if (name === 'phone') {
+
+    // Xử lý số điện thoại - chỉ cho phép số và giới hạn 10 chữ số
+    if (name === "phone") {
+      const phoneValue = value.replace(/\D/g, "").slice(0, 10);
       setFormData({
         ...formData,
-        [name]: value,
-        password: value, // Mật khẩu mặc định = số điện thoại
+        [name]: phoneValue,
       });
     } else {
       setFormData({
@@ -54,23 +53,36 @@ const AdminAddStaff = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Chuẩn bị dữ liệu cho API
+      const userData = {
+        Name: formData.name,
+        Email: formData.email,
+        Password: formData.password,
+        phone: parseInt(formData.phone), // Chuyển đổi thành số
+        roleID: 2, // Staff = 2
+      };
 
-      showSuccess("Thêm nhân viên mới thành công!");
+      // Gọi API thật
+      const response = await apiService.addUser(userData);
 
-      // Reset form
-      setFormData({
-        staffId: "",
-        name: "",
-        email: "",
-        password: "",
-        phone: "",
-        role: "Nhân viên",
-      });
-      setShowPreview(false);
+      if (response && response.status === "success") {
+        showSuccess("Thêm Staff mới thành công!");
+
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          phone: "",
+          role: "Nhân viên",
+        });
+        setShowPreview(false);
+      } else {
+        showError(response?.message || "Có lỗi xảy ra khi thêm Staff!");
+      }
     } catch (error) {
-      showError("Có lỗi xảy ra khi thêm nhân viên mới!");
+      console.error("Add user error:", error);
+      showError("Có lỗi xảy ra khi thêm Staff mới!");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +103,7 @@ const AdminAddStaff = () => {
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
-            
+
             <div className="relative z-10 p-5">
               <div className="flex justify-between items-center">
                 {/* Left Content */}
@@ -113,25 +125,31 @@ const AdminAddStaff = () => {
                       </svg>
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold mb-1">Thêm Nhân viên Mới</h1>
+                      <h1 className="text-2xl font-bold mb-1">
+                        Thêm Nhân viên Mới
+                      </h1>
                       <p className="text-white text-opacity-90 text-sm">
                         Tạo tài khoản nhân viên mới trong hệ thống
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Stats Cards */}
                   <div className="flex space-x-3">
                     <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
                       <div className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Admin: Quản trị hệ thống</span>
+                        <span className="text-xs font-medium">
+                          Admin: Quản trị hệ thống
+                        </span>
                       </div>
                     </div>
                     <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
                       <div className="flex items-center space-x-2">
                         <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Thêm nhân viên mới</span>
+                        <span className="text-xs font-medium">
+                          Thêm nhân viên mới
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -157,16 +175,20 @@ const AdminAddStaff = () => {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white font-semibold text-sm">Admin System</p>
-                        <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
+                        <p className="text-white font-semibold text-sm">
+                          Admin System
+                        </p>
+                        <p className="text-white text-opacity-80 text-xs">
+                          Quản trị viên
+                        </p>
                       </div>
                     </div>
-                    
+
                     <button
                       onClick={() => {
-                        localStorage.removeItem('stationMenuOpen');
-                        localStorage.removeItem('userMenuOpen');
-                        window.location.href = '/login';
+                        localStorage.removeItem("stationMenuOpen");
+                        localStorage.removeItem("userMenuOpen");
+                        window.location.href = "/login";
                       }}
                       className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
                     >
@@ -196,22 +218,6 @@ const AdminAddStaff = () => {
         <div className="bg-white p-6 rounded-lg shadow-md">
           <form onSubmit={handlePreview} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Mã nhân viên */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mã nhân viên <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="staffId"
-                  value={formData.staffId}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="STAFF001"
-                  required
-                />
-              </div>
-
               {/* Tên */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -272,27 +278,25 @@ const AdminAddStaff = () => {
                   onChange={handleInputChange}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="0901234567"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Nhập đúng 10 chữ số (VD: 0901234567)
+                </p>
               </div>
 
-              {/* Vai trò */}
+              {/* Vai trò - Cố định là Staff */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vai trò <span className="text-red-500">*</span>
+                  Vai trò
                 </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                >
-                  <option value="Nhân viên">Nhân viên</option>
-                  <option value="Khách hàng">Khách hàng</option>
-                </select>
+                <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+                  Staff (Mặc định)
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  💡 Chọn vai trò phù hợp cho tài khoản mới
+                  💡 Tài khoản này sẽ được tạo với quyền Staff
                 </p>
               </div>
             </div>
@@ -372,31 +376,6 @@ const AdminAddStaff = () => {
 
                 {/* Staff Info Cards */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  {/* Mã nhân viên */}
-                  <div className="bg-green-50 rounded-lg p-3 border border-green-100">
-                    <div className="flex items-center mb-1">
-                      <svg
-                        className="w-3 h-3 text-green-600 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                        />
-                      </svg>
-                      <span className="text-base font-medium text-green-600">
-                        Mã nhân viên
-                      </span>
-                    </div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formData.staffId || "Chưa nhập"}
-                    </div>
-                  </div>
-
                   {/* Tên */}
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
                     <div className="flex items-center mb-1">
@@ -518,7 +497,7 @@ const AdminAddStaff = () => {
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.role || "Chưa chọn"}
+                      Staff
                     </div>
                   </div>
                 </div>

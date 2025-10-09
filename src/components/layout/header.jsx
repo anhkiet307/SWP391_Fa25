@@ -15,8 +15,7 @@ export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = () => {
-    logout();
-    setShowUserMenu(false);
+    logout(); // logout() sẽ tự động chuyển hướng về /login
   };
 
   return (
@@ -67,14 +66,23 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-1.5 text-sm font-semibold text-blue-300 hover:text-white transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold text-blue-300 hover:text-white transition-colors"
               >
-                <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-bold text-xs">
                     {user?.name?.charAt(0) || "U"}
                   </span>
                 </div>
-                <span className="hidden lg:inline">{user?.name || "User"}</span>
+                <div className="hidden lg:flex flex-col items-start">
+                  <span className="text-sm">{user?.name || "User"}</span>
+                  <span className="text-xs text-white/60">
+                    {user?.role === "admin"
+                      ? "Admin"
+                      : user?.role === "staff"
+                      ? "Staff"
+                      : "EV Driver"}
+                  </span>
+                </div>
                 <svg
                   className={`w-3 h-3 transition-transform ${
                     showUserMenu ? "rotate-180" : ""
@@ -94,12 +102,43 @@ export default function Header() {
 
               {/* Dropdown Menu */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#0b1448] py-2 z-50 shadow-xl shadow-black/30">
-                  <div className="px-4 pb-2 mb-2 border-b border-white/10">
-                    <p className="text-sm font-semibold text-white">
-                      {user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-white/60">{user?.email}</p>
+                <div className="absolute right-0 mt-2 w-64 rounded-xl border border-white/10 bg-[#0b1448] py-2 z-50 shadow-xl shadow-black/30">
+                  <div className="px-4 pb-3 mb-3 border-b border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {user?.name?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-white">
+                          {user?.name || "User"}
+                        </p>
+                        <p className="text-xs text-white/60">{user?.email}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                              user?.role === "admin"
+                                ? "bg-red-500/20 text-red-300"
+                                : user?.role === "staff"
+                                ? "bg-blue-500/20 text-blue-300"
+                                : "bg-green-500/20 text-green-300"
+                            }`}
+                          >
+                            {user?.role === "admin"
+                              ? "Admin"
+                              : user?.role === "staff"
+                              ? "Staff"
+                              : "EV Driver"}
+                          </span>
+                          {user?.phone && (
+                            <span className="text-xs text-white/50">
+                              {user.phone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <Link
                     to="/profile"
@@ -107,12 +146,35 @@ export default function Header() {
                   >
                     Thông tin tài khoản
                   </Link>
-                  <Link
-                    to="/booking-history"
-                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
-                  >
-                    Lịch sử giao dịch
-                  </Link>
+
+                  {/* Role-based navigation */}
+                  {user?.role === "admin" && (
+                    <Link
+                      to="/admin-dashboard"
+                      className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+
+                  {user?.role === "staff" && (
+                    <Link
+                      to="/staff-dashboard"
+                      className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Staff Dashboard
+                    </Link>
+                  )}
+
+                  {user?.role === "evdriver" && (
+                    <Link
+                      to="/booking-history"
+                      className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
+                    >
+                      Lịch sử giao dịch
+                    </Link>
+                  )}
+
                   <a
                     href="#"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"

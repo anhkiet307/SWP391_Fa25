@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -14,8 +14,34 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect nếu đã đăng nhập
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect về dashboard phù hợp với role
+      if (user.role === "admin") {
+        navigate("/admin-dashboard", { replace: true });
+      } else if (user.role === "staff") {
+        navigate("/staff-dashboard", { replace: true });
+      } else if (user.role === "evdriver") {
+        navigate("/", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Hiển thị loading nếu đang redirect
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Đang chuyển hướng...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     setFormData({

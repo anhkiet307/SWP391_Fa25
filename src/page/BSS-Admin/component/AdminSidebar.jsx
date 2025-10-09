@@ -4,35 +4,35 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // Khởi tạo state từ localStorage, luôn đóng khi mới login
   const [isStationMenuOpen, setIsStationMenuOpen] = useState(() => {
-    const savedState = localStorage.getItem('stationMenuOpen');
+    const savedState = localStorage.getItem("stationMenuOpen");
     if (savedState !== null) {
       return JSON.parse(savedState);
     }
-    
+
     // Luôn đóng khi mới login vào admin
     return false;
   });
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(() => {
-    const savedState = localStorage.getItem('userMenuOpen');
+    const savedState = localStorage.getItem("userMenuOpen");
     if (savedState !== null) {
       return JSON.parse(savedState);
     }
-    
+
     // Luôn đóng khi mới login vào admin
     return false;
   });
 
   // Lưu trạng thái menu vào localStorage khi thay đổi
   useEffect(() => {
-    localStorage.setItem('stationMenuOpen', JSON.stringify(isStationMenuOpen));
+    localStorage.setItem("stationMenuOpen", JSON.stringify(isStationMenuOpen));
   }, [isStationMenuOpen]);
 
   useEffect(() => {
-    localStorage.setItem('userMenuOpen', JSON.stringify(isUserMenuOpen));
+    localStorage.setItem("userMenuOpen", JSON.stringify(isUserMenuOpen));
   }, [isUserMenuOpen]);
 
   const menuItems = [
@@ -182,11 +182,11 @@ const AdminSidebar = () => {
       </div>
 
       {/* Navigation Menu */}
-      <nav 
+      <nav
         className="mt-6 flex-1 px-3 pb-6 overflow-y-auto custom-scrollbar"
         style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#a5b4fc #f1f5f9'
+          scrollbarWidth: "thin",
+          scrollbarColor: "#a5b4fc #f1f5f9",
         }}
       >
         <div className="mb-6">
@@ -197,8 +197,10 @@ const AdminSidebar = () => {
         <div className="space-y-2">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
-            const hasActiveSubmenu = item.submenu?.some(subItem => location.pathname === subItem.path);
-            
+            const hasActiveSubmenu = item.submenu?.some(
+              (subItem) => location.pathname === subItem.path
+            );
+
             return (
               <div key={item.path}>
                 {item.hasSubmenu ? (
@@ -208,11 +210,11 @@ const AdminSidebar = () => {
                         if (item.path === "/admin-station-management") {
                           setIsStationMenuOpen(!isStationMenuOpen);
                           // Navigate to first submenu item (Danh sách trạm)
-                          navigate('/admin-station-management');
+                          navigate("/admin-station-management");
                         } else if (item.path === "/admin-user-management") {
                           setIsUserMenuOpen(!isUserMenuOpen);
                           // Navigate to first submenu item (Danh sách khách hàng)
-                          navigate('/admin-user-management');
+                          navigate("/admin-user-management");
                         }
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
@@ -224,7 +226,9 @@ const AdminSidebar = () => {
                       <div className="flex items-center">
                         <span
                           className={`mr-3 ${
-                            isActive || hasActiveSubmenu ? "text-white" : "text-gray-400"
+                            isActive || hasActiveSubmenu
+                              ? "text-white"
+                              : "text-gray-400"
                           }`}
                         >
                           {item.icon}
@@ -233,9 +237,12 @@ const AdminSidebar = () => {
                       </div>
                       <svg
                         className={`w-4 h-4 transition-transform duration-300 ${
-                          (item.path === "/admin-station-management" && isStationMenuOpen) ||
-                          (item.path === "/admin-user-management" && isUserMenuOpen)
-                            ? "rotate-180" : ""
+                          (item.path === "/admin-station-management" &&
+                            isStationMenuOpen) ||
+                          (item.path === "/admin-user-management" &&
+                            isUserMenuOpen)
+                            ? "rotate-180"
+                            : ""
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -249,12 +256,15 @@ const AdminSidebar = () => {
                         />
                       </svg>
                     </button>
-                    
-                    {((item.path === "/admin-station-management" && isStationMenuOpen) ||
-                      (item.path === "/admin-user-management" && isUserMenuOpen)) && (
+
+                    {((item.path === "/admin-station-management" &&
+                      isStationMenuOpen) ||
+                      (item.path === "/admin-user-management" &&
+                        isUserMenuOpen)) && (
                       <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
                         {item.submenu.map((subItem) => {
-                          const isSubActive = location.pathname === subItem.path;
+                          const isSubActive =
+                            location.pathname === subItem.path;
                           return (
                             <Link
                               key={subItem.path}

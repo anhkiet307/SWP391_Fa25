@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Header from "./components/layout/header.jsx";
 import Footer from "./components/layout/footer.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import RoleBasedRedirect from "./components/RoleBasedRedirect.jsx";
 
 // User pages
 import Home from "./page/home.jsx";
@@ -56,6 +58,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Redirect route để xử lý refresh */}
+          <Route path="/redirect" element={<RoleBasedRedirect />} />
+
           <Route
             path="/"
             element={
@@ -107,37 +112,103 @@ function App() {
             }
           />
           {/* Staff Routes */}
-          <Route path="/staff-dashboard" element={<StaffDashboard />} />
+          <Route
+            path="/staff-dashboard"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <StaffDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/transactions-management"
-            element={<TransactionManagement />}
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <TransactionManagement />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/station-management" element={<StationManagement />} />
+          <Route
+            path="/station-management"
+            element={
+              <ProtectedRoute requiredRole="staff">
+                <StationManagement />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Routes */}
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin-station-management"
-            element={<AdminStationManagement />}
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminStationManagement />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin-user-management"
-            element={<AdminUserManagement />}
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminUserManagement />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/admin-add-station" element={<AdminAddStation />} />
+          <Route
+            path="/admin-add-station"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddStation />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin-battery-dispatch"
-            element={<AdminBatteryDispatch />}
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminBatteryDispatch />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/admin-add-customer" element={<AdminAddCustomer />} />
-          <Route path="/admin-add-staff" element={<AdminAddStaff />} />
+          <Route
+            path="/admin-add-customer"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddCustomer />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-add-staff"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminAddStaff />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin-battery-packages"
-            element={<AdminPackManagement />}
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPackManagement />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admin-report-management"
-            element={<AdminReportManagement />}
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminReportManagement />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </Router>
