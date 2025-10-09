@@ -18,6 +18,17 @@ const AdminStationManagement = () => {
   const [stationToDelete, setStationToDelete] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [stationToChangeStatus, setStationToChangeStatus] = useState(null);
+  
+  // Edit form state
+  const [editFormData, setEditFormData] = useState({
+    stationID: "",
+    stationName: "",
+    location: "",
+    status: 1,
+    x: "",
+    y: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load stations from API
   useEffect(() => {
@@ -30,12 +41,10 @@ const AdminStationManagement = () => {
         // Transform API data to match UI format
         const transformedStations = response.data.map((station) => ({
           id: station.stationID,
-          stationId: `BSS-${String(station.stationID).padStart(3, '0')}`,
+          stationId: station.stationID.toString(),
           name: station.stationName,
           address: station.location,
           status: station.status === 1 ? "active" : "maintenance",
-          x: station.x,
-          y: station.y,
           createdAt: station.createAt,
         }));
         
@@ -71,12 +80,10 @@ const AdminStationManagement = () => {
       
       const transformedStations = response.data.map((station) => ({
         id: station.stationID,
-        stationId: `BSS-${String(station.stationID).padStart(3, '0')}`,
+        stationId: station.stationID.toString(),
         name: station.stationName,
         address: station.location,
         status: station.status === 1 ? "active" : "maintenance",
-        x: station.x,
-        y: station.y,
         createdAt: station.createAt,
       }));
       
@@ -99,15 +106,97 @@ const AdminStationManagement = () => {
     navigate("/admin-battery-dispatch");
   };
 
-  // Hàm cập nhật trạm
-  const handleUpdateStation = (id, updates) => {
-    setStations(
-      stations.map((station) =>
-        station.id === id ? { ...station, ...updates } : station
-      )
-    );
+  // Hàm mở form chỉnh sửa
+  const openEditForm = (station) => {
+    setEditFormData({
+      stationID: station.id,
+      stationName: station.name,
+      location: station.address,
+      status: station.status === "active" ? 1 : 0,
+      x: station.x || "",
+      y: station.y || ""
+    });
+    setShowEditForm(true);
+    setSelectedStation(station);
+  };
+
+  // Hàm đóng form chỉnh sửa
+  const closeEditForm = () => {
     setShowEditForm(false);
     setSelectedStation(null);
+    setEditFormData({
+      stationID: "",
+      stationName: "",
+      location: "",
+      status: 1,
+      x: "",
+      y: ""
+    });
+  };
+
+  // Hàm xử lý input change
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Hàm cập nhật trạm
+  const handleUpdateStation = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // Validate required fields
+      if (!editFormData.stationName || !editFormData.location || !editFormData.x || !editFormData.y) {
+        showError("Vui lòng điền đầy đủ thông tin bắt buộc!");
+        return;
+      }
+
+      // Validate numeric fields
+      const x = parseFloat(editFormData.x);
+      const y = parseFloat(editFormData.y);
+      if (isNaN(x) || isNaN(y)) {
+        showError("Vui lòng nhập đúng định dạng số cho tọa độ!");
+        return;
+      }
+
+      // Prepare data without status field
+      const updateData = {
+        stationID: editFormData.stationID,
+        stationName: editFormData.stationName,
+        location: editFormData.location,
+        x: x,
+        y: y
+      };
+
+      // Call API to update station
+      await apiService.updateStation(updateData);
+      
+      // Update local state
+      setStations(
+        stations.map((station) =>
+          station.id === editFormData.stationID
+            ? {
+                ...station,
+                name: editFormData.stationName,
+                address: editFormData.location,
+                x: x,
+                y: y
+              }
+            : station
+        )
+      );
+      
+      showSuccess("Cập nhật trạm thành công!");
+      closeEditForm();
+    } catch (error) {
+      console.error("Error updating station:", error);
+      showError("Lỗi khi cập nhật trạm!");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Hàm mở modal xác nhận xóa
@@ -150,7 +239,10 @@ const AdminStationManagement = () => {
   const toggleStationStatus = async () => {
     if (stationToChangeStatus) {
       try {
-        // Update local state first for immediate UI feedback
+        // Call API to toggle status on server (API handles the toggle logic)
+        await apiService.updateStationStatus(stationToChangeStatus.id);
+        
+        // Update local state after successful API call
         setStations(
           stations.map((station) =>
               station.id === stationToChangeStatus.id
@@ -162,12 +254,9 @@ const AdminStationManagement = () => {
           )
         );
         
-        // TODO: Call API to update status on server
-        // await apiService.updateStationStatus(stationToChangeStatus.id, newStatus);
-        
         showSuccess(
           stationToChangeStatus.status === "active"
-            ? "Đã chuyển trạm sang chế độ bảo dưỡng!"
+            ? "Đã tạm ngưng trạm thành công!"
             : "Đã kích hoạt trạm thành công!"
         );
         setShowStatusModal(false);
@@ -418,7 +507,7 @@ const AdminStationManagement = () => {
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                  <th className="p-4 text-left font-semibold text-base">
+                  <th className="p-4 text-center font-semibold text-base">
                     Mã trạm
                   </th>
                   <th className="p-4 text-left font-semibold text-base">
@@ -427,13 +516,10 @@ const AdminStationManagement = () => {
                   <th className="p-4 text-left font-semibold text-base">
                     Địa chỉ
                   </th>
-                  <th className="p-4 text-left font-semibold text-base">
+                  <th className="p-4 text-center font-semibold text-base">
                     Trạng thái
                   </th>
-                  <th className="p-4 text-left font-semibold text-base">
-                    Tọa độ
-                  </th>
-                  <th className="p-4 text-left font-semibold text-base">
+                  <th className="p-4 text-center font-semibold text-base">
                     Ngày tạo
                   </th>
                   <th className="p-4 text-center font-semibold text-base">
@@ -450,8 +536,10 @@ const AdminStationManagement = () => {
                     }`}
                   >
                     <td className="p-4 border-b border-gray-200">
-                      <div className="font-bold text-base text-indigo-600">
-                        {station.stationId}
+                      <div className="flex justify-center">
+                        <div className="font-bold text-base text-indigo-600">
+                          {station.stationId}
+                        </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
@@ -480,18 +568,15 @@ const AdminStationManagement = () => {
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <div className="text-sm text-gray-700">
-                        <div className="font-medium text-gray-800">
-                          X: {station.x}
+                      <div className="flex justify-center">
+                        <div className="text-sm text-gray-700 text-center">
+                          <div className="font-medium text-gray-800">
+                            {new Date(station.createdAt).toLocaleDateString("vi-VN")}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(station.createdAt).toLocaleTimeString("vi-VN")}
+                          </div>
                         </div>
-                        <div className="font-medium text-gray-800">
-                          Y: {station.y}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 border-b border-gray-200">
-                      <div className="text-sm text-gray-700">
-                        {new Date(station.createdAt).toLocaleDateString("vi-VN")}
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
@@ -529,10 +614,7 @@ const AdminStationManagement = () => {
                         {/* Sửa */}
                         <button
                           className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                          onClick={() => {
-                            setSelectedStation(station);
-                            setShowEditForm(true);
-                          }}
+                          onClick={() => openEditForm(station)}
                           title="Sửa"
                         >
                           <svg
@@ -557,13 +639,13 @@ const AdminStationManagement = () => {
                         <button
                           className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
                             station.status === "active"
-                              ? "bg-yellow-500 hover:bg-yellow-600"
+                              ? "bg-red-500 hover:bg-red-600"
                               : "bg-green-500 hover:bg-green-600"
                           }`}
                           onClick={() => openStatusModal(station)}
                           title={
                             station.status === "active"
-                              ? "Chuyển sang bảo dưỡng"
+                              ? "Tạm ngưng hoạt động"
                               : "Kích hoạt trạm"
                           }
                         >
@@ -578,13 +660,7 @@ const AdminStationManagement = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
                           ) : (
@@ -603,33 +679,7 @@ const AdminStationManagement = () => {
                             </svg>
                           )}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            {station.status === "active"
-                              ? "Bảo dưỡng"
-                              : "Kích hoạt"}
-                          </div>
-                        </button>
-
-                        {/* Xóa */}
-                        <button
-                          className="group relative bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                          onClick={() => openDeleteModal(station)}
-                          title="Xóa"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                            Xóa trạm
+                            {station.status === "active" ? "Tạm ngưng" : "Kích hoạt"}
                           </div>
                         </button>
                       </div>
@@ -645,211 +695,121 @@ const AdminStationManagement = () => {
         {/* Modal chi tiết trạm */}
         {selectedStation && !showEditForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-3xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <svg
-                        className="w-7 h-7 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                        />
+              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-8">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
+                
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-xl">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">
+                      <h3 className="text-3xl font-bold mb-2">
                         {selectedStation.name}
                       </h3>
-                      <div className="flex items-center space-x-3 mt-2">
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-                          {selectedStation.stationId}
+                      <div className="flex items-center space-x-4">
+                        <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-white bg-opacity-20 backdrop-blur-sm">
+                          ID: {selectedStation.stationId}
                         </span>
-                      <span
-                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                        <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                           selectedStation.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {selectedStation.status === "active"
-                            ? "🟢 Hoạt động"
-                            : "🔴 Bảo dưỡng"}
-                      </span>
+                            ? "bg-green-500 bg-opacity-20 text-green-100"
+                            : "bg-red-500 bg-opacity-20 text-red-100"
+                        }`}>
+                          {selectedStation.status === "active" ? "🟢 Hoạt động" : "🔴 Bảo dưỡng"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
                   <button
                     onClick={() => setSelectedStation(null)}
-                    className="p-3 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 border border-gray-200 hover:border-red-200"
+                    className="p-3 text-white hover:text-red-200 hover:bg-white hover:bg-opacity-10 rounded-xl transition-all duration-200 backdrop-blur-sm"
                   >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                    </div>
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  {/* Thông tin cơ bản */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-3 border border-blue-100">
-                    <h4 className="text-base font-bold text-blue-800 mb-3 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+              <div className="p-8 bg-gray-50">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                  <div className="flex items-center mb-6">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      Thông tin cơ bản
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-start space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-3 h-3 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-blue-600">
-                            Địa chỉ
-                          </div>
-                          <div className="text-sm text-gray-700 mt-1">
-                            {selectedStation.address}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-3 h-3 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-blue-600">
-                            Tọa độ
-                          </div>
-                          <div className="text-sm text-gray-700">
-                            X: {selectedStation.x}, Y: {selectedStation.y}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-3 h-3 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-blue-600">
-                            Ngày tạo
-                          </div>
-                          <div className="text-sm text-gray-700">
-                            {new Date(selectedStation.createdAt).toLocaleDateString("vi-VN")}
-                          </div>
-                        </div>
-                      </div>
                     </div>
+                    <h4 className="text-xl font-bold text-gray-900">Thông tin trạm</h4>
                   </div>
-
-                  {/* Thông tin bổ sung */}
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
-                    <h4 className="text-base font-bold text-green-800 mb-3 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Thông tin bổ sung
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-sm font-semibold text-gray-600 mb-1">
-                          Trạng thái
-                        </div>
-                        <div className="text-lg font-bold text-gray-900">
-                          {selectedStation.status === "active" ? "🟢 Hoạt động" : "🔴 Bảo dưỡng"}
-                        </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Địa chỉ */}
+                    <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                       </div>
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-sm font-semibold text-gray-600 mb-1">
-                          Mã trạm
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-blue-600 mb-1">Địa chỉ</div>
+                        <div className="text-base text-gray-800 font-medium">{selectedStation.address}</div>
+                      </div>
+                    </div>
+
+                    {/* Ngày tạo */}
+                    <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-green-600 mb-1">Ngày tạo</div>
+                        <div className="text-base text-gray-800 font-medium">
+                          {new Date(selectedStation.createdAt).toLocaleDateString("vi-VN")}
                         </div>
-                        <div className="text-lg font-bold text-indigo-600">
-                          {selectedStation.stationId}
+                        <div className="text-sm text-gray-500">
+                          {new Date(selectedStation.createdAt).toLocaleTimeString("vi-VN")}
                         </div>
                       </div>
                     </div>
+
+                    {/* Tọa độ X */}
+                    <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-orange-600 mb-1">Tọa độ X</div>
+                        <div className="text-base text-gray-800 font-medium">{selectedStation.x || "N/A"}</div>
+                      </div>
+                    </div>
+
+                    {/* Tọa độ Y */}
+                    <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                      <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-pink-600 mb-1">Tọa độ Y</div>
+                        <div className="text-base text-gray-800 font-medium">{selectedStation.y || "N/A"}</div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -973,21 +933,16 @@ const AdminStationManagement = () => {
                         </div>
 
                   {/* Thông tin tóm tắt */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-                    <div className="bg-blue-50 rounded-lg p-2">
-                      <p className="text-xs font-medium text-blue-600 mb-1">
-                        Tọa độ
-                      </p>
-                      <p className="text-xs font-semibold text-gray-900">
-                        X: {stationToDelete.x}, Y: {stationToDelete.y}
-                      </p>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-center">
                     <div className="bg-green-50 rounded-lg p-2">
                       <p className="text-xs font-medium text-green-600 mb-1">
                         Ngày tạo
                       </p>
                       <p className="text-xs font-bold text-gray-600">
                         {new Date(stationToDelete.createdAt).toLocaleDateString("vi-VN")}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(stationToDelete.createdAt).toLocaleTimeString("vi-VN")}
                       </p>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-2">
@@ -1046,13 +1001,13 @@ const AdminStationManagement = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
                   {stationToChangeStatus.status === "active"
-                    ? "Chuyển sang bảo dưỡng"
+                    ? "Tạm ngưng trạm"
                     : "Kích hoạt trạm"}
                 </h3>
                 <p className="text-gray-600 text-center">
                   Bạn có chắc chắn muốn{" "}
                   {stationToChangeStatus.status === "active"
-                    ? "chuyển trạm sang chế độ bảo dưỡng"
+                    ? "tạm ngưng hoạt động trạm"
                     : "kích hoạt trạm"}{" "}
                   không?
                 </p>
@@ -1120,7 +1075,7 @@ const AdminStationManagement = () => {
                     <div>
                       <p className="text-sm font-semibold text-blue-800">
                         {stationToChangeStatus.status === "active"
-                          ? "Trạm sẽ được chuyển sang chế độ bảo dưỡng và tạm ngừng hoạt động."
+                          ? "Trạm sẽ được tạm ngưng và ngừng hoạt động."
                           : "Trạm sẽ được kích hoạt và bắt đầu hoạt động bình thường."}
                       </p>
                     </div>
@@ -1141,15 +1096,139 @@ const AdminStationManagement = () => {
                     onClick={toggleStationStatus}
                     className={`flex-1 px-4 py-2.5 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl ${
                       stationToChangeStatus.status === "active"
-                        ? "bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500"
+                        ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
                         : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
                     }`}
                   >
                     {stationToChangeStatus.status === "active"
-                      ? "Bảo dưỡng"
+                      ? "Tạm ngưng"
                       : "Kích hoạt"}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Station Modal */}
+        {showEditForm && selectedStation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Chỉnh sửa trạm</h3>
+                      <p className="text-sm text-gray-600">Cập nhật thông tin trạm đổi pin</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeEditForm}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Form */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Tên trạm */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tên trạm <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="stationName"
+                      value={editFormData.stationName}
+                      onChange={handleEditInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập tên trạm"
+                      required
+                    />
+                  </div>
+
+                  {/* Địa chỉ */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Địa chỉ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={editFormData.location}
+                      onChange={handleEditInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập địa chỉ trạm"
+                      required
+                    />
+                  </div>
+
+
+                  {/* Tọa độ X */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tọa độ X <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="x"
+                      value={editFormData.x}
+                      onChange={handleEditInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="21.005057"
+                      step="any"
+                      required
+                    />
+                  </div>
+
+                  {/* Tọa độ Y */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tọa độ Y <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="y"
+                      value={editFormData.y}
+                      onChange={handleEditInputChange}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="105.869329"
+                      step="any"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl flex justify-end space-x-3">
+                <button
+                  onClick={closeEditForm}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={handleUpdateStation}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isSubmitting && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  )}
+                  <span>{isSubmitting ? "Đang cập nhật..." : "Cập nhật"}</span>
+                </button>
               </div>
             </div>
           </div>

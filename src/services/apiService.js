@@ -188,13 +188,33 @@ class ApiService {
   }
 
   async updateStation(stationData) {
-    const url = getApiUrl("STATION", "UPDATE");
-    return this.put(url, stationData);
+    const url = this.baseURL + "/pinStation/update";
+    
+    // Format data for API - only required fields (no status field)
+    const cleanData = {
+      stationID: parseInt(stationData.stationID),
+      stationName: stationData.stationName,
+      location: stationData.location,
+      x: parseFloat(stationData.x),
+      y: parseFloat(stationData.y)
+    };
+    
+    // API uses PUT with query parameters
+    const queryString = new URLSearchParams(cleanData).toString();
+    const fullUrl = `${url}?${queryString}`;
+    
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
   }
 
-  async updateStationStatus(stationId, status) {
+  async updateStationStatus(stationId) {
     const url = getApiUrl("STATION", "UPDATE_STATUS");
-    return this.get(url, { stationId, status });
+    return this.get(url, { stationID: stationId });
   }
 
   async getStationStatus() {
