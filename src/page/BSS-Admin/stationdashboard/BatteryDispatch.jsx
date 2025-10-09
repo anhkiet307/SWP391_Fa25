@@ -107,7 +107,7 @@ const AdminBatteryDispatch = () => {
         {/* Header */}
         <div className="mb-8">
           {/* Main Header Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl shadow-2xl">
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>

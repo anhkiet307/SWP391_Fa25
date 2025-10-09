@@ -1,4 +1,4 @@
-import API_CONFIG, { getApiUrl, buildApiUrl } from "../config/apiConfig";
+import API_CONFIG, { getApiUrl } from "../config/apiConfig";
 
 // API Service class để quản lý tất cả API calls
 class ApiService {
@@ -30,7 +30,7 @@ class ApiService {
     const config = {
       method: "GET",
       mode: "cors", // Explicitly enable CORS
-      headers: this.buildHeaders(options.headers),
+      headers: this.buildHeaders(),
       ...options,
     };
 
@@ -54,7 +54,13 @@ class ApiService {
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
-    return this.makeRequest(fullUrl, { method: "GET" });
+    return this.makeRequest(fullUrl, { 
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
   }
 
   // POST request
@@ -62,6 +68,10 @@ class ApiService {
     return this.makeRequest(url, {
       method: "POST",
       body: JSON.stringify(data),
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true"
+      }
     });
   }
 
@@ -148,23 +158,54 @@ class ApiService {
   }
 
   async getStationById(stationId) {
-    const url = getApiUrl("STATION", "DETAIL", { id: stationId });
+    const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
     return this.get(url);
   }
 
   async createStation(stationData) {
-    const url = getApiUrl("STATION", "CREATE");
-    return this.post(url, stationData);
+    const url = this.baseURL + "/pinStation/create";
+    
+    // Format data for API - x and y should be float
+    const cleanData = {
+      stationName: stationData.stationName,
+      location: stationData.location,
+      status: parseInt(stationData.status),
+      x: parseFloat(stationData.x),
+      y: parseFloat(stationData.y)
+    };
+    
+    // API uses POST with query parameters
+    const queryString = new URLSearchParams(cleanData).toString();
+    const fullUrl = `${url}?${queryString}`;
+    
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
   }
 
-  async updateStation(stationId, stationData) {
-    const url = getApiUrl("STATION", "UPDATE", { id: stationId });
+  async updateStation(stationData) {
+    const url = getApiUrl("STATION", "UPDATE");
     return this.put(url, stationData);
   }
 
+  async updateStationStatus(stationId, status) {
+    const url = getApiUrl("STATION", "UPDATE_STATUS");
+    return this.get(url, { stationId, status });
+  }
+
+  async getStationStatus() {
+    const url = getApiUrl("STATION", "STATUS");
+    return this.get(url);
+  }
+
   async deleteStation(stationId) {
-    const url = getApiUrl("STATION", "DELETE", { id: stationId });
-    return this.delete(url);
+    // Note: DELETE endpoint not available in the API documentation
+    // This method is kept for backward compatibility
+    throw new Error("Delete station endpoint not available in current API");
   }
 
   async getNearbyStations(latitude, longitude, radius = 10) {
@@ -324,5 +365,6 @@ class ApiService {
   }
 }
 
-// Export singleton instance
-export default new ApiService();
+// Create and export singleton instance
+const apiService = new ApiService();
+export default apiService;

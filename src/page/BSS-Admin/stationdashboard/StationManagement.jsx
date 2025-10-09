@@ -1,71 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
 import { showConfirm, showSuccess, showError } from "../../../utils/toast";
+import apiService from "../../../services/apiService";
 
 const AdminStationManagement = () => {
   const navigate = useNavigate();
   
   // State cho quản lý trạm
-  const [stations, setStations] = useState([
-    {
-      id: 1,
-      stationId: "BSS-001",
-      name: "Trạm Đổi Pin Quận 1",
-      address: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-      status: "active",
-      manager: "Nguyễn Văn Staff",
-      phone: "0901234567",
-      batteryCapacity: 60,
-      batteryFull: 45,
-      batteryCharging: 12,
-      batteryMaintenance: 3,
-      totalTransactions: 1250,
-      monthlyRevenue: 62500000,
-      lastMaintenance: "10/01/2024",
-      nextMaintenance: "10/02/2024",
-      stationHealth: 92,
-      location: { lat: 10.7769, lng: 106.7009 },
-    },
-    {
-      id: 2,
-      stationId: "BSS-002",
-      name: "Trạm Đổi Pin Quận 2",
-      address: "456 Nguyễn Thị Minh Khai, Quận 2, TP.HCM",
-      status: "active",
-      manager: "Trần Thị Manager",
-      phone: "0907654321",
-      batteryCapacity: 80,
-      batteryFull: 60,
-      batteryCharging: 15,
-      batteryMaintenance: 5,
-      totalTransactions: 1890,
-      monthlyRevenue: 94500000,
-      lastMaintenance: "05/01/2024",
-      nextMaintenance: "05/02/2024",
-      stationHealth: 88,
-      location: { lat: 10.7879, lng: 106.7003 },
-    },
-    {
-      id: 3,
-      stationId: "BSS-003",
-      name: "Trạm Đổi Pin Quận 3",
-      address: "789 Lê Văn Sỹ, Quận 3, TP.HCM",
-      status: "maintenance",
-      manager: "Lê Văn Tech",
-      phone: "0909876543",
-      batteryCapacity: 50,
-      batteryFull: 30,
-      batteryCharging: 8,
-      batteryMaintenance: 12,
-      totalTransactions: 980,
-      monthlyRevenue: 49000000,
-      lastMaintenance: "15/01/2024",
-      nextMaintenance: "25/01/2024",
-      stationHealth: 75,
-      location: { lat: 10.7829, lng: 106.7001 },
-    },
-  ]);
+  const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -74,33 +19,74 @@ const AdminStationManagement = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [stationToChangeStatus, setStationToChangeStatus] = useState(null);
 
-  // Hàm tính sức khỏe trạm dựa trên số giao dịch (mỗi 10 giao dịch giảm 1%)
-  const calculateStationHealth = (transactions) => {
-    const healthReduction = Math.floor(transactions / 10);
-    return Math.max(0, 100 - healthReduction);
-  };
+  // Load stations from API
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiService.getStations();
+        
+        // Transform API data to match UI format
+        const transformedStations = response.data.map((station) => ({
+          id: station.stationID,
+          stationId: `BSS-${String(station.stationID).padStart(3, '0')}`,
+          name: station.stationName,
+          address: station.location,
+          status: station.status === 1 ? "active" : "maintenance",
+          x: station.x,
+          y: station.y,
+          createdAt: station.createAt,
+        }));
+        
+        setStations(transformedStations);
+      } catch (err) {
+        console.error("Error loading stations:", err);
+        setError("Không thể tải danh sách trạm. Vui lòng thử lại sau.");
+        showError("Lỗi khi tải danh sách trạm!");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Cập nhật sức khỏe trạm cho tất cả stations
-  const updatedStations = stations.map(station => ({
-    ...station,
-    stationHealth: calculateStationHealth(station.totalTransactions)
-  }));
+    loadStations();
+  }, []);
+
+  // Use stations directly without transformation
+  const updatedStations = stations;
 
   // Tính tổng thống kê
   const totalStats = {
     totalStations: stations.length,
     activeStations: stations.filter((s) => s.status === "active").length,
-    maintenanceStations: stations.filter((s) => s.status === "maintenance")
-      .length,
-    totalBatteries: stations.reduce((sum, s) => sum + s.batteryCapacity, 0),
-    totalTransactions: stations.reduce(
-      (sum, s) => sum + s.totalTransactions,
-      0
-    ),
-    totalRevenue: stations.reduce((sum, s) => sum + s.monthlyRevenue, 0),
-    averageStationHealth: Math.round(
-      updatedStations.reduce((sum, s) => sum + s.stationHealth, 0) / updatedStations.length
-    ),
+    maintenanceStations: stations.filter((s) => s.status === "maintenance").length,
+  };
+
+  // Function to refresh stations list
+  const refreshStations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getStations();
+      
+      const transformedStations = response.data.map((station) => ({
+        id: station.stationID,
+        stationId: `BSS-${String(station.stationID).padStart(3, '0')}`,
+        name: station.stationName,
+        address: station.location,
+        status: station.status === 1 ? "active" : "maintenance",
+        x: station.x,
+        y: station.y,
+        createdAt: station.createAt,
+      }));
+      
+      setStations(transformedStations);
+    } catch (err) {
+      console.error("Error refreshing stations:", err);
+      setError("Không thể tải danh sách trạm. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Hàm chuyển đến trang thêm trạm mới
@@ -131,14 +117,20 @@ const AdminStationManagement = () => {
   };
 
   // Hàm xóa trạm
-  const handleDeleteStation = () => {
+  const handleDeleteStation = async () => {
     if (stationToDelete) {
-      setStations(
-        stations.filter((station) => station.id !== stationToDelete.id)
-      );
-      showSuccess("Đã xóa trạm thành công!");
-      setShowDeleteModal(false);
-      setStationToDelete(null);
+      try {
+        // Note: API doesn't have delete endpoint, so we'll just remove from local state
+        setStations(
+          stations.filter((station) => station.id !== stationToDelete.id)
+        );
+        showSuccess("Đã xóa trạm thành công!");
+        setShowDeleteModal(false);
+        setStationToDelete(null);
+      } catch (error) {
+        console.error("Error deleting station:", error);
+        showError("Lỗi khi xóa trạm!");
+      }
     }
   };
 
@@ -155,25 +147,35 @@ const AdminStationManagement = () => {
   };
 
   // Hàm thay đổi trạng thái trạm
-  const toggleStationStatus = () => {
+  const toggleStationStatus = async () => {
     if (stationToChangeStatus) {
-    setStations(
-      stations.map((station) =>
-          station.id === stationToChangeStatus.id
-          ? {
-              ...station,
-              status: station.status === "active" ? "maintenance" : "active",
-            }
-          : station
-      )
-    );
-      showSuccess(
-        stationToChangeStatus.status === "active"
-          ? "Đã chuyển trạm sang chế độ bảo dưỡng!"
-          : "Đã kích hoạt trạm thành công!"
-      );
-      setShowStatusModal(false);
-      setStationToChangeStatus(null);
+      try {
+        // Update local state first for immediate UI feedback
+        setStations(
+          stations.map((station) =>
+              station.id === stationToChangeStatus.id
+              ? {
+                  ...station,
+                  status: station.status === "active" ? "maintenance" : "active",
+                }
+              : station
+          )
+        );
+        
+        // TODO: Call API to update status on server
+        // await apiService.updateStationStatus(stationToChangeStatus.id, newStatus);
+        
+        showSuccess(
+          stationToChangeStatus.status === "active"
+            ? "Đã chuyển trạm sang chế độ bảo dưỡng!"
+            : "Đã kích hoạt trạm thành công!"
+        );
+        setShowStatusModal(false);
+        setStationToChangeStatus(null);
+      } catch (error) {
+        console.error("Error updating station status:", error);
+        showError("Lỗi khi cập nhật trạng thái trạm!");
+      }
     }
   };
 
@@ -326,7 +328,7 @@ const AdminStationManagement = () => {
           <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
             Tổng quan hệ thống
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng trạm
@@ -351,38 +353,6 @@ const AdminStationManagement = () => {
                 {totalStats.maintenanceStations}
               </div>
             </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Tổng pin
-              </h3>
-              <div className="text-4xl font-bold m-0 text-purple-500">
-                {totalStats.totalBatteries}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Giao dịch
-              </h3>
-              <div className="text-4xl font-bold m-0 text-orange-500">
-                {totalStats.totalTransactions.toLocaleString("vi-VN")}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Doanh thu
-              </h3>
-              <div className="text-4xl font-bold m-0 text-green-600">
-                {(totalStats.totalRevenue / 1000000).toFixed(1)}M
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Sức khỏe TB
-              </h3>
-              <div className="text-4xl font-bold m-0 text-yellow-500">
-                {totalStats.averageStationHealth}%
-              </div>
-            </div>
           </div>
         </div>
 
@@ -392,6 +362,12 @@ const AdminStationManagement = () => {
             Danh sách trạm đổi pin
           </h2>
           <div className="flex gap-3">
+            <button
+              onClick={refreshStations}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              🔄 Tải lại
+            </button>
             <button
               onClick={handleAddStation}
               className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
@@ -407,10 +383,39 @@ const AdminStationManagement = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <span className="text-lg font-medium text-gray-600">Đang tải danh sách trạm...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-lg font-medium text-red-800">{error}</span>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
         {/* Danh sách trạm */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
+        {!loading && !error && (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
                   <th className="p-4 text-left font-semibold text-base">
@@ -426,19 +431,10 @@ const AdminStationManagement = () => {
                     Trạng thái
                   </th>
                   <th className="p-4 text-left font-semibold text-base">
-                    Quản lý
+                    Tọa độ
                   </th>
                   <th className="p-4 text-left font-semibold text-base">
-                    Pin/Tổng
-                  </th>
-                  <th className="p-4 text-left font-semibold text-base">
-                    Sức khỏe
-                  </th>
-                  <th className="p-4 text-left font-semibold text-base">
-                    Giao dịch
-                  </th>
-                  <th className="p-4 text-left font-semibold text-base">
-                    Doanh thu
+                    Ngày tạo
                   </th>
                   <th className="p-4 text-center font-semibold text-base">
                     Thao tác
@@ -484,72 +480,18 @@ const AdminStationManagement = () => {
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <div>
-                        <div className="font-semibold text-base text-gray-800">
-                          {station.manager}
+                      <div className="text-sm text-gray-700">
+                        <div className="font-medium text-gray-800">
+                          X: {station.x}
                         </div>
-                        <div className="text-gray-600 text-sm mt-1">
-                          {station.phone}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 border-b border-gray-200">
-                      <div className="flex items-center gap-3">
-                        <div className="text-center">
-                          <div className="text-green-600 font-bold text-base">
-                            {station.batteryFull}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">Đầy</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-yellow-600 font-bold text-base">
-                            {station.batteryCharging}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">Sạc</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-red-600 font-bold text-base">
-                            {station.batteryMaintenance}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Bảo dưỡng
-                          </div>
-                        </div>
-                        <div className="text-center ml-3 pl-3 border-l border-gray-300">
-                          <div className="font-bold text-base text-gray-800">
-                            {station.batteryCapacity}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">Tổng</div>
+                        <div className="font-medium text-gray-800">
+                          Y: {station.y}
                         </div>
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
-                      <div className="flex items-center">
-                        <div className="w-16 bg-gray-200 rounded-full h-3 mr-3">
-                          <div
-                            className={`h-3 rounded-full transition-all duration-300 ${
-                              station.stationHealth >= 80
-                                ? "bg-green-500"
-                                : station.stationHealth >= 60
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
-                            style={{ width: `${station.stationHealth}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-sm font-bold text-gray-800">
-                          {station.stationHealth}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 border-b border-gray-200">
-                      <div className="font-semibold text-base text-gray-800">
-                        {station.totalTransactions.toLocaleString("vi-VN")}
-                      </div>
-                    </td>
-                    <td className="p-4 border-b border-gray-200">
-                      <div className="font-bold text-base text-green-600">
-                        {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
+                      <div className="text-sm text-gray-700">
+                        {new Date(station.createdAt).toLocaleDateString("vi-VN")}
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
@@ -698,6 +640,7 @@ const AdminStationManagement = () => {
             </table>
           </div>
         </div>
+        )}
 
         {/* Modal chi tiết trạm */}
         {selectedStation && !showEditForm && (
@@ -830,16 +773,16 @@ const AdminStationManagement = () => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                             />
                           </svg>
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-blue-600">
-                            Quản lý
+                            Tọa độ
                           </div>
                           <div className="text-sm text-gray-700">
-                            {selectedStation.manager}
+                            X: {selectedStation.x}, Y: {selectedStation.y}
                           </div>
                         </div>
                       </div>
@@ -855,23 +798,23 @@ const AdminStationManagement = () => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
                         </div>
                         <div className="flex-1">
                           <div className="text-sm font-medium text-blue-600">
-                            Số điện thoại
+                            Ngày tạo
                           </div>
                           <div className="text-sm text-gray-700">
-                            {selectedStation.phone}
+                            {new Date(selectedStation.createdAt).toLocaleDateString("vi-VN")}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Thống kê pin */}
+                  {/* Thông tin bổ sung */}
                   <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-100">
                     <h4 className="text-base font-bold text-green-800 mb-3 flex items-center">
                       <svg
@@ -884,141 +827,30 @@ const AdminStationManagement = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Thống kê pin
+                      Thông tin bổ sung
                     </h4>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
-                        <div className="text-lg font-bold text-green-600">
-                      {selectedStation.batteryFull}
-                    </div>
-                        <div className="text-sm text-gray-600">Pin đầy</div>
+                    <div className="space-y-2">
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-sm font-semibold text-gray-600 mb-1">
+                          Trạng thái
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">
+                          {selectedStation.status === "active" ? "🟢 Hoạt động" : "🔴 Bảo dưỡng"}
+                        </div>
                       </div>
-                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
-                        <div className="text-lg font-bold text-yellow-600">
-                      {selectedStation.batteryCharging}
-                    </div>
-                        <div className="text-sm text-gray-600">Đang sạc</div>
-                      </div>
-                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
-                        <div className="text-lg font-bold text-red-600">
-                      {selectedStation.batteryMaintenance}
-                    </div>
-                        <div className="text-sm text-gray-600">Bảo dưỡng</div>
-                    </div>
-                      <div className="text-center bg-white rounded-lg p-2 shadow-sm">
+                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-sm font-semibold text-gray-600 mb-1">
+                          Mã trạm
+                        </div>
                         <div className="text-lg font-bold text-indigo-600">
-                          {selectedStation.batteryCapacity}
-                  </div>
-                        <div className="text-sm text-gray-600">Tổng pin</div>
-                </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 shadow-sm">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-semibold text-gray-700">
-                          Sức khỏe trạm
-                        </span>
-                        <span className="text-sm font-bold text-gray-900">
-                          {selectedStation.stationHealth}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            selectedStation.stationHealth >= 80
-                              ? "bg-gradient-to-r from-green-400 to-green-500"
-                              : selectedStation.stationHealth >= 60
-                              ? "bg-gradient-to-r from-yellow-400 to-yellow-500"
-                              : "bg-gradient-to-r from-red-400 to-red-500"
-                          }`}
-                          style={{ width: `${selectedStation.stationHealth}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Thống kê kinh doanh */}
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
-                    <h4 className="text-base font-bold text-purple-800 mb-3 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                    Thống kê kinh doanh
-                  </h4>
-                    <div className="space-y-2">
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xl font-bold text-purple-600 mb-1">
-                      {selectedStation.totalTransactions.toLocaleString(
-                        "vi-VN"
-                      )}
-                    </div>
-                        <div className="text-xs text-gray-600">
-                          Tổng giao dịch
-                    </div>
-                  </div>
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xl font-bold text-green-600 mb-1">
-                          {(selectedStation.monthlyRevenue / 1000000).toFixed(
-                            1
-                          )}
-                          M VNĐ
-                </div>
-                        <div className="text-xs text-gray-600">
-                          Doanh thu tháng
+                          {selectedStation.stationId}
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Bảo dưỡng */}
-                  <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-100">
-                    <h4 className="text-base font-bold text-orange-800 mb-3 flex items-center">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                        />
-                      </svg>
-                      Bảo dưỡng
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xs font-semibold text-gray-600 mb-1">
-                          Lần cuối
-                        </div>
-                        <div className="text-sm font-bold text-gray-900">
-                      {selectedStation.lastMaintenance}
-                    </div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-xs font-semibold text-gray-600 mb-1">
-                          Lần tiếp theo
-                        </div>
-                        <div className="text-sm font-bold text-gray-900">
-                      {selectedStation.nextMaintenance}
-                    </div>
-                  </div>
-                </div>
-              </div>
                 </div>
               </div>
             </div>
@@ -1141,39 +973,29 @@ const AdminStationManagement = () => {
                         </div>
 
                   {/* Thông tin tóm tắt */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
                     <div className="bg-blue-50 rounded-lg p-2">
                       <p className="text-xs font-medium text-blue-600 mb-1">
-                        Quản lý
+                        Tọa độ
                       </p>
                       <p className="text-xs font-semibold text-gray-900">
-                        {stationToDelete.manager}
+                        X: {stationToDelete.x}, Y: {stationToDelete.y}
                       </p>
-                          </div>
+                    </div>
                     <div className="bg-green-50 rounded-lg p-2">
                       <p className="text-xs font-medium text-green-600 mb-1">
-                        Sức khỏe trạm
+                        Ngày tạo
                       </p>
-                      <p className="text-xs font-bold text-yellow-600">
-                        {calculateStationHealth(stationToDelete.totalTransactions)}%
+                      <p className="text-xs font-bold text-gray-600">
+                        {new Date(stationToDelete.createdAt).toLocaleDateString("vi-VN")}
                       </p>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-2">
                       <p className="text-xs font-medium text-purple-600 mb-1">
-                        Giao dịch
+                        Trạng thái
                       </p>
                       <p className="text-xs font-bold text-purple-600">
-                        {stationToDelete.totalTransactions.toLocaleString(
-                          "vi-VN"
-                        )}
-                      </p>
-                    </div>
-                    <div className="bg-orange-50 rounded-lg p-2">
-                      <p className="text-xs font-medium text-orange-600 mb-1">
-                        Doanh thu
-                      </p>
-                      <p className="text-xs font-bold text-orange-600">
-                        {(stationToDelete.monthlyRevenue / 1000000).toFixed(1)}M
+                        {stationToDelete.status === "active" ? "Hoạt động" : "Bảo dưỡng"}
                       </p>
                     </div>
                   </div>

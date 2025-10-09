@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://f73846398efc.ngrok-free.app/api",
+    "https://9480bd5ba4ff.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -28,12 +28,13 @@ const API_CONFIG = {
 
     // Station management endpoints
     STATION: {
-      LIST: "/stations",
-      DETAIL: "/stations/:id",
-      CREATE: "/stations",
-      UPDATE: "/stations/:id",
-      DELETE: "/stations/:id",
-      NEARBY: "/stations/nearby",
+      LIST: "/pinStation/list",
+      DETAIL: "/pinStation/:stationID",
+      CREATE: "/pinStation/create",
+      UPDATE: "/pinStation/update",
+      UPDATE_STATUS: "/pinStation/updateStatus",
+      STATUS: "/pinStation/status",
+      NEARBY: "/stations/nearby", // Keep this for future use
     },
 
     // Booking endpoints
