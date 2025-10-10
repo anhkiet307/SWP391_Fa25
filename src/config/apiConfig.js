@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://9480bd5ba4ff.ngrok-free.app/api",
+    "https://6d5f64c495e1.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -24,6 +24,9 @@ const API_CONFIG = {
       CHANGE_PASSWORD: "/user/change-password",
       DELETE_ACCOUNT: "/user/delete-account",
       ADD: "/user/add",
+      LIST_DRIVERS: "/user/listDriver",
+      LIST_STAFF: "/user/listStaff",
+      UPDATE: "/user/update",
     },
 
     // Station management endpoints

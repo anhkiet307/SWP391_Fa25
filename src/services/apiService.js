@@ -151,6 +151,31 @@ class ApiService {
     return this.makeRequest(fullUrl, { method: "POST" });
   }
 
+  async listDrivers() {
+    const url = getApiUrl("USER", "LIST_DRIVERS");
+    return this.get(url);
+  }
+
+  async listStaff() {
+    const url = getApiUrl("USER", "LIST_STAFF");
+    return this.get(url);
+  }
+
+  async updateUser(userData) {
+    const url = getApiUrl("USER", "UPDATE");
+    // API này sử dụng PUT với query parameters
+    const queryString = new URLSearchParams(userData).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, { 
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true"
+      }
+    });
+  }
+
   // ===== STATION METHODS =====
   async getStations(params = {}) {
     const url = getApiUrl("STATION", "LIST");
