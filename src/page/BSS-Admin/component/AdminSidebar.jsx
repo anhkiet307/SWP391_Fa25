@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../contexts/AuthContext";
 
 const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
   // Khởi tạo state từ localStorage, luôn đóng khi mới login
   const [isStationMenuOpen, setIsStationMenuOpen] = useState(() => {
@@ -309,51 +307,6 @@ const AdminSidebar = () => {
         </div>
       </nav>
 
-      {/* User Profile Section */}
-      <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-indigo-50">
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">
-              {user?.name?.charAt(0) || "A"}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-800 truncate">
-              {user?.name || "Admin"}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {user?.email || "admin@voltswap.com"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-            Admin
-          </span>
-          <button
-            onClick={() => {
-              logout();
-            }}
-            className="flex items-center space-x-1 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            <span>Đăng xuất</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

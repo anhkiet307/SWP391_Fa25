@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
-import { showSuccess, showInfo } from "../../../utils/toast";
+import AdminHeader from "../component/AdminHeader";
+import { showSuccess, showInfo, showError } from "../../../utils/toast";
 import { useAuth } from "../../../contexts/AuthContext";
+import apiService from "../../../services/apiService";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -10,9 +12,9 @@ const AdminDashboard = () => {
 
   // State cho thống kê tổng quan hệ thống
   const [systemStats, setSystemStats] = useState({
-    totalStations: 15,
-    activeStations: 12,
-    maintenanceStations: 3,
+    totalStations: 0,
+    activeStations: 0,
+    maintenanceStations: 0,
     totalBatteries: 1200,
     totalUsers: 2500,
     totalTransactions: 15680,
@@ -20,47 +22,10 @@ const AdminDashboard = () => {
     stationHealth: 85,
   });
 
-  const [stationStats, setStationStats] = useState([
-    {
-      id: 1,
-      stationId: "BSS-002",
-      name: "Trạm Quận 2",
-      status: "active",
-      batteryCapacity: 100,
-      batteryFull: 75,
-      batteryCharging: 20,
-      batteryMaintenance: 5,
-      totalTransactions: 1890,
-      monthlyRevenue: 94500000,
-      stationHealth: 88,
-    },
-    {
-      id: 2,
-      stationId: "BSS-001",
-      name: "Trạm Quận 1",
-      status: "active",
-      batteryCapacity: 80,
-      batteryFull: 60,
-      batteryCharging: 15,
-      batteryMaintenance: 5,
-      totalTransactions: 1250,
-      monthlyRevenue: 62500000,
-      stationHealth: 92,
-    },
-    {
-      id: 3,
-      stationId: "BSS-003",
-      name: "Trạm Quận 3",
-      status: "maintenance",
-      batteryCapacity: 60,
-      batteryFull: 30,
-      batteryCharging: 8,
-      batteryMaintenance: 22,
-      totalTransactions: 980,
-      monthlyRevenue: 49000000,
-      stationHealth: 75,
-    },
-  ]);
+  // State cho danh sách trạm từ API
+  const [stations, setStations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [recentReports, setRecentReports] = useState([
     {
@@ -95,144 +60,70 @@ const AdminDashboard = () => {
     },
   ]);
 
+  // Load stations from API
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiService.getStations();
+        
+        // Transform API data to match UI format
+        const transformedStations = response.data.map((station) => ({
+          id: station.stationID,
+          stationId: station.stationID.toString(),
+          name: station.stationName,
+          address: station.location,
+          status: station.status === 1 ? "active" : "maintenance",
+          createdAt: station.createAt,
+          // Mock data for dashboard display
+          batteryCapacity: 100,
+          batteryFull: Math.floor(Math.random() * 50) + 30,
+          batteryCharging: Math.floor(Math.random() * 20) + 5,
+          batteryMaintenance: Math.floor(Math.random() * 10) + 2,
+          totalTransactions: Math.floor(Math.random() * 2000) + 500,
+          monthlyRevenue: Math.floor(Math.random() * 100000000) + 20000000,
+          stationHealth: Math.floor(Math.random() * 30) + 70,
+        }));
+        
+        // Sort by creation date and take only the 3 newest
+        const sortedStations = transformedStations
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 3);
+        
+        setStations(sortedStations);
+        
+        // Update system stats
+        setSystemStats(prev => ({
+          ...prev,
+          totalStations: response.data.length,
+          activeStations: response.data.filter(s => s.status === 1).length,
+          maintenanceStations: response.data.filter(s => s.status === 0).length,
+        }));
+        
+      } catch (err) {
+        console.error("Error loading stations:", err);
+        setError("Không thể tải danh sách trạm. Vui lòng thử lại sau.");
+        showError("Lỗi khi tải danh sách trạm!");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStations();
+  }, []);
+
   return (
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="mb-8">
-          {/* Main Header Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
-
-            <div className="relative z-10 p-5">
-              <div className="flex justify-between items-center">
-                {/* Left Content */}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold mb-1">
-                        Dashboard Quản trị Hệ thống
-                      </h1>
-                      <p className="text-white text-opacity-90 text-sm">
-                        Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Stats Cards */}
-                  <div className="flex space-x-3">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                        <span className="text-xs font-medium">
-                          {user?.role === "admin"
-                            ? "Admin"
-                            : user?.role === "staff"
-                            ? "Staff"
-                            : user?.role === "evdriver"
-                            ? "EVDriver"
-                            : "User"}
-                          : {user?.name || "Hệ thống"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs font-medium">
-                          Tổng trạm: {systemStats.totalStations}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Content - Admin Profile */}
-                <div className="ml-6">
-                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold text-sm">
-                          {user?.name || "Admin System"}
-                        </p>
-                        <p className="text-white text-opacity-80 text-xs">
-                          {user?.role === "admin"
-                            ? "Quản trị viên"
-                            : user?.role === "staff"
-                            ? "Nhân viên"
-                            : user?.role === "evdriver"
-                            ? "Tài xế EV"
-                            : "Người dùng"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        logout();
-                      }}
-                      className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
-                    >
-                      <svg
-                        className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                      <span className="text-sm">Đăng xuất</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AdminHeader
+          title="Dashboard Quản trị Hệ thống"
+          subtitle="Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin"
+          stats={[
+            { label: "Tổng trạm", value: systemStats.totalStations, color: "bg-blue-400" }
+          ]}
+        />
 
         {/* Thống kê tổng quan */}
         <div className="mb-8">
@@ -317,52 +208,41 @@ const AdminDashboard = () => {
               Thống kê trạm
             </h2>
             <div className="space-y-3 flex-1 mt-8">
-              {stationStats.map((station, index) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                  <span className="ml-3 text-gray-600">Đang tải dữ liệu...</span>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <div className="text-red-500 mb-2">⚠️ {error}</div>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              ) : stations.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500">Chưa có trạm nào trong hệ thống</div>
+                </div>
+              ) : (
+                stations.map((station, index) => (
                 <div
                   key={station.id}
-                  className={`flex items-center justify-between p-4 rounded-lg border-l-4 transition-all duration-200 hover:shadow-md ${
+                  className={`p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
                     station.status === "active"
                       ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
                       : "border-red-400 bg-gradient-to-r from-red-50 to-white hover:from-red-100"
                   }`}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {station.stationId.charAt(station.stationId.length - 1)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-base text-gray-800">
-                          {station.stationId}
-                        </div>
-                        <div className="text-sm text-indigo-600 font-medium">
-                          {station.name}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-700 mb-2 pl-13">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            station.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {station.status === "active"
-                            ? "Hoạt động"
-                            : "Bảo dưỡng"}
-                        </span>
-                        <span className="text-gray-600">•</span>
-                        <span className="text-gray-600 text-xs">
-                          Sức khỏe: {station.stationHealth}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-500 pl-13">
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-start space-x-4">
+                    {/* Station Icon */}
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
                         <svg
-                          className="w-4 h-4"
+                          className="w-6 h-6 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -371,35 +251,72 @@ const AdminDashboard = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                           />
                         </svg>
-                        Doanh thu:{" "}
-                        {(station.monthlyRevenue / 1000000).toFixed(1)}M VNĐ
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right ml-4">
-                    <div className="flex items-center">
-                      <div className="w-16 bg-gray-200 rounded-full h-3 mr-3">
-                        <div
-                          className={`h-3 rounded-full transition-all duration-300 ${
-                            station.stationHealth >= 80
-                              ? "bg-green-500"
-                              : station.stationHealth >= 60
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
-                          }`}
-                          style={{ width: `${station.stationHealth}%` }}
-                        ></div>
+
+                    {/* Station Info */}
+                    <div className="flex-1 min-w-0">
+                      {/* Station Name */}
+                      <div className="mb-3">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {station.name}
+                        </h3>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <svg
+                            className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          <span className="truncate">{station.address}</span>
+                        </div>
                       </div>
-                      <span className="text-sm font-bold text-gray-800">
-                        {station.stationHealth}%
-                      </span>
+
+                      {/* Status Badge */}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
+                            station.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full mr-2 ${
+                              station.status === "active"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }`}
+                          ></div>
+                          {station.status === "active" ? "Hoạt động" : "Bảo dưỡng"}
+                        </span>
+                        
+                        {/* Station ID */}
+                        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                          ID: {station.stationId}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
             <div className="mt-6 text-center">
               <button
