@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminLayout from "../component/AdminLayout";
 import AdminHeader from "../component/AdminHeader";
 import apiService from "../../../services/apiService";
 
 const PinslotManagement = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [pinslots, setPinslots] = useState([]);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,16 @@ const PinslotManagement = () => {
   const [filteredPinslots, setFilteredPinslots] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest"); // "newest" or "oldest"
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  
+  // Get station filter from URL params
+  const filterStationId = searchParams.get('stationId');
+  const filterStationName = searchParams.get('stationName');
+  const [isStationFiltered, setIsStationFiltered] = useState(false);
+
+  // Update isStationFiltered based on URL params
+  useEffect(() => {
+    setIsStationFiltered(!!filterStationId);
+  }, [filterStationId]);
 
   // Single useEffect for initial data loading - NO DEPENDENCIES ISSUES
   useEffect(() => {
@@ -65,11 +76,22 @@ const PinslotManagement = () => {
           };
         });
         
-        // Step 4: Apply initial sorting
-        const sortedPinslots = sortPinslots(transformedPinslots, sortOrder);
-        
-        console.log("✅ Pinslots loaded and transformed:", sortedPinslots.length);
-        setPinslots(sortedPinslots);
+              // Step 4: Apply station filtering if needed
+              let finalPinslots = transformedPinslots;
+              if (filterStationId) {
+                console.log(`🔍 Filtering pinslots for station ID: ${filterStationId}`);
+                finalPinslots = transformedPinslots.filter(pinslot => 
+                  pinslot.stationId.toString() === filterStationId.toString()
+                );
+                setIsStationFiltered(true);
+                console.log(`✅ Filtered pinslots: ${finalPinslots.length} of ${transformedPinslots.length}`);
+              }
+              
+              // Step 5: Apply initial sorting
+              const sortedPinslots = sortPinslots(finalPinslots, sortOrder);
+              
+              console.log("✅ Pinslots loaded and transformed:", sortedPinslots.length);
+              setPinslots(sortedPinslots);
         
       } catch (err) {
         console.error("❌ Error loading data:", err);
@@ -109,6 +131,13 @@ const PinslotManagement = () => {
       setLoading(true);
       setError(null);
       
+      // Clear station filter when refreshing
+      if (filterStationId) {
+        console.log("🧹 Clearing station filter on refresh");
+        // Clear URL params by navigating to clean URL
+        navigate('/admin-pinslot-management', { replace: true });
+      }
+      
       // Step 1: Reload stations
       const stationsResponse = await apiService.getPinStations();
       const transformedStations = stationsResponse.data.map((station) => ({
@@ -137,19 +166,22 @@ const PinslotManagement = () => {
         };
       });
       
-      // Step 3: Apply current sorting
+      // Step 3: NO station filtering on refresh - show all pinslots
+      console.log("📋 Loading all pinslots (no filter)");
+      
+      // Step 4: Apply current sorting
       const sortedPinslots = sortPinslots(transformedPinslots, sortOrder);
       setPinslots(sortedPinslots);
       
-      // Step 4: Re-apply search if there was one
+      // Step 5: Clear any existing search
       if (searchQuery) {
-        const filtered = sortedPinslots.filter(pinslot => 
-          pinslot.stationName.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setFilteredPinslots(filtered);
+        console.log("🧹 Clearing search on refresh");
+        setSearchQuery("");
+        setIsSearching(false);
+        setFilteredPinslots([]);
       }
       
-      console.log("✅ Pinslots refreshed successfully");
+      console.log("✅ Pinslots refreshed successfully - showing all pinslots");
     } catch (err) {
       console.error("❌ Error refreshing pinslots:", err);
       setError("Không thể tải lại dữ liệu. Vui lòng thử lại sau.");
@@ -278,8 +310,11 @@ const PinslotManagement = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         <AdminHeader
-          title="Quản lý Pin Slot"
-          subtitle="Quản lý và theo dõi tất cả các pin slot trong hệ thống"
+          title={isStationFiltered ? `Pin Slot - ${filterStationName || `Trạm ${filterStationId}`}` : "Quản lý Pin Slot"}
+          subtitle={isStationFiltered 
+            ? `Danh sách pin slot của ${filterStationName || `Trạm ${filterStationId}`}` 
+            : "Quản lý và theo dõi tất cả các pin slot trong hệ thống"
+          }
           icon={
             <svg
               className="w-6 h-6 text-white"
@@ -296,7 +331,10 @@ const PinslotManagement = () => {
             </svg>
           }
           stats={[
-            { label: "Tổng pin slot", value: pinslots.length, color: "bg-blue-400" }
+            { label: "Tổng pin slot", value: getCurrentPinslots().length, color: "bg-blue-400" },
+            { label: "Đang hoạt động", value: getCurrentPinslots().filter(p => p.status === 1).length, color: "bg-green-400" },
+            { label: "Đang sạc", value: getCurrentPinslots().filter(p => p.pinStatus === "charging").length, color: "bg-yellow-400" },
+            { label: "Sẵn sàng", value: getCurrentPinslots().filter(p => p.pinStatus === "available").length, color: "bg-purple-400" }
           ]}
         />
 
@@ -306,11 +344,37 @@ const PinslotManagement = () => {
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
               <h2 className="text-2xl font-bold text-gray-800">
-                {isSearching ? `Kết quả tìm kiếm` : "Danh sách Pin Slot"}
+                {isStationFiltered 
+                  ? `Pin Slot - ${filterStationName || `Trạm ${filterStationId}`}` 
+                  : isSearching 
+                    ? `Kết quả tìm kiếm` 
+                    : "Danh sách Pin Slot"
+                }
               </h2>
               <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                 {getCurrentPinslots().length} pin slot
               </span>
+              {isStationFiltered && (
+                <button
+                  onClick={() => navigate('/admin-station-management')}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  <span>Quay lại danh sách trạm</span>
+                </button>
+              )}
             </div>
 
             {/* Search Box */}
