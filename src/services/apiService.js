@@ -253,6 +253,17 @@ class ApiService {
     return this.get(url);
   }
 
+  // PinSlot management methods
+  async getPinslots() {
+    const url = getApiUrl("PINSLOT", "LIST_ALL");
+    return this.get(url);
+  }
+
+  async getPinslotsByStation(stationId) {
+    const url = getApiUrl("PINSLOT", "LIST_BY_STATION");
+    return this.get(url, { stationID: stationId });
+  }
+
   async deleteStation(stationId) {
     // Note: DELETE endpoint not available in the API documentation
     // This method is kept for backward compatibility

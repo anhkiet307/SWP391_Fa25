@@ -16,10 +16,6 @@ const AdminDashboard = () => {
     activeStations: 0,
     maintenanceStations: 0,
     totalBatteries: 1200,
-    totalUsers: 2500,
-    totalTransactions: 15680,
-    monthlyRevenue: 784000000,
-    stationHealth: 85,
   });
 
   // State cho danh sách trạm từ API
@@ -81,9 +77,6 @@ const AdminDashboard = () => {
           batteryFull: Math.floor(Math.random() * 50) + 30,
           batteryCharging: Math.floor(Math.random() * 20) + 5,
           batteryMaintenance: Math.floor(Math.random() * 10) + 2,
-          totalTransactions: Math.floor(Math.random() * 2000) + 500,
-          monthlyRevenue: Math.floor(Math.random() * 100000000) + 20000000,
-          stationHealth: Math.floor(Math.random() * 30) + 70,
         }));
         
         // Sort by creation date and take only the 3 newest
@@ -130,7 +123,7 @@ const AdminDashboard = () => {
           <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
             Tổng quan hệ thống
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng trạm
@@ -153,41 +146,6 @@ const AdminDashboard = () => {
               </h3>
               <div className="text-4xl font-bold m-0 text-purple-500">
                 {systemStats.totalBatteries}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Tổng người dùng
-              </h3>
-              <div className="text-4xl font-bold m-0 text-orange-500">
-                {systemStats.totalUsers.toLocaleString("vi-VN")}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Giao dịch
-              </h3>
-              <div className="text-4xl font-bold m-0 text-indigo-500">
-                {systemStats.totalTransactions.toLocaleString("vi-VN")}
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Doanh thu tháng
-              </h3>
-              <div className="text-4xl font-bold m-0 text-green-600">
-                {(systemStats.monthlyRevenue / 1000000).toFixed(1)}M
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                Sức khỏe trạm
-              </h3>
-              <div className="text-4xl font-bold m-0 text-yellow-500">
-                {systemStats.stationHealth}%
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">

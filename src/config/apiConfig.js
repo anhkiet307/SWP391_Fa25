@@ -40,6 +40,12 @@ const API_CONFIG = {
       NEARBY: "/stations/nearby", // Keep this for future use
     },
 
+    // PinSlot management endpoints
+    PINSLOT: {
+      LIST_ALL: "/pinSlot/listAll",
+      LIST_BY_STATION: "/pinSlot/list",
+    },
+
     // Booking endpoints
     BOOKING: {
       CREATE: "/bookings",

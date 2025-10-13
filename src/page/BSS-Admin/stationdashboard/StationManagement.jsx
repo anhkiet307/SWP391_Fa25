@@ -47,6 +47,8 @@ const AdminStationManagement = () => {
           address: station.location,
           status: station.status === 1 ? "active" : "maintenance",
           createdAt: station.createAt,
+          x: station.x,
+          y: station.y,
         }));
         
         setStations(transformedStations);
@@ -86,6 +88,8 @@ const AdminStationManagement = () => {
         address: station.location,
         status: station.status === 1 ? "active" : "maintenance",
         createdAt: station.createAt,
+        x: station.x,
+        y: station.y,
       }));
       
       setStations(transformedStations);
@@ -114,8 +118,8 @@ const AdminStationManagement = () => {
       stationName: station.name,
       location: station.address,
       status: station.status === "active" ? 1 : 0,
-      x: station.x || "",
-      y: station.y || ""
+      x: station.x ? station.x.toString() : "",
+      y: station.y ? station.y.toString() : ""
     });
     setShowEditForm(true);
     setSelectedStation(station);
@@ -1102,7 +1106,7 @@ const AdminStationManagement = () => {
                       value={editFormData.x}
                       onChange={handleEditInputChange}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="21.005057"
+                      placeholder="21.424112"
                       step="any"
                       required
                     />
@@ -1119,7 +1123,7 @@ const AdminStationManagement = () => {
                       value={editFormData.y}
                       onChange={handleEditInputChange}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="105.869329"
+                      placeholder="106.23134"
                       step="any"
                       required
                     />

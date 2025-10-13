@@ -25,6 +25,7 @@ import Profile from "./page/profile.jsx";
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
+import AdminPinslotManagement from "./page/BSS-Admin/stationdashboard/PinslotManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
 import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
 import AdminBatteryDispatch from "./page/BSS-Admin/stationdashboard/BatteryDispatch.jsx";
@@ -151,6 +152,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminStationManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-pinslot-management"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPinslotManagement />
               </ProtectedRoute>
             }
           />

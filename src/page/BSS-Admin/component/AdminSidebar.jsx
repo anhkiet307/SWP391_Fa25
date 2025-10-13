@@ -86,6 +86,10 @@ const AdminSidebar = () => {
           label: "Danh sách trạm",
         },
         {
+          path: "/admin-pinslot-management",
+          label: "Quản lý Pin Slot",
+        },
+        {
           path: "/admin-add-station",
           label: "Thêm trạm mới",
         },
