@@ -2,20 +2,16 @@ import React, { useCallback, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Typography, Space, Button, Tag, Rate } from "antd";
+import { Typography, Space, Button, Tag } from "antd";
 import {
   PoweroffOutlined,
   EnvironmentOutlined,
   AimOutlined,
-  StarOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
-  RightOutlined,
-  CalendarOutlined,
 } from "@ant-design/icons";
-import { batteryStations, districts } from "../data/stations";
-import { useNavigate } from "react-router-dom";
-import RatingModal from "./RatingModal";
+import { batteryStations } from "../data/stations";
+import apiService from "../services/apiService";
 
 const { Title, Paragraph } = Typography;
 
@@ -396,7 +392,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
 // Component bản đồ chính
 function Map() {
-  const navigate = useNavigate();
   const [userLocation, setUserLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
@@ -405,11 +400,56 @@ function Map() {
   const [selectedStation, setSelectedStation] = useState(null);
   const [showStationPopup, setShowStationPopup] = useState(false);
   const [selectedCity, setSelectedCity] = useState("Tất cả");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
   const [mapCenter, setMapCenter] = useState([16.0, 108.0]); // Trung tâm Việt Nam
   const [mapZoom, setMapZoom] = useState(6);
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [ratingStation, setRatingStation] = useState(null);
+
+  // States cho API data
+  const [apiStations, setApiStations] = useState([]);
+  const [isLoadingStations, setIsLoadingStations] = useState(false);
+  const [stationsError, setStationsError] = useState(null);
+
+  // Hàm transform dữ liệu từ API sang format cần thiết
+  const transformApiStationData = useCallback((apiData) => {
+    return apiData.map((station) => ({
+      id: station.stationID,
+      name: station.stationName,
+      address: station.location,
+      position: [station.x, station.y], // API trả về x, y thay vì lat, lng
+      city: station.location.includes("Hà Nội") ? "Hà Nội" : "TP.HCM", // Detect city từ address
+      district: "Chưa xác định", // API chưa có district info
+      rating: 4.0, // Default rating cho UI
+      totalRatings: 0, // Default cho UI
+      status: station.status === 1 ? "active" : "inactive",
+      createAt: station.createAt,
+    }));
+  }, []);
+
+  // Hàm fetch dữ liệu trạm từ API
+  const fetchStationsFromAPI = useCallback(async () => {
+    setIsLoadingStations(true);
+    setStationsError(null);
+
+    try {
+      const response = await apiService.getPinStations();
+
+      if (response && response.status === "success") {
+        const transformedStations = transformApiStationData(response.data);
+        setApiStations(transformedStations);
+      } else {
+        setStationsError("Không thể tải danh sách trạm sạc");
+      }
+    } catch (error) {
+      console.error("Error fetching stations:", error);
+      setStationsError(`Lỗi khi tải danh sách trạm sạc: ${error.message}`);
+    } finally {
+      setIsLoadingStations(false);
+    }
+  }, [transformApiStationData]);
+
+  // Load stations khi component mount
+  useEffect(() => {
+    fetchStationsFromAPI();
+  }, [fetchStationsFromAPI]);
 
   // Hàm lấy vị trí hiện tại của người dùng
   const getUserLocation = useCallback(() => {
@@ -431,7 +471,7 @@ function Map() {
         let minDistance = Infinity;
         let nearest = null;
 
-        batteryStations.forEach((station) => {
+        apiStations.forEach((station) => {
           const distance = calculateDistance(
             userPos[0],
             userPos[1],
@@ -478,40 +518,11 @@ function Map() {
         maximumAge: 60000,
       }
     );
-  }, []);
-
-  // Hàm mở modal đánh giá
-  const openRatingModal = useCallback((station) => {
-    setRatingStation(station);
-    setShowRatingModal(true);
-  }, []);
-
-  // Hàm xử lý gửi đánh giá
-  const handleRatingSubmit = useCallback(
-    (rating) => {
-      console.log(`Đánh giá trạm ${ratingStation?.name}: ${rating} sao`);
-      // Ở đây có thể gọi API để lưu đánh giá
-    },
-    [ratingStation]
-  );
-
-  // Hàm chuyển đến trang booking với trạm đã chọn
-  const goToBooking = useCallback(
-    (station) => {
-      // Chuyển đến trang booking với station ID trong URL params
-      navigate(
-        `/booking?stationId=${station.id}&stationName=${encodeURIComponent(
-          station.name
-        )}`
-      );
-    },
-    [navigate]
-  );
+  }, [apiStations]);
 
   // Hàm chọn thành phố
   const handleCityChange = useCallback((city) => {
     setSelectedCity(city);
-    setSelectedDistrict("");
 
     if (city === "Tất cả") {
       setMapCenter([16.0, 108.0]); // Trung tâm Việt Nam
@@ -525,31 +536,14 @@ function Map() {
     }
   }, []);
 
-  // Hàm chọn quận/huyện
-  const handleDistrictChange = useCallback(
-    (district) => {
-      setSelectedDistrict(district);
-
-      const districtData = districts[selectedCity].find(
-        (d) => d.name === district
-      );
-      if (districtData) {
-        setMapCenter(districtData.center);
-        setMapZoom(districtData.zoom);
-      }
-    },
-    [selectedCity]
-  );
-
-  // Lọc trạm theo thành phố và quận được chọn
-  const filteredStations = batteryStations.filter((station) => {
+  // Lọc trạm theo thành phố được chọn
+  const filteredStations = apiStations.filter((station) => {
     if (
       selectedCity &&
       selectedCity !== "Tất cả" &&
       station.city !== selectedCity
     )
       return false;
-    if (selectedDistrict && station.district !== selectedDistrict) return false;
     return true;
   });
 
@@ -581,27 +575,6 @@ function Map() {
                 </select>
               </div>
 
-              {/* Chọn quận/huyện */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quận/Huyện
-                </label>
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => handleDistrictChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={selectedCity === "Tất cả"}
-                >
-                  <option value="">Tất cả quận/huyện</option>
-                  {selectedCity !== "Tất cả" &&
-                    districts[selectedCity]?.map((district) => (
-                      <option key={district.name} value={district.name}>
-                        {district.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
               {/* Thống kê */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -619,20 +592,8 @@ function Map() {
                       <span>Tại {selectedCity}:</span>
                       <span className="font-semibold">
                         {
-                          batteryStations.filter((s) => s.city === selectedCity)
+                          apiStations.filter((s) => s.city === selectedCity)
                             .length
-                        }
-                      </span>
-                    </div>
-                  )}
-                  {selectedDistrict && (
-                    <div className="flex justify-between">
-                      <span>Tại {selectedDistrict}:</span>
-                      <span className="font-semibold">
-                        {
-                          batteryStations.filter(
-                            (s) => s.district === selectedDistrict
-                          ).length
                         }
                       </span>
                     </div>
@@ -644,7 +605,6 @@ function Map() {
               <button
                 onClick={() => {
                   setSelectedCity("Tất cả");
-                  setSelectedDistrict("");
                   setMapCenter([16.0, 108.0]);
                   setMapZoom(6);
                 }}
@@ -702,7 +662,6 @@ function Map() {
 
             <div className="text-sm text-gray-600">
               {filteredStations.length} trạm sạc
-              {selectedDistrict && ` tại ${selectedDistrict}`}
             </div>
           </div>
 
@@ -710,6 +669,31 @@ function Map() {
           {locationError && (
             <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
               <p className="text-sm">{locationError}</p>
+            </div>
+          )}
+
+          {/* Thông báo loading stations */}
+          {isLoadingStations && (
+            <div className="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg shadow-lg">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                <p className="text-sm">Đang tải danh sách trạm sạc...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Thông báo lỗi stations */}
+          {stationsError && (
+            <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
+              <div className="flex items-center justify-between">
+                <p className="text-sm">{stationsError}</p>
+                <button
+                  onClick={fetchStationsFromAPI}
+                  className="text-red-600 hover:text-red-800 text-sm underline"
+                >
+                  Thử lại
+                </button>
+              </div>
             </div>
           )}
 
@@ -936,68 +920,6 @@ function Map() {
                               )}
                             </div>
                           </div>
-
-                          {/* Hiển thị đánh giá */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              marginBottom: "12px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "50%",
-                                background:
-                                  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginRight: "8px",
-                              }}
-                            >
-                              <StarOutlined
-                                style={{ fontSize: "10px", color: "white" }}
-                              />
-                            </div>
-                            <div>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "600",
-                                  color: "#00083B",
-                                  marginBottom: "2px",
-                                }}
-                              >
-                                Đánh giá
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Rate
-                                  disabled
-                                  value={station.rating}
-                                  style={{ fontSize: "12px" }}
-                                />
-                                <span
-                                  style={{
-                                    fontSize: "12px",
-                                    color: "#475569",
-                                    fontWeight: "600",
-                                  }}
-                                >
-                                  {station.rating} ({station.totalRatings} đánh
-                                  giá)
-                                </span>
-                              </div>
-                            </div>
-                          </div>
                         </div>
 
                         <div style={{ marginBottom: "16px" }}>
@@ -1093,54 +1015,6 @@ function Map() {
                                 }}
                               >
                                 {station.city}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              marginBottom: "12px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                borderRadius: "50%",
-                                background:
-                                  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginRight: "8px",
-                              }}
-                            >
-                              <span
-                                style={{ fontSize: "10px", color: "white" }}
-                              >
-                                📍
-                              </span>
-                            </div>
-                            <div>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: "600",
-                                  color: "#00083B",
-                                  marginBottom: "2px",
-                                }}
-                              >
-                                Quận/Huyện
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: "13px",
-                                  color: "#475569",
-                                }}
-                              >
-                                {station.district}
                               </div>
                             </div>
                           </div>
@@ -1254,84 +1128,13 @@ function Map() {
                           </div>
                         </div>
 
-                        {/* Nút đánh giá, đặt lịch và chỉ đường */}
+                        {/* Nút chỉ đường */}
                         <div
                           style={{
                             display: "flex",
-                            gap: "6px",
-                            flexWrap: "wrap",
+                            justifyContent: "center",
                           }}
                         >
-                          <button
-                            onClick={() => openRatingModal(station)}
-                            style={{
-                              flex: 1,
-                              minWidth: "80px",
-                              background:
-                                "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                              color: "white",
-                              padding: "10px 12px",
-                              borderRadius: "12px",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              border: "none",
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "6px",
-                              boxShadow: "0 4px 8px rgba(245, 158, 11, 0.2)",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.transform = "translateY(-2px)";
-                              e.target.style.boxShadow =
-                                "0 6px 12px rgba(245, 158, 11, 0.3)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.transform = "translateY(0)";
-                              e.target.style.boxShadow =
-                                "0 4px 8px rgba(245, 158, 11, 0.2)";
-                            }}
-                          >
-                            <StarOutlined style={{ fontSize: "12px" }} />
-                            <span>Đánh giá</span>
-                          </button>
-                          <button
-                            onClick={() => goToBooking(station)}
-                            style={{
-                              flex: 1,
-                              minWidth: "80px",
-                              background:
-                                "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                              color: "white",
-                              padding: "10px 12px",
-                              borderRadius: "12px",
-                              fontSize: "13px",
-                              fontWeight: "600",
-                              border: "none",
-                              cursor: "pointer",
-                              transition: "all 0.3s ease",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "6px",
-                              boxShadow: "0 4px 8px rgba(0, 8, 59, 0.2)",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.transform = "translateY(-2px)";
-                              e.target.style.boxShadow =
-                                "0 6px 12px rgba(0, 8, 59, 0.3)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.transform = "translateY(0)";
-                              e.target.style.boxShadow =
-                                "0 4px 8px rgba(0, 8, 59, 0.2)";
-                            }}
-                          >
-                            <CalendarOutlined style={{ fontSize: "12px" }} />
-                            <span>Đặt lịch</span>
-                          </button>
                           <button
                             onClick={() => {
                               // Sử dụng địa chỉ văn bản thay vì tọa độ
@@ -1352,14 +1155,12 @@ function Map() {
                               }
                             }}
                             style={{
-                              flex: 1,
-                              minWidth: "80px",
                               background:
                                 "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                               color: "white",
-                              padding: "10px 12px",
+                              padding: "12px 24px",
                               borderRadius: "12px",
-                              fontSize: "13px",
+                              fontSize: "14px",
                               fontWeight: "600",
                               border: "none",
                               cursor: "pointer",
@@ -1367,7 +1168,7 @@ function Map() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              gap: "6px",
+                              gap: "8px",
                               boxShadow: "0 4px 8px rgba(16, 185, 129, 0.2)",
                             }}
                             onMouseOver={(e) => {
@@ -1381,8 +1182,8 @@ function Map() {
                                 "0 4px 8px rgba(16, 185, 129, 0.2)";
                             }}
                           >
-                            <EnvironmentOutlined style={{ fontSize: "12px" }} />
-                            <span>Chỉ đường</span>
+                            <EnvironmentOutlined style={{ fontSize: "14px" }} />
+                            <span>Chỉ đường đến trạm</span>
                           </button>
                         </div>
                       </div>
@@ -1400,14 +1201,6 @@ function Map() {
           </div>
         </div>
       </div>
-
-      {/* Modal đánh giá */}
-      <RatingModal
-        visible={showRatingModal}
-        onCancel={() => setShowRatingModal(false)}
-        station={ratingStation}
-        onSubmit={handleRatingSubmit}
-      />
     </div>
   );
 }

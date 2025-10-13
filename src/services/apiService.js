@@ -22,6 +22,9 @@ class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // Thêm header cho ngrok
+    headers["ngrok-skip-browser-warning"] = "true";
+
     return headers;
   }
 
@@ -37,7 +40,10 @@ class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
       }
 
       const data = await response.json();
@@ -169,6 +175,11 @@ class ApiService {
   async getNearbyStations(latitude, longitude, radius = 10) {
     const url = getApiUrl("STATION", "NEARBY");
     return this.get(url, { latitude, longitude, radius });
+  }
+
+  async getPinStations() {
+    const url = getApiUrl("STATION", "PIN_STATIONS");
+    return this.get(url);
   }
 
   // ===== BOOKING METHODS =====
