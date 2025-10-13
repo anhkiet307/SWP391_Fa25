@@ -27,6 +27,7 @@ const API_CONFIG = {
       LIST_DRIVERS: "/user/listDriver",
       LIST_STAFF: "/user/listStaff",
       UPDATE: "/user/update",
+      UPDATE_STATUS: "/user/updateStatus",
     },
 
     // Station management endpoints
@@ -37,6 +38,8 @@ const API_CONFIG = {
       UPDATE: "/pinStation/update",
       UPDATE_STATUS: "/pinStation/updateStatus",
       STATUS: "/pinStation/status",
+      ASSIGN_STAFF: "/pinStation/assignStaff",
+      CHECK_STAFF_ASSIGNMENT: "/pinStation/checkStaffAssignment",
       NEARBY: "/stations/nearby", // Keep this for future use
     },
 

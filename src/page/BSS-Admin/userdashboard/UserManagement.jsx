@@ -23,6 +23,11 @@ const UserManagement = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [activeTab, setActiveTab] = useState("users");
+  
+  // States cho modal xác nhận
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userToChangeStatus, setUserToChangeStatus] = useState(null);
+  const [isUserType, setIsUserType] = useState(true); // true: user, false: staff
   const [newUser, setNewUser] = useState({
     userId: "",
     name: "",
@@ -310,28 +315,129 @@ const UserManagement = () => {
     });
   };
 
-  // Hàm thay đổi trạng thái người dùng
-  const toggleUserStatus = (id) => {
-    // TODO: Gọi API để cập nhật status thực tế
-    // Hiện tại chỉ cập nhật local state
-    setUsers(
-      users.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: user.status === "active" ? "suspended" : "active",
-            }
-          : user
-      )
-    );
+  // Hàm mở modal xác nhận cho user
+  const openUserStatusModal = (user) => {
+    setUserToChangeStatus(user);
+    setIsUserType(true);
+    setShowStatusModal(true);
+  };
+
+  // Hàm thay đổi trạng thái người dùng với API integration
+  const toggleUserStatus = async () => {
+    if (!userToChangeStatus) return;
     
-    // Hiển thị thông báo
-    const user = users.find(u => u.id === id);
-    if (user) {
-      const newStatus = user.status === "active" ? "suspended" : "active";
-      const statusText = newStatus === "active" ? "kích hoạt" : "tạm khóa";
-      showSuccess(`Đã ${statusText} tài khoản ${user.name}`);
+    const id = userToChangeStatus.id;
+    console.log("toggleUserStatus called for user ID:", id); // Debug log
+    
+    try {
+      const user = userToChangeStatus;
+      const newStatusText = user.status === "active" ? "tạm khóa" : "kích hoạt";
+      const actionText = user.status === "active" ? "khóa" : "mở khóa";
+      
+      console.log("About to call API"); // Debug log
+      
+      // Gọi API để cập nhật status
+      const response = await apiService.updateUserStatus(id);
+      console.log("Update status response:", response);
+
+      // Cập nhật local state sau khi API thành công
+      setUsers(prevUsers =>
+        prevUsers.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                status: u.status === "active" ? "suspended" : "active",
+              }
+            : u
+        )
+      );
+
+      // Hiển thị thông báo thành công
+      showSuccess(`Đã ${newStatusText} tài khoản "${user.name}" thành công!`);
+      
+      // Đóng modal
+      setShowStatusModal(false);
+      setUserToChangeStatus(null);
+
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      
+      // Xử lý các loại lỗi khác nhau
+      if (error.response?.status === 404) {
+        showError("Không tìm thấy người dùng trong hệ thống!");
+      } else if (error.response?.status === 403) {
+        showError("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 400) {
+        showError("Dữ liệu không hợp lệ!");
+      } else {
+        showError(`Không thể cập nhật tài khoản. Vui lòng thử lại sau!`);
+      }
     }
+  };
+
+  // Hàm mở modal xác nhận cho staff
+  const openStaffStatusModal = (staffMember) => {
+    setUserToChangeStatus(staffMember);
+    setIsUserType(false);
+    setShowStatusModal(true);
+  };
+
+  // Hàm thay đổi trạng thái nhân viên với API integration
+  const toggleStaffStatus = async () => {
+    if (!userToChangeStatus) return;
+    
+    const id = userToChangeStatus.id;
+    console.log("toggleStaffStatus called for staff ID:", id); // Debug log
+    
+    try {
+      const staffMember = userToChangeStatus;
+      const newStatusText = staffMember.status === "active" ? "tạm khóa" : "kích hoạt";
+      
+      console.log("About to call API for staff"); // Debug log
+      
+      // Gọi API để cập nhật status (sử dụng cùng API với user)
+      const response = await apiService.updateUserStatus(id);
+      console.log("Update staff status response:", response);
+
+      // Cập nhật local state sau khi API thành công
+      setStaff(prevStaff =>
+        prevStaff.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: s.status === "active" ? "suspended" : "active",
+              }
+            : s
+        )
+      );
+
+      // Hiển thị thông báo thành công
+      showSuccess(`Đã ${newStatusText} tài khoản nhân viên "${staffMember.name}" thành công!`);
+      
+      // Đóng modal
+      setShowStatusModal(false);
+      setUserToChangeStatus(null);
+
+    } catch (error) {
+      console.error("Error updating staff status:", error);
+      
+      // Xử lý các loại lỗi khác nhau
+      if (error.response?.status === 404) {
+        showError("Không tìm thấy nhân viên trong hệ thống!");
+      } else if (error.response?.status === 403) {
+        showError("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 400) {
+        showError("Dữ liệu không hợp lệ!");
+      } else {
+        showError(`Không thể cập nhật tài khoản nhân viên. Vui lòng thử lại sau!`);
+      }
+    }
+  };
+
+  // Hàm hủy modal
+  const cancelStatusChange = () => {
+    setShowStatusModal(false);
+    setUserToChangeStatus(null);
   };
 
   // Hàm tạo gói thuê pin
@@ -720,7 +826,7 @@ const UserManagement = () => {
                                 ? "bg-red-500 hover:bg-red-600"
                                 : "bg-green-500 hover:bg-green-600"
                             }`}
-                            onClick={() => toggleUserStatus(user.id)}
+                            onClick={() => openUserStatusModal(user)}
                             title={
                               user.status === "active"
                                 ? "Khóa tài khoản"
@@ -998,7 +1104,7 @@ const UserManagement = () => {
                                 ? "bg-red-500 hover:bg-red-600"
                                 : "bg-green-500 hover:bg-green-600"
                             }`}
-                            onClick={() => toggleUserStatus(staffMember.id)}
+                            onClick={() => openStaffStatusModal(staffMember)}
                             title={
                               staffMember.status === "active"
                                 ? "Khóa tài khoản"
@@ -1390,6 +1496,152 @@ const UserManagement = () => {
                           </div>
 
                       </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal xác nhận thay đổi trạng thái */}
+        {showStatusModal && userToChangeStatus && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-yellow-100 rounded-full mb-4">
+                  <svg
+                    className="w-8 h-8 text-yellow-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                  {userToChangeStatus.status === "active"
+                    ? "Khóa tài khoản"
+                    : "Mở khóa tài khoản"}
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Bạn có chắc chắn muốn{" "}
+                  {userToChangeStatus.status === "active"
+                    ? "khóa tài khoản"
+                    : "mở khóa tài khoản"}{" "}
+                  {isUserType ? "này" : "nhân viên này"} không?
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900">
+                        {userToChangeStatus.name}
+                      </h4>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          ID: {userToChangeStatus.id}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            userToChangeStatus.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {userToChangeStatus.status === "active"
+                            ? "🟢 Hoạt động"
+                            : "🔴 Tạm khóa"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Thông báo */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-800">
+                        {userToChangeStatus.status === "active"
+                          ? "Tài khoản sẽ bị khóa và không thể đăng nhập."
+                          : "Tài khoản sẽ được kích hoạt và có thể đăng nhập bình thường."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelStatusChange}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={isUserType ? toggleUserStatus : toggleStaffStatus}
+                    className={`flex-1 px-4 py-2.5 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 ${
+                      userToChangeStatus.status === "active"
+                        ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                        : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d={
+                          userToChangeStatus.status === "active"
+                            ? "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            : "M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                        }
+                      />
+                    </svg>
+                    <span>
+                      {userToChangeStatus.status === "active"
+                        ? "Khóa tài khoản"
+                        : "Mở khóa"}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>

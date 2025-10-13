@@ -2,6 +2,8 @@ import "./App.css";
 import "antd/dist/reset.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from "./components/layout/header.jsx";
 import Footer from "./components/layout/footer.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -230,6 +232,7 @@ function App() {
           />
         </Routes>
       </Router>
+      <ToastContainer />
     </AuthProvider>
   );
 }

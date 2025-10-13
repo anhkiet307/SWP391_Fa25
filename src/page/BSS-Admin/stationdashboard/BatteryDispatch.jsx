@@ -19,7 +19,7 @@ const AdminBatteryDispatch = () => {
   });
 
   const [showPreview, setShowPreview] = useState(false);
-  
+
   // Station selection states
   const [stations, setStations] = useState([]);
   const [stationsLoading, setStationsLoading] = useState(true);
@@ -400,15 +400,15 @@ const AdminBatteryDispatch = () => {
                     </div>
                     <h3 className="text-xl font-bold text-blue-700">Trạm Nguồn</h3>
                     <p className="text-sm text-blue-600">Pin slot cần thay thế</p>
-                  </div>
+              </div>
 
                   {/* Form Fields */}
                   <div className="space-y-4">
                     {/* Chọn trạm nguồn */}
-                    <div>
+              <div>
                       <label className="block text-sm font-semibold text-blue-700 mb-2">
                         Chọn trạm nguồn <span className="text-red-500">*</span>
-                      </label>
+                </label>
                       <button
                         type="button"
                         onClick={() => setShowSourceStationModal(true)}
@@ -421,7 +421,7 @@ const AdminBatteryDispatch = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                    </div>
+              </div>
 
               {/* Chọn pin slot */}
               <div>
@@ -453,48 +453,48 @@ const AdminBatteryDispatch = () => {
               </div>
 
                     {/* Pin Percent */}
-                    <div>
+              <div>
                       <label className="block text-sm font-semibold text-blue-700 mb-2">
                         Pin Percent (%) <span className="text-red-500">*</span>
                         {formData.sourcePinPercent && (
                           <span className="ml-2 text-xs text-green-600 font-medium">✓ Tự động điền</span>
                         )}
-                      </label>
-                      <input
-                        type="number"
+                </label>
+                <input
+                  type="number"
                         name="sourcePinPercent"
                         value={formData.sourcePinPercent}
-                        onChange={handleInputChange}
+                  onChange={handleInputChange}
                         className={`w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           formData.sourcePinPercent ? "border-green-300 bg-green-50" : "border-blue-200"
                         }`}
                         placeholder="0-100"
                         min="0"
                         max="100"
-                        required
-                      />
-                    </div>
+                  required
+                />
+              </div>
 
                     {/* Pin Health */}
-                    <div>
+              <div>
                       <label className="block text-sm font-semibold text-blue-700 mb-2">
                         Pin Health (%) <span className="text-red-500">*</span>
                         {formData.sourcePinHealth && (
                           <span className="ml-2 text-xs text-green-600 font-medium">✓ Tự động điền</span>
                         )}
-                      </label>
+                </label>
                       <input
                         type="number"
                         name="sourcePinHealth"
                         value={formData.sourcePinHealth}
-                        onChange={handleInputChange}
+                  onChange={handleInputChange}
                         className={`w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           formData.sourcePinHealth ? "border-green-300 bg-green-50" : "border-blue-200"
                         }`}
                         placeholder="0-100"
                         min="0"
                         max="100"
-                        required
+                  required
                       />
                     </div>
                   </div>
@@ -547,7 +547,7 @@ const AdminBatteryDispatch = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                    </div>
+              </div>
 
               {/* Chọn pin slot */}
               <div>
@@ -576,21 +576,21 @@ const AdminBatteryDispatch = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-              </div>
+            </div>
 
                     {/* Pin Percent */}
-                    <div>
+            <div>
                       <label className="block text-sm font-semibold text-green-700 mb-2">
                         Pin Percent (%) <span className="text-red-500">*</span>
                         {formData.targetPinPercent && (
                           <span className="ml-2 text-xs text-blue-600 font-medium">✓ Tự động điền</span>
                         )}
-                      </label>
+              </label>
                       <input
                         type="number"
                         name="targetPinPercent"
                         value={formData.targetPinPercent}
-                        onChange={handleInputChange}
+                onChange={handleInputChange}
                         className={`w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
                           formData.targetPinPercent ? "border-blue-300 bg-blue-50" : "border-green-200"
                         }`}
@@ -598,8 +598,8 @@ const AdminBatteryDispatch = () => {
                         min="0"
                         max="100"
                         required
-                      />
-                    </div>
+              />
+            </div>
 
                     {/* Pin Health */}
                     <div>
@@ -864,7 +864,7 @@ const AdminBatteryDispatch = () => {
                       <div className="w-12 h-12 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-2">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
+                      </svg>
                       </div>
                       <h4 className="text-lg font-bold text-blue-700">Pin Slot Nguồn</h4>
                     </div>
@@ -872,28 +872,28 @@ const AdminBatteryDispatch = () => {
                     <div className="space-y-3">
                       <div className="bg-white rounded-lg p-3 border border-blue-100">
                         <div className="text-sm font-medium text-blue-600 mb-1">Trạm</div>
-                        <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                           {selectedSourceStation?.name || "Chưa chọn"}
-                        </div>
-                      </div>
-                      
+                    </div>
+                  </div>
+
                       <div className="bg-white rounded-lg p-3 border border-blue-100">
                         <div className="text-sm font-medium text-blue-600 mb-1">Pin Slot ID</div>
-                        <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                           {selectedSourcePinSlot?.pinId || "Chưa chọn"}
-                        </div>
-                      </div>
-                      
+                    </div>
+                  </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white rounded-lg p-3 border border-blue-100">
                           <div className="text-sm font-medium text-blue-600 mb-1">Pin %</div>
                           <div className="text-base font-semibold text-gray-900">
                             {formData.sourcePinPercent || "0"}%
                           </div>
-                        </div>
+                    </div>
                         <div className="bg-white rounded-lg p-3 border border-blue-100">
                           <div className="text-sm font-medium text-blue-600 mb-1">Health</div>
-                          <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                             {formData.sourcePinHealth || "0"}%
                           </div>
                         </div>
@@ -907,7 +907,7 @@ const AdminBatteryDispatch = () => {
                       <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-2">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
+                      </svg>
                       </div>
                       <h4 className="text-lg font-bold text-green-700">Pin Slot Đích</h4>
                     </div>
@@ -915,35 +915,35 @@ const AdminBatteryDispatch = () => {
                     <div className="space-y-3">
                       <div className="bg-white rounded-lg p-3 border border-green-100">
                         <div className="text-sm font-medium text-green-600 mb-1">Trạm</div>
-                        <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                           {selectedTargetStation?.name || "Chưa chọn"}
-                        </div>
-                      </div>
-                      
+                    </div>
+                  </div>
+
                       <div className="bg-white rounded-lg p-3 border border-green-100">
                         <div className="text-sm font-medium text-green-600 mb-1">Pin Slot ID</div>
-                        <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                           {selectedTargetPinSlot?.pinId || "Chưa chọn"}
-                        </div>
-                      </div>
-                      
+                    </div>
+                  </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-white rounded-lg p-3 border border-green-100">
                           <div className="text-sm font-medium text-green-600 mb-1">Pin %</div>
                           <div className="text-base font-semibold text-gray-900">
                             {formData.targetPinPercent || "0"}%
                           </div>
-                        </div>
+                    </div>
                         <div className="bg-white rounded-lg p-3 border border-green-100">
                           <div className="text-sm font-medium text-green-600 mb-1">Health</div>
-                          <div className="text-base font-semibold text-gray-900">
+                    <div className="text-base font-semibold text-gray-900">
                             {formData.targetPinHealth || "0"}%
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
+                    </div>
+                    </div>
+                  </div>
               </div>
 
               {/* Modal Footer */}

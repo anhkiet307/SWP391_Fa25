@@ -182,6 +182,21 @@ class ApiService {
     });
   }
 
+  async updateUserStatus(userId) {
+    const url = getApiUrl("USER", "UPDATE_STATUS");
+    // API sử dụng PUT với query parameter userID
+    const queryString = new URLSearchParams({ userID: userId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // ===== STATION METHODS =====
   async getStations(params = {}) {
     const url = getApiUrl("STATION", "LIST");
@@ -246,6 +261,40 @@ class ApiService {
   async updateStationStatus(stationId) {
     const url = getApiUrl("STATION", "UPDATE_STATUS");
     return this.get(url, { stationID: stationId });
+  }
+
+  async assignStaff(userId, stationId) {
+    const url = getApiUrl("STATION", "ASSIGN_STAFF");
+    // API sử dụng PUT với query parameters userID và stationID
+    const queryString = new URLSearchParams({ 
+      userID: userId, 
+      stationID: stationId 
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async checkStaffAssignment(userId) {
+    const url = getApiUrl("STATION", "CHECK_STAFF_ASSIGNMENT");
+    const queryString = new URLSearchParams({
+      userID: userId
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async getStationStatus() {

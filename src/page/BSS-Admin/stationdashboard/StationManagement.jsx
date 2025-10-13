@@ -12,6 +12,10 @@ const AdminStationManagement = () => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // State cho quản lý staff
+  const [staff, setStaff] = useState([]);
+  const [staffLoading, setStaffLoading] = useState(true);
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -19,6 +23,10 @@ const AdminStationManagement = () => {
   const [stationToDelete, setStationToDelete] = useState(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [stationToChangeStatus, setStationToChangeStatus] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [stationToAssign, setStationToAssign] = useState(null);
+  const [showConfirmAssignModal, setShowConfirmAssignModal] = useState(false);
+  const [staffToAssign, setStaffToAssign] = useState(null);
   
   // Edit form state
   const [editFormData, setEditFormData] = useState({
@@ -49,6 +57,7 @@ const AdminStationManagement = () => {
           createdAt: station.createAt,
           x: station.x,
           y: station.y,
+          userID: station.userID, // Thêm userID để track staff assignment
         }));
         
         setStations(transformedStations);
@@ -64,6 +73,47 @@ const AdminStationManagement = () => {
     loadStations();
   }, []);
 
+  // Load staff data from API
+  useEffect(() => {
+    const loadStaff = async () => {
+      try {
+        setStaffLoading(true);
+        const response = await apiService.listStaff();
+        
+        // Transform staff data
+        let staffData = null;
+        if (response && response.data && Array.isArray(response.data)) {
+          staffData = response.data;
+        } else if (response && Array.isArray(response)) {
+          staffData = response;
+        } else if (response && response.status === "success" && response.data) {
+          staffData = response.data;
+        }
+        
+        if (staffData && staffData.length > 0) {
+          const transformedStaff = staffData.map((staffMember) => ({
+            id: staffMember.userID,
+            name: staffMember.name,
+            email: staffMember.email,
+            phone: staffMember.phone,
+            roleID: staffMember.roleID,
+            status: staffMember.status === 1 ? "active" : "suspended",
+          }));
+          setStaff(transformedStaff);
+        } else {
+          setStaff([]);
+        }
+      } catch (err) {
+        console.error("Error loading staff:", err);
+        // Không hiển thị error cho staff loading để không làm phiền user
+      } finally {
+        setStaffLoading(false);
+      }
+    };
+
+    loadStaff();
+  }, []);
+
   // Use stations directly without transformation
   const updatedStations = stations;
 
@@ -72,6 +122,13 @@ const AdminStationManagement = () => {
     totalStations: stations.length,
     activeStations: stations.filter((s) => s.status === "active").length,
     maintenanceStations: stations.filter((s) => s.status === "maintenance").length,
+  };
+
+  // Function to get staff name by userID
+  const getStaffName = (userID) => {
+    if (!userID) return null;
+    const staffMember = staff.find(s => s.id === userID);
+    return staffMember ? staffMember.name : "Không tìm thấy";
   };
 
   // Function to refresh stations list
@@ -90,6 +147,7 @@ const AdminStationManagement = () => {
         createdAt: station.createAt,
         x: station.x,
         y: station.y,
+        userID: station.userID, // Thêm userID để track staff assignment
       }));
       
       setStations(transformedStations);
@@ -99,6 +157,78 @@ const AdminStationManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to open assign staff modal
+  const openAssignModal = (station) => {
+    setStationToAssign(station);
+    setShowAssignModal(true);
+  };
+
+  // Function to get assigned staff IDs
+  const getAssignedStaffIds = () => {
+    return stations
+      .filter(station => station.userID)
+      .map(station => station.userID);
+  };
+
+  // Function to get available staff (not assigned to any station)
+  const getAvailableStaff = () => {
+    const assignedStaffIds = getAssignedStaffIds();
+    return staff.filter(s => 
+      s.status === "active" && 
+      !assignedStaffIds.includes(s.id)
+    );
+  };
+
+  // Function to open confirm assign modal
+  const handleAssignStaff = (staffId) => {
+    if (!stationToAssign) return;
+    
+    const selectedStaff = staff.find(s => s.id === staffId);
+    if (selectedStaff) {
+      setStaffToAssign(selectedStaff);
+      setShowConfirmAssignModal(true);
+    }
+  };
+
+  // Function to confirm and assign staff to station
+  const confirmAssignStaff = async () => {
+    if (!stationToAssign || !staffToAssign) return;
+    
+    try {
+      await apiService.assignStaff(staffToAssign.id, stationToAssign.id);
+      
+      // Update local state
+      setStations(stations.map(station => 
+        station.id === stationToAssign.id 
+          ? { ...station, userID: staffToAssign.id }
+          : station
+      ));
+      
+      showSuccess(`Đã phân công ${staffToAssign.name} cho trạm ${stationToAssign.name}!`);
+      
+      // Close modals
+      setShowConfirmAssignModal(false);
+      setShowAssignModal(false);
+      setStationToAssign(null);
+      setStaffToAssign(null);
+    } catch (error) {
+      console.error("Error assigning staff:", error);
+      showError("Không thể phân công nhân viên. Vui lòng thử lại!");
+    }
+  };
+
+  // Function to cancel assign confirmation
+  const cancelAssignConfirm = () => {
+    setShowConfirmAssignModal(false);
+    setStaffToAssign(null);
+  };
+
+  // Function to cancel assign modal
+  const cancelAssign = () => {
+    setShowAssignModal(false);
+    setStationToAssign(null);
   };
 
   // Hàm chuyển đến trang thêm trạm mới
@@ -450,6 +580,9 @@ const AdminStationManagement = () => {
                     Địa chỉ
                   </th>
                   <th className="p-4 text-center font-semibold text-base">
+                    Nhân viên
+                  </th>
+                  <th className="p-4 text-center font-semibold text-base">
                     Trạng thái
                   </th>
                   <th className="p-4 text-center font-semibold text-base">
@@ -483,6 +616,25 @@ const AdminStationManagement = () => {
                     <td className="p-4 border-b border-gray-200">
                       <div className="text-sm text-gray-700 max-w-xs">
                         {station.address}
+                      </div>
+                    </td>
+                    <td className="p-4 border-b border-gray-200">
+                      <div className="flex justify-center">
+                        {station.userID ? (
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                            {getStaffName(station.userID)}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => openAssignModal(station)}
+                            className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 hover:bg-orange-200 transition-colors cursor-pointer"
+                          >
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Phân công
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td className="p-4 border-b border-gray-200">
@@ -766,6 +918,56 @@ const AdminStationManagement = () => {
                         <div className="text-base text-gray-800 font-medium">{selectedStation.y || "N/A"}</div>
                       </div>
                     </div>
+
+                    {/* Nhân viên phân công */}
+                    {selectedStation.userID ? (
+                      <>
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-purple-600 mb-1">Nhân viên phụ trách</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {getStaffName(selectedStation.userID) || "Không tìm thấy"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-cyan-600 mb-1">Số điện thoại</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {(() => {
+                                const staffMember = staff.find(s => s.id === selectedStation.userID);
+                                return staffMember ? `(+84) ${staffMember.phone}` : "N/A";
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-semibold text-gray-400 mb-1">Nhân viên phụ trách</div>
+                          <div className="text-base text-gray-500 font-medium italic">
+                            Chưa phân công nhân viên
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                   </div>
                 </div>
@@ -1186,6 +1388,282 @@ const AdminStationManagement = () => {
                   )}
                   <span>{isSubmitting ? "Đang cập nhật..." : "Cập nhật"}</span>
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal phân công nhân viên */}
+        {showAssignModal && stationToAssign && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Phân công nhân viên</h3>
+                      <p className="text-sm text-gray-600">Chọn nhân viên để phân công cho trạm {stationToAssign.name}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={cancelAssign}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                {/* Station Info */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900">{stationToAssign.name}</h4>
+                      <p className="text-sm text-gray-600">{stationToAssign.address}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Staff Statistics */}
+                <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                  <div className="flex items-center justify-center">
+                    <div className="text-sm text-gray-700 flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="font-medium">Tổng số nhân viên: <span className="text-blue-600 font-bold">{staff.filter(s => s.status === "active").length}</span></span>
+                      </div>
+                      <div className="w-px h-4 bg-gray-300"></div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="font-medium">Có thể phân công: <span className="text-green-600 font-bold">{getAvailableStaff().length}</span></span>
+                      </div>
+                      <div className="w-px h-4 bg-gray-300"></div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="font-medium">Đã phân công: <span className="text-red-600 font-bold">{getAssignedStaffIds().length}</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Staff List */}
+                <div>
+                  {staffLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                      <span className="ml-3 text-gray-600">Đang tải danh sách nhân viên...</span>
+                    </div>
+                  ) : getAvailableStaff().length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-lg font-medium mb-2">Không có nhân viên khả dụng</p>
+                      <p className="text-gray-400 text-sm">Tất cả nhân viên đã được phân công hoặc không hoạt động</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {staff.filter(s => s.status === "active").map((staffMember) => {
+                        const isAssigned = getAssignedStaffIds().includes(staffMember.id);
+                        const assignedStation = isAssigned ? stations.find(station => station.userID === staffMember.id) : null;
+                        const canAssign = !isAssigned;
+
+                        return (
+                          <div
+                            key={staffMember.id}
+                            onClick={canAssign ? () => handleAssignStaff(staffMember.id) : undefined}
+                            className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
+                              canAssign 
+                                ? 'bg-white border-blue-200 hover:border-blue-400 hover:shadow-lg cursor-pointer transform hover:-translate-y-1' 
+                                : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-75'
+                            }`}
+                          >
+                            {/* Staff Info */}
+                            <div className="flex items-start space-x-3">
+                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                                canAssign 
+                                  ? 'bg-gradient-to-br from-blue-100 to-indigo-100' 
+                                  : 'bg-gradient-to-br from-gray-100 to-gray-200'
+                              }`}>
+                                <svg className={`w-6 h-6 ${canAssign ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className={`font-bold text-base mb-1 ${canAssign ? 'text-gray-900' : 'text-gray-500'}`}>
+                                  {staffMember.name}
+                                </h4>
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">Số điện thoại:</span>
+                                    <span className="text-sm font-medium text-gray-800">
+                                      (+84) {staffMember.phone}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600">Trạng thái:</span>
+                                    {canAssign ? (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Có thể phân công
+                                      </span>
+                                    ) : (
+                                      <div className="text-right">
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                          Đã phân công
+                                        </span>
+                                        {assignedStation && (
+                                          <p className="text-xs text-gray-500 mt-1">{assignedStation.name}</p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Disabled overlay for assigned staff */}
+                            {!canAssign && (
+                              <div className="absolute top-2 right-2">
+                                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* Modal xác nhận phân công nhân viên */}
+        {showConfirmAssignModal && staffToAssign && stationToAssign && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-blue-100 rounded-full mb-4">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                  Xác nhận phân công
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Bạn có chắc chắn muốn phân công nhân viên này không?
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-4 mb-4">
+                      {/* Staff Info */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900">{staffToAssign.name}</h4>
+                        <p className="text-xs text-gray-500">Nhân viên</p>
+                      </div>
+
+                      {/* Arrow */}
+                      <div className="flex flex-col items-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </div>
+
+                      {/* Station Info */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <h4 className="text-sm font-bold text-gray-900">{stationToAssign.name}</h4>
+                        <p className="text-xs text-gray-500">Trạm sạc</p>
+                      </div>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold text-blue-600">{staffToAssign.name}</span> sẽ được phân công cho{" "}
+                        <span className="font-semibold text-indigo-600">{stationToAssign.name}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Địa chỉ: {stationToAssign.address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Warning */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-yellow-800">
+                        Lưu ý
+                      </p>
+                      <p className="text-sm text-yellow-700">
+                        Sau khi phân công, nhân viên này sẽ chịu trách nhiệm quản lý trạm sạc được chỉ định.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelAssignConfirm}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={confirmAssignStaff}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Xác nhận phân công</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
