@@ -135,7 +135,7 @@ const AdminSidebar = () => {
       submenu: [
         {
           path: "/admin-user-management",
-          label: "Danh sách khách hàng",
+          label: "Danh sách người dùng",
         },
         {
           path: "/admin-add-customer",

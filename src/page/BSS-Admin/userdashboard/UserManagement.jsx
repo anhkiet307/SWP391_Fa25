@@ -18,6 +18,10 @@ const UserManagement = () => {
   const [staffLoading, setStaffLoading] = useState(true);
   const [staffError, setStaffError] = useState(null);
 
+  // State cho quản lý trạm (để hiển thị tên trạm)
+  const [stations, setStations] = useState([]);
+  const [stationsLoading, setStationsLoading] = useState(true);
+
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -61,6 +65,9 @@ const UserManagement = () => {
         phone: staffMember.phone || "N/A",
         role: staffMember.roleID === 2 ? "staff" : staffMember.roleID === 3 ? "admin" : "user",
         status: staffMember.status === 1 ? "active" : "suspended", // 1: active, 0: suspended
+        assignedStationID: null, // Sẽ được cập nhật sau khi check assignment
+        assignedStationName: null, // Sẽ được cập nhật sau khi check assignment
+        assignedStationAddress: null, // Sẽ được cập nhật sau khi check assignment
         // Thêm các field để tương thích với format user
         totalTransactions: 0,
         totalSpent: 0,
@@ -154,6 +161,38 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  // Fetch stations data from API
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        setStationsLoading(true);
+        const response = await apiService.getStations();
+        console.log("Stations API Response:", response); // Debug log
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          const stationMap = {};
+          response.data.forEach(station => {
+            stationMap[station.stationID] = {
+              name: station.stationName,
+              address: station.location
+            };
+          });
+          setStations(stationMap);
+          console.log("Station map:", stationMap); // Debug log
+        } else {
+          setStations({});
+        }
+      } catch (err) {
+        console.error("Error fetching stations:", err);
+        setStations({});
+      } finally {
+        setStationsLoading(false);
+      }
+    };
+
+    fetchStations();
+  }, []);
+
   // Fetch staff data from API
   useEffect(() => {
     const fetchStaff = async () => {
@@ -177,7 +216,9 @@ const UserManagement = () => {
           console.log("Staff data found:", staffData); // Debug log
           const mappedStaff = mapApiDataToStaff(staffData);
           console.log("Mapped staff:", mappedStaff); // Debug log
-          setStaff(mappedStaff);
+          
+          // Check staff assignments
+          await checkStaffAssignments(mappedStaff);
         } else {
           console.log("No valid staff data found"); // Debug log
           setStaff([]);
@@ -192,7 +233,55 @@ const UserManagement = () => {
     };
 
     fetchStaff();
-  }, []);
+  }, [stations]); // Depend on stations to ensure stations are loaded first
+
+  // Function to check staff assignments and update station names
+  const checkStaffAssignments = async (staffList) => {
+    try {
+      console.log("Checking staff assignments for:", staffList); // Debug log
+      
+      const updatedStaff = await Promise.all(
+        staffList.map(async (staffMember) => {
+          try {
+            const response = await apiService.checkStaffAssignment(staffMember.id);
+            console.log(`Assignment check for staff ${staffMember.id}:`, response); // Debug log
+            
+            // Based on API response format from the image:
+            // If staff is assigned: assignedStationID will have a value
+            // If staff is not assigned: assignedStationID will be null
+            const isAssigned = response && response.data && response.data.assignedStationID !== null;
+            const assignedStationID = response?.data?.assignedStationID || null;
+            const stationInfo = assignedStationID ? stations[assignedStationID] : null;
+            const assignedStationName = stationInfo ? stationInfo.name : (assignedStationID ? `Trạm ${assignedStationID}` : null);
+            const assignedStationAddress = stationInfo ? stationInfo.address : null;
+            
+            return {
+              ...staffMember,
+              assignedStationID: assignedStationID,
+              assignedStationName: assignedStationName,
+              assignedStationAddress: assignedStationAddress,
+            };
+          } catch (error) {
+            console.error(`Error checking assignment for staff ${staffMember.id}:`, error);
+            // If API call fails, assume not assigned
+            return {
+              ...staffMember,
+              assignedStationID: null,
+              assignedStationName: null,
+              assignedStationAddress: null,
+            };
+          }
+        })
+      );
+      
+      console.log("Updated staff with assignments:", updatedStaff); // Debug log
+      setStaff(updatedStaff);
+    } catch (error) {
+      console.error("Error checking staff assignments:", error);
+      // If overall process fails, just set the staff without assignment info
+      setStaff(staffList);
+    }
+  };
 
   // Tính tổng thống kê
   const userStats = {
@@ -206,7 +295,9 @@ const UserManagement = () => {
   const staffStats = {
     totalStaff: staff.length,
     activeStaff: staff.filter((s) => s.status === "active").length,
-    stationManagers: staff.filter((s) => s.role === "station_manager").length,
+    suspendedStaff: staff.filter((s) => s.status === "suspended").length,
+    assignedStaff: staff.filter((s) => s.assignedStationID !== null).length,
+    unassignedStaff: staff.filter((s) => s.assignedStationID === null).length,
   };
 
   // Hàm thêm người dùng mới
@@ -568,6 +659,57 @@ const UserManagement = () => {
           </div>
         )}
 
+        {/* Thống kê nhân viên */}
+        {activeTab === "staff" && (
+          <div className="mb-8">
+            <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+              Thống kê nhân viên
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Tổng nhân viên
+                </h3>
+                <div className="text-4xl font-bold m-0 text-blue-500">
+                  {staffStats.totalStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Đang hoạt động
+                </h3>
+                <div className="text-4xl font-bold m-0 text-green-500">
+                  {staffStats.activeStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Tạm khóa
+                </h3>
+                <div className="text-4xl font-bold m-0 text-red-500">
+                  {staffStats.suspendedStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Đã phân công
+                </h3>
+                <div className="text-4xl font-bold m-0 text-purple-500">
+                  {staffStats.assignedStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Chưa phân công
+                </h3>
+                <div className="text-4xl font-bold m-0 text-orange-500">
+                  {staffStats.unassignedStaff}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-gray-800 text-2xl font-semibold">
@@ -717,7 +859,7 @@ const UserManagement = () => {
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
                           <div className="text-sm text-gray-800 font-medium">
-                            {user.phone}
+                            (+84) {user.phone}
                           </div>
                         </div>
                       </td>
@@ -995,7 +1137,7 @@ const UserManagement = () => {
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
                           <div className="text-sm text-gray-800 font-medium">
-                            {staffMember.phone}
+                            (+84) {staffMember.phone}
                           </div>
                         </div>
                       </td>
@@ -1433,7 +1575,13 @@ const UserManagement = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                             </div>
-                    <h4 className="text-xl font-bold text-gray-900">Thông tin khách hàng</h4>
+                    <h4 className="text-xl font-bold text-gray-900">
+                      {selectedUser.role === "admin"
+                        ? "Thông tin quản trị viên"
+                        : selectedUser.role === "staff"
+                        ? "Thông tin nhân viên"
+                        : "Thông tin khách hàng"}
+                    </h4>
                             </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1495,7 +1643,41 @@ const UserManagement = () => {
                         </div>
                           </div>
 
-                      </div>
+                    {/* Trạm đã phân công - chỉ hiển thị cho nhân viên */}
+                    {(selectedUser.role === "staff" || selectedUser.role === "admin") && (
+                      <>
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-indigo-600 mb-1">Trạm đã phân công</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {selectedUser.assignedStationName || "Chưa phân công"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-teal-600 mb-1">Địa chỉ trạm</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {selectedUser.assignedStationAddress || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                          </div>
                 </div>
               </div>
             </div>
