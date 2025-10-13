@@ -33,6 +33,7 @@ import AdminAddCustomer from "./page/BSS-Admin/userdashboard/AddCustomer.jsx";
 import AdminAddStaff from "./page/BSS-Admin/userdashboard/AddStaff.jsx";
 import AdminPackManagement from "./page/BSS-Admin/userdashboard/PackManagement.jsx";
 import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManagement.jsx";
+import AdminStatisticManagement from "./page/BSS-Admin/reportdashboard/StatisticManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -208,6 +209,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminPackManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-statistic-management"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminStatisticManagement />
               </ProtectedRoute>
             }
           />

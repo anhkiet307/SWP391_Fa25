@@ -127,6 +127,7 @@ const AdminHeader = ({
                     onClick={() => {
                       localStorage.removeItem('stationMenuOpen');
                       localStorage.removeItem('userMenuOpen');
+                      localStorage.removeItem('reportMenuOpen');
                       logout();
                     }}
                     className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
