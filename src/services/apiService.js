@@ -60,12 +60,12 @@ class ApiService {
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
-    return this.makeRequest(fullUrl, { 
+    return this.makeRequest(fullUrl, {
       method: "GET",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true"
-      }
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
@@ -76,8 +76,8 @@ class ApiService {
       body: JSON.stringify(data),
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true"
-      }
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
@@ -173,12 +173,12 @@ class ApiService {
     const queryString = new URLSearchParams(userData).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
-    return this.makeRequest(fullUrl, { 
+    return this.makeRequest(fullUrl, {
       method: "PUT",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true"
-      }
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
@@ -195,51 +195,51 @@ class ApiService {
 
   async createStation(stationData) {
     const url = this.baseURL + "/pinStation/create";
-    
+
     // Format data for API - x and y should be float
     const cleanData = {
       stationName: stationData.stationName,
       location: stationData.location,
       status: parseInt(stationData.status),
       x: parseFloat(stationData.x),
-      y: parseFloat(stationData.y)
+      y: parseFloat(stationData.y),
     };
-    
+
     // API uses POST with query parameters
     const queryString = new URLSearchParams(cleanData).toString();
     const fullUrl = `${url}?${queryString}`;
-    
+
     return this.makeRequest(fullUrl, {
       method: "POST",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true"
-      }
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
   async updateStation(stationData) {
     const url = this.baseURL + "/pinStation/update";
-    
+
     // Format data for API - only required fields (no status field)
     const cleanData = {
       stationID: parseInt(stationData.stationID),
       stationName: stationData.stationName,
       location: stationData.location,
       x: parseFloat(stationData.x),
-      y: parseFloat(stationData.y)
+      y: parseFloat(stationData.y),
     };
-    
+
     // API uses PUT with query parameters
     const queryString = new URLSearchParams(cleanData).toString();
     const fullUrl = `${url}?${queryString}`;
-    
+
     return this.makeRequest(fullUrl, {
       method: "PUT",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true"
-      }
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
@@ -265,7 +265,7 @@ class ApiService {
   }
 
   async getPinStations() {
-    const url = getApiUrl("STATION", "PIN_STATIONS");
+    const url = getApiUrl("STATION", "LIST");
     return this.get(url);
   }
 
@@ -418,6 +418,37 @@ class ApiService {
   async getAdminSettings() {
     const url = getApiUrl("ADMIN", "SETTINGS");
     return this.get(url);
+  }
+
+  // ===== RATING METHODS =====
+  async getRatingStatistics(stationId) {
+    const url = getApiUrl("RATING", "STATISTICS", { stationID: stationId });
+    return this.get(url);
+  }
+
+  async createRating(ratingData) {
+    const url = getApiUrl("RATING", "CREATE");
+    // API sử dụng query parameters thay vì body
+    const queryString = new URLSearchParams(ratingData).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async updateRating(ratingId, ratingData) {
+    const url = getApiUrl("RATING", "UPDATE", { id: ratingId });
+    return this.put(url, ratingData);
+  }
+
+  async deleteRating(ratingId) {
+    const url = getApiUrl("RATING", "DELETE", { id: ratingId });
+    return this.delete(url);
   }
 }
 

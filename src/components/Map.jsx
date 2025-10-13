@@ -9,9 +9,12 @@ import {
   AimOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import { batteryStations } from "../data/stations";
 import apiService from "../services/apiService";
+import RatingModal from "./RatingModal";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Title, Paragraph } = Typography;
 
@@ -408,20 +411,48 @@ function Map() {
   const [isLoadingStations, setIsLoadingStations] = useState(false);
   const [stationsError, setStationsError] = useState(null);
 
+  // States cho rating data
+  const [ratingData, setRatingData] = useState({});
+  const [isLoadingRating, setIsLoadingRating] = useState(false);
+  const [ratingError, setRatingError] = useState(null);
+
+  // States cho RatingModal
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedStationForRating, setSelectedStationForRating] =
+    useState(null);
+  const { user, isAuthenticated } = useAuth();
+
   // Hàm transform dữ liệu từ API sang format cần thiết
   const transformApiStationData = useCallback((apiData) => {
-    return apiData.map((station) => ({
-      id: station.stationID,
-      name: station.stationName,
-      address: station.location,
-      position: [station.x, station.y], // API trả về x, y thay vì lat, lng
-      city: station.location.includes("Hà Nội") ? "Hà Nội" : "TP.HCM", // Detect city từ address
-      district: "Chưa xác định", // API chưa có district info
-      rating: 4.0, // Default rating cho UI
-      totalRatings: 0, // Default cho UI
-      status: station.status === 1 ? "active" : "inactive",
-      createAt: station.createAt,
-    }));
+    return apiData.map((station) => {
+      // Kiểm tra an toàn cho location
+      const location = station.location || "";
+      const address = location || "Địa chỉ chưa xác định";
+
+      // Detect city từ address với kiểm tra an toàn
+      let city = "TP.HCM"; // Default city
+      if (location && typeof location === "string") {
+        if (location.includes("Hà Nội")) {
+          city = "Hà Nội";
+        } else if (location.includes("TPHCM") || location.includes("TP.HCM")) {
+          city = "TP.HCM";
+        }
+      }
+
+      return {
+        id: station.stationID,
+        name: station.stationName || "Trạm sạc",
+        address: address,
+        position: [station.x || 0, station.y || 0], // API trả về x, y thay vì lat, lng
+        city: city,
+        district: "Chưa xác định", // API chưa có district info
+        rating: 4.0, // Default rating cho UI
+        totalRatings: 0, // Default cho UI
+        status: station.status === 1 ? "active" : "inactive",
+        createAt: station.createAt,
+        userID: station.userID, // Thêm userID từ API mới
+      };
+    });
   }, []);
 
   // Hàm fetch dữ liệu trạm từ API
@@ -445,6 +476,55 @@ function Map() {
       setIsLoadingStations(false);
     }
   }, [transformApiStationData]);
+
+  // Hàm fetch rating statistics cho một trạm
+  const fetchRatingStatistics = useCallback(async (stationId) => {
+    setIsLoadingRating(true);
+    setRatingError(null);
+
+    try {
+      const response = await apiService.getRatingStatistics(stationId);
+
+      if (response && response.status === "success") {
+        setRatingData((prev) => ({
+          ...prev,
+          [stationId]: response.data,
+        }));
+      } else {
+        setRatingError("Không thể tải thông tin đánh giá");
+      }
+    } catch (error) {
+      console.error("Error fetching rating statistics:", error);
+      setRatingError(`Lỗi khi tải thông tin đánh giá: ${error.message}`);
+    } finally {
+      setIsLoadingRating(false);
+    }
+  }, []);
+
+  // Hàm xử lý rating
+  const handleRatingSubmit = useCallback(
+    async (rating) => {
+      if (selectedStationForRating) {
+        // Refresh rating data sau khi submit thành công
+        await fetchRatingStatistics(selectedStationForRating.id);
+      }
+    },
+    [selectedStationForRating, fetchRatingStatistics]
+  );
+
+  // Hàm mở rating modal
+  const handleOpenRatingModal = useCallback(
+    (station) => {
+      if (!isAuthenticated) {
+        // Redirect to login nếu chưa đăng nhập
+        window.location.href = "/login";
+        return;
+      }
+      setSelectedStationForRating(station);
+      setShowRatingModal(true);
+    },
+    [isAuthenticated]
+  );
 
   // Load stations khi component mount
   useEffect(() => {
@@ -858,6 +938,24 @@ function Map() {
                             station.city === "Hà Nội" ? "#00ff00" : "#ff6b35"
                           )
                     }
+                    eventHandlers={{
+                      popupopen: () => {
+                        // Fetch rating data khi popup được mở
+                        if (!ratingData[station.id]) {
+                          fetchRatingStatistics(station.id);
+                        }
+                      },
+                      click: () => {
+                        // Set selected station và hiển thị popup
+                        setSelectedStation(station);
+                        setShowStationPopup(true);
+
+                        // Fetch rating data nếu chưa có
+                        if (!ratingData[station.id]) {
+                          fetchRatingStatistics(station.id);
+                        }
+                      },
+                    }}
                   >
                     <Popup>
                       <div style={{ padding: "16px", minWidth: "300px" }}>
@@ -1081,6 +1179,359 @@ function Map() {
                           </div>
                         )}
 
+                        {/* Rating Statistics Section - Enhanced Design */}
+                        {ratingData[station.id] && (
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 152, 0, 0.05) 100%)",
+                              border: "1px solid rgba(255, 193, 7, 0.3)",
+                              borderRadius: "16px",
+                              padding: "16px",
+                              marginBottom: "16px",
+                              boxShadow: "0 4px 12px rgba(255, 193, 7, 0.15)",
+                              position: "relative",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {/* Decorative background pattern */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "-10px",
+                                right: "-10px",
+                                width: "40px",
+                                height: "40px",
+                                background:
+                                  "linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%)",
+                                borderRadius: "50%",
+                                opacity: 0.6,
+                              }}
+                            />
+                            <div
+                              style={{
+                                position: "absolute",
+                                bottom: "-15px",
+                                left: "-15px",
+                                width: "30px",
+                                height: "30px",
+                                background:
+                                  "linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 152, 0, 0.03) 100%)",
+                                borderRadius: "50%",
+                                opacity: 0.4,
+                              }}
+                            />
+
+                            {/* Header */}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                marginBottom: "12px",
+                                position: "relative",
+                                zIndex: 1,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "50%",
+                                  background:
+                                    "linear-gradient(135deg, #ffc107 0%, #ff8f00 100%)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginRight: "12px",
+                                  boxShadow: "0 2px 8px rgba(255, 193, 7, 0.3)",
+                                }}
+                              >
+                                <span
+                                  style={{ fontSize: "14px", color: "white" }}
+                                >
+                                  ⭐
+                                </span>
+                              </div>
+                              <div>
+                                <div
+                                  style={{
+                                    fontSize: "14px",
+                                    fontWeight: "700",
+                                    color: "#1a1a1a",
+                                    marginBottom: "2px",
+                                    letterSpacing: "0.3px",
+                                  }}
+                                >
+                                  Đánh giá trạm
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#6b7280",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  {ratingData[station.id].totalRatings} lượt
+                                  đánh giá
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Average Rating - Enhanced */}
+                            <div
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%)",
+                                borderRadius: "12px",
+                                padding: "12px",
+                                marginBottom: "12px",
+                                border: "1px solid rgba(255, 193, 7, 0.2)",
+                                position: "relative",
+                                zIndex: 1,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: "600",
+                                    color: "#374151",
+                                  }}
+                                >
+                                  Điểm trung bình
+                                </span>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "18px",
+                                      fontWeight: "700",
+                                      color: "#ff8f00",
+                                    }}
+                                  >
+                                    {ratingData[
+                                      station.id
+                                    ].averageRating.toFixed(1)}
+                                  </span>
+                                  <div style={{ display: "flex", gap: "1px" }}>
+                                    {[...Array(5)].map((_, i) => (
+                                      <span
+                                        key={i}
+                                        style={{
+                                          fontSize: "14px",
+                                          color:
+                                            i <
+                                            Math.floor(
+                                              ratingData[station.id]
+                                                .averageRating
+                                            )
+                                              ? "#ffc107"
+                                              : "#e5e7eb",
+                                          filter:
+                                            i <
+                                            Math.floor(
+                                              ratingData[station.id]
+                                                .averageRating
+                                            )
+                                              ? "drop-shadow(0 1px 2px rgba(255, 193, 7, 0.4))"
+                                              : "none",
+                                          transition: "all 0.2s ease",
+                                        }}
+                                      >
+                                        ⭐
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Rating Breakdown - Enhanced */}
+                            <div
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%)",
+                                borderRadius: "10px",
+                                padding: "10px",
+                                border: "1px solid rgba(255, 193, 7, 0.15)",
+                                position: "relative",
+                                zIndex: 1,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "600",
+                                  color: "#6b7280",
+                                  marginBottom: "8px",
+                                  textAlign: "center",
+                                }}
+                              >
+                                Phân bố đánh giá
+                              </div>
+
+                              {/* Rating bars */}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "4px",
+                                }}
+                              >
+                                {[
+                                  {
+                                    stars: 5,
+                                    count: ratingData[station.id].fiveStar,
+                                    color: "#10b981",
+                                  },
+                                  {
+                                    stars: 4,
+                                    count: ratingData[station.id].fourStar,
+                                    color: "#3b82f6",
+                                  },
+                                  {
+                                    stars: 3,
+                                    count: ratingData[station.id].threeStar,
+                                    color: "#f59e0b",
+                                  },
+                                  {
+                                    stars: 2,
+                                    count: ratingData[station.id].twoStar,
+                                    color: "#ef4444",
+                                  },
+                                  {
+                                    stars: 1,
+                                    count: ratingData[station.id].oneStar,
+                                    color: "#8b5cf6",
+                                  },
+                                ].map((rating) => {
+                                  const percentage =
+                                    ratingData[station.id].totalRatings > 0
+                                      ? (rating.count /
+                                          ratingData[station.id].totalRatings) *
+                                        100
+                                      : 0;
+
+                                  return (
+                                    <div
+                                      key={rating.stars}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          fontSize: "10px",
+                                          fontWeight: "600",
+                                          color: "#374151",
+                                          minWidth: "20px",
+                                        }}
+                                      >
+                                        {rating.stars}⭐
+                                      </span>
+                                      <div
+                                        style={{
+                                          flex: 1,
+                                          height: "6px",
+                                          background: "#e5e7eb",
+                                          borderRadius: "3px",
+                                          overflow: "hidden",
+                                          position: "relative",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            width: `${percentage}%`,
+                                            height: "100%",
+                                            background: `linear-gradient(90deg, ${rating.color} 0%, ${rating.color}dd 100%)`,
+                                            borderRadius: "3px",
+                                            transition: "width 0.3s ease",
+                                          }}
+                                        />
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontSize: "10px",
+                                          fontWeight: "600",
+                                          color: "#6b7280",
+                                          minWidth: "20px",
+                                          textAlign: "right",
+                                        }}
+                                      >
+                                        {rating.count}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Loading Rating */}
+                        {isLoadingRating && !ratingData[station.id] && (
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%)",
+                              border: "1px solid rgba(59, 130, 246, 0.1)",
+                              borderRadius: "12px",
+                              padding: "12px",
+                              marginBottom: "16px",
+                              textAlign: "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                              <span
+                                style={{ fontSize: "12px", color: "#3b82f6" }}
+                              >
+                                Đang tải thông tin đánh giá...
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Rating Error */}
+                        {ratingError && !ratingData[station.id] && (
+                          <div
+                            style={{
+                              background:
+                                "linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%)",
+                              border: "1px solid rgba(239, 68, 68, 0.1)",
+                              borderRadius: "12px",
+                              padding: "12px",
+                              marginBottom: "16px",
+                              textAlign: "center",
+                            }}
+                          >
+                            <span
+                              style={{ fontSize: "12px", color: "#ef4444" }}
+                            >
+                              {ratingError}
+                            </span>
+                          </div>
+                        )}
+
                         <div
                           style={{
                             background:
@@ -1128,11 +1579,13 @@ function Map() {
                           </div>
                         </div>
 
-                        {/* Nút chỉ đường */}
+                        {/* Nút chỉ đường và đánh giá */}
                         <div
                           style={{
                             display: "flex",
                             justifyContent: "center",
+                            gap: "12px",
+                            flexWrap: "wrap",
                           }}
                         >
                           <button
@@ -1158,9 +1611,9 @@ function Map() {
                               background:
                                 "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                               color: "white",
-                              padding: "12px 24px",
+                              padding: "12px 20px",
                               borderRadius: "12px",
-                              fontSize: "14px",
+                              fontSize: "13px",
                               fontWeight: "600",
                               border: "none",
                               cursor: "pointer",
@@ -1168,7 +1621,7 @@ function Map() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              gap: "8px",
+                              gap: "6px",
                               boxShadow: "0 4px 8px rgba(16, 185, 129, 0.2)",
                             }}
                             onMouseOver={(e) => {
@@ -1182,8 +1635,42 @@ function Map() {
                                 "0 4px 8px rgba(16, 185, 129, 0.2)";
                             }}
                           >
-                            <EnvironmentOutlined style={{ fontSize: "14px" }} />
-                            <span>Chỉ đường đến trạm</span>
+                            <EnvironmentOutlined style={{ fontSize: "12px" }} />
+                            <span>Chỉ đường</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleOpenRatingModal(station)}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                              color: "white",
+                              padding: "12px 20px",
+                              borderRadius: "12px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(245, 158, 11, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(245, 158, 11, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(245, 158, 11, 0.2)";
+                            }}
+                          >
+                            <StarOutlined style={{ fontSize: "12px" }} />
+                            <span>Đánh giá</span>
                           </button>
                         </div>
                       </div>
@@ -1201,6 +1688,17 @@ function Map() {
           </div>
         </div>
       </div>
+
+      {/* RatingModal */}
+      <RatingModal
+        visible={showRatingModal}
+        onCancel={() => {
+          setShowRatingModal(false);
+          setSelectedStationForRating(null);
+        }}
+        station={selectedStationForRating}
+        onSubmit={handleRatingSubmit}
+      />
     </div>
   );
 }
