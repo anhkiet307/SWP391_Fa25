@@ -264,6 +264,26 @@ class ApiService {
     return this.get(url, { stationID: stationId });
   }
 
+  async updatePinSlot(pinId, pinData) {
+    const url = getApiUrl("PINSLOT", "UPDATE_SLOT");
+    // API sử dụng PUT với query parameters
+    const params = {
+      pinID: pinId,
+      pinPercent: pinData.pinPercent,
+      pinHealth: pinData.pinHealth
+    };
+    const queryString = new URLSearchParams(params).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // Pin station methods
   async getPinStations() {
     const url = getApiUrl("STATION", "LIST");
