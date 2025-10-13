@@ -264,6 +264,12 @@ class ApiService {
     return this.get(url, { stationID: stationId });
   }
 
+  // Pin station methods
+  async getPinStations() {
+    const url = getApiUrl("STATION", "LIST");
+    return this.get(url);
+  }
+
   async deleteStation(stationId) {
     // Note: DELETE endpoint not available in the API documentation
     // This method is kept for backward compatibility
