@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Modal, Rate, Button, message } from "antd";
 import { StarOutlined } from "@ant-design/icons";
+import apiService from "../services/apiService";
+import { useAuth } from "../contexts/AuthContext";
 
 const RatingModal = ({ visible, onCancel, station, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -12,16 +15,30 @@ const RatingModal = ({ visible, onCancel, station, onSubmit }) => {
       return;
     }
 
+    if (!user?.userID) {
+      message.error("Vui lòng đăng nhập để đánh giá!");
+      return;
+    }
+
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Gọi API tạo rating
+      const response = await apiService.createRating({
+        stationID: station.id,
+        rating: rating,
+        userID: user.userID,
+      });
 
-      onSubmit(rating);
-      message.success("Cảm ơn bạn đã đánh giá trạm!");
-      setRating(0);
-      onCancel();
+      if (response && response.status === "success") {
+        message.success("Cảm ơn bạn đã đánh giá trạm!");
+        onSubmit(rating);
+        setRating(0);
+        onCancel();
+      } else {
+        message.error(response?.message || "Có lỗi xảy ra khi gửi đánh giá!");
+      }
     } catch (error) {
+      console.error("Rating error:", error);
       message.error("Có lỗi xảy ra khi gửi đánh giá!");
     } finally {
       setLoading(false);
@@ -111,8 +128,3 @@ const RatingModal = ({ visible, onCancel, station, onSubmit }) => {
 };
 
 export default RatingModal;
-
-
-
-
-

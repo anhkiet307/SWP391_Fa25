@@ -5,7 +5,7 @@ export const batteryStations = [
     id: 1,
     name: "Trạm đổi pin Ba Đình",
     address: "Số 1, Phố Điện Biên Phủ, Quận Ba Đình, Hà Nội",
-    position: [21.0333, 105.8333],
+    position: [21.01014257423604, 105.81532823845932],
     city: "Hà Nội",
     district: "Ba Đình",
     rating: 4.2,

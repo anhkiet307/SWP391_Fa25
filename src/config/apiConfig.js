@@ -76,6 +76,14 @@ const API_CONFIG = {
       PAYMENT: "/transactions/payment",
     },
 
+    // Rating endpoints
+    RATING: {
+      STATISTICS: "/rating/statistics/:stationID",
+      CREATE: "/rating/create",
+      UPDATE: "/rating/update",
+      DELETE: "/rating/delete",
+    },
+
     // Report endpoints
     REPORT: {
       DASHBOARD: "/reports/dashboard",
