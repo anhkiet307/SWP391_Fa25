@@ -80,21 +80,11 @@ const StaffDashboard = () => {
     <StaffLayout>
       <div className="p-6 bg-gray-50 min-h-screen">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
-          <div>
-            <h1 className="text-3xl font-semibold m-0">Dashboard</h1>
-            <p className="text-indigo-100 mt-2">
-              Tổng quan hoạt động trạm đổi pin BSS-001
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Quản lý: {user?.name || "Staff"}
-            </span>
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Mã trạm: BSS-001
-            </span>
-          </div>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 rounded-lg mb-8 shadow-lg">
+          <h1 className="text-3xl font-semibold m-0">Dashboard</h1>
+          <p className="text-purple-100 mt-2">
+            Tổng quan hoạt động trạm đổi pin BSS-001
+          </p>
         </div>
 
         {/* Thống kê tổng quan */}

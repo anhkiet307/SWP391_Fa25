@@ -61,64 +61,52 @@ const TransactionManagement = () => {
     <StaffLayout>
       <div className="p-6 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6 rounded-lg mb-8 flex justify-between items-center shadow-lg">
-          <div>
-            <h1 className="text-3xl font-semibold m-0">Quản lý Giao dịch</h1>
-            <p className="text-indigo-100 mt-2">
-              Xem và quản lý các giao dịch đổi pin tại trạm
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Quản lý: Nguyễn Văn Staff
-            </span>
-            <span className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm">
-              Mã trạm: BSS-001
-            </span>
-          </div>
+        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 rounded-lg mb-8 shadow-lg">
+          <h1 className="text-3xl font-semibold m-0">Quản lý Giao dịch</h1>
+          <p className="text-purple-100 mt-2">
+            Xem và quản lý các giao dịch đổi pin tại trạm
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-1 gap-8">
-          {/* Thống kê nhanh */}
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-gray-800 mb-5 text-xl font-semibold">
-              Thống kê giao dịch
-            </h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {transactions.filter((t) => t.status === "completed").length}
-                </div>
-                <div className="text-sm text-green-700">Hoàn thành</div>
+        {/* Thống kê giao dịch */}
+        <div className="mb-8">
+          <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+            Thống kê giao dịch
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md">
+              <div className="text-4xl font-bold text-green-500 mb-2">
+                {transactions.filter((t) => t.status === "completed").length}
               </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {transactions.filter((t) => t.status === "pending").length}
-                </div>
-                <div className="text-sm text-yellow-700">Chờ xử lý</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {transactions.filter((t) => t.status === "cancelled").length}
-                </div>
-                <div className="text-sm text-red-700">Đã hủy</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg col-span-3">
-                <div className="text-2xl font-bold text-blue-600">
-                  {transactions
-                    .filter((t) => t.status === "completed")
-                    .reduce((sum, t) => sum + t.payment, 0)
-                    .toLocaleString("vi-VN")}{" "}
-                  VNĐ
-                </div>
-                <div className="text-sm text-blue-700">Tổng doanh thu</div>
-              </div>
+              <div className="text-sm text-gray-600">Hoàn thành</div>
             </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md">
+              <div className="text-4xl font-bold text-yellow-500 mb-2">
+                {transactions.filter((t) => t.status === "pending").length}
+              </div>
+              <div className="text-sm text-gray-600">Chờ xử lý</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md">
+              <div className="text-4xl font-bold text-red-500 mb-2">
+                {transactions.filter((t) => t.status === "cancelled").length}
+              </div>
+              <div className="text-sm text-gray-600">Đã hủy</div>
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600 mb-2">
+              {transactions
+                .filter((t) => t.status === "completed")
+                .reduce((sum, t) => sum + t.payment, 0)
+                .toLocaleString("vi-VN")}{" "}
+              VNĐ
+            </div>
+            <div className="text-sm text-gray-600">Tổng doanh thu</div>
           </div>
         </div>
 
         {/* Danh sách giao dịch */}
-        <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-gray-800 mb-5 text-xl font-semibold">
             Danh sách giao dịch
           </h2>
