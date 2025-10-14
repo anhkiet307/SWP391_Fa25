@@ -433,6 +433,25 @@ class ApiService {
     return this.put(url, packData);
   }
 
+  async updateServicePackStatus(packId, adminUserID, status) {
+    const url = getApiUrl("SERVICE_PACK", "UPDATE_STATUS");
+    // API sử dụng PUT với query parameters
+    const queryString = new URLSearchParams({ 
+      packID: packId,
+      adminUserID: adminUserID,
+      status: status
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   async deleteServicePack(packId) {
     const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
     return this.delete(url);

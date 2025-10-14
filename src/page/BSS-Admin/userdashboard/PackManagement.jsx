@@ -3,8 +3,10 @@ import { toast } from "react-toastify";
 import AdminLayout from "../component/AdminLayout";
 import AdminHeader from "../component/AdminHeader";
 import apiService from "../../../services/apiService";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const PackManagement = () => {
+  const { user } = useAuth();
   const [servicePacks, setServicePacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -110,17 +112,12 @@ const PackManagement = () => {
     try {
       const newStatus = pack.status === 1 ? 0 : 1;
       
-      // Sử dụng API service có sẵn với tất cả thông tin cần thiết
-      const updateData = {
-        packName: pack.packName,
-        description: pack.description || "",
-        price: pack.price,
-        status: newStatus,
-        total: pack.total || 0
-      };
-      
-      // Sử dụng apiService.updateServicePack thay vì gọi trực tiếp
-      await apiService.updateServicePack(pack.packID, updateData);
+      // Sử dụng API updateStatus mới với packID, adminUserID, và status
+      await apiService.updateServicePackStatus(
+        pack.packID, 
+        user?.userID || 1, // Sử dụng userID từ AuthContext, fallback là 1
+        newStatus
+      );
       
       toast.success(`Đã ${newStatus === 1 ? "kích hoạt" : "vô hiệu hóa"} gói dịch vụ`);
       loadServicePacks();

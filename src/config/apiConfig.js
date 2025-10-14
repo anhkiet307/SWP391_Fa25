@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://bb2352c6ad88.ngrok-free.app/api",
+    "https://408c73d81ad9.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -75,6 +75,7 @@ const API_CONFIG = {
       DETAIL: "/service-packs/:id",
       CREATE: "/service-packs",
       UPDATE: "/service-packs/:id",
+      UPDATE_STATUS: "/servicePack/updateStatus",
       DELETE: "/service-packs/:id",
     },
 
