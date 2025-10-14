@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import AdminLayout from "../component/AdminLayout";
+import AdminHeader from "../component/AdminHeader";
 import { showSuccess, showError } from "../../../utils/toast";
 
 const AdminReportManagement = () => {
@@ -221,113 +222,28 @@ const AdminReportManagement = () => {
     <AdminLayout>
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="mb-8">
-          {/* Main Header Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white bg-opacity-5 rounded-full translate-y-24 -translate-x-24"></div>
-            
-            <div className="relative z-10 p-5">
-              <div className="flex justify-between items-center">
-                {/* Left Content */}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-          <div>
-                      <h1 className="text-2xl font-bold mb-1">Quản lý Report</h1>
-                      <p className="text-white text-opacity-90 text-sm">
-                        Quản lý các báo cáo và phản hồi từ khách hàng
-            </p>
-          </div>
-                  </div>
-                  
-                  {/* Stats Cards */}
-                  <div className="flex space-x-3">
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Admin: Quản trị hệ thống</span>
-                      </div>
-                    </div>
-                    <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                        <span className="text-xs font-medium">Tổng report: {reports.length}</span>
-                      </div>
-                    </div>
-          </div>
-        </div>
-
-                {/* Right Content - Admin Profile */}
-                <div className="ml-6">
-                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-              </div>
-              <div>
-                        <p className="text-white font-semibold text-sm">Admin System</p>
-                        <p className="text-white text-opacity-80 text-xs">Quản trị viên</p>
-              </div>
-            </div>
-                    
-              <button
-                      onClick={() => {
-                        localStorage.removeItem('stationMenuOpen');
-                        localStorage.removeItem('userMenuOpen');
-                        window.location.href = '/login';
-                      }}
-                      className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg group"
-                    >
-                      <svg
-                        className="w-4 h-4 group-hover:rotate-12 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                      <span className="text-sm">Đăng xuất</span>
-              </button>
-            </div>
-          </div>
-        </div>
-            </div>
-          </div>
-        </div>
+        <AdminHeader
+          title="Quản lý Báo cáo"
+          subtitle="Quản lý và xử lý các báo cáo từ khách hàng"
+          icon={
+            <svg
+              className="w-6 h-6 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          }
+          stats={[
+            { label: "Tổng báo cáo", value: reports.length, color: "bg-blue-400" }
+          ]}
+        />
 
         {/* Stats Overview */}
         <div className="mb-8">

@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://f73846398efc.ngrok-free.app/api",
+    "https://506d44d86f44.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -24,16 +24,20 @@ const API_CONFIG = {
       CHANGE_PASSWORD: "/user/change-password",
       DELETE_ACCOUNT: "/user/delete-account",
       ADD: "/user/add",
+      LIST_DRIVERS: "/user/listDriver",
+      LIST_STAFF: "/user/listStaff",
+      UPDATE: "/user/update",
     },
 
     // Station management endpoints
     STATION: {
-      LIST: "/stations",
-      DETAIL: "/stations/:id",
-      CREATE: "/stations",
-      UPDATE: "/stations/:id",
-      DELETE: "/stations/:id",
-      NEARBY: "/stations/nearby",
+      LIST: "/pinStation/list",
+      DETAIL: "/pinStation/:stationID",
+      CREATE: "/pinStation/create",
+      UPDATE: "/pinStation/update",
+      UPDATE_STATUS: "/pinStation/updateStatus",
+      STATUS: "/pinStation/status",
+      NEARBY: "/stations/nearby", // Keep this for future use
     },
 
     // Booking endpoints
@@ -70,6 +74,14 @@ const API_CONFIG = {
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",
       PAYMENT: "/transactions/payment",
+    },
+
+    // Rating endpoints
+    RATING: {
+      STATISTICS: "/rating/statistics/:stationID",
+      CREATE: "/rating/create",
+      UPDATE: "/rating/update",
+      DELETE: "/rating/delete",
     },
 
     // Report endpoints

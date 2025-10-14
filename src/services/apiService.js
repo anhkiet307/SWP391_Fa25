@@ -1,4 +1,4 @@
-import API_CONFIG, { getApiUrl, buildApiUrl } from "../config/apiConfig";
+import API_CONFIG, { getApiUrl } from "../config/apiConfig";
 
 // API Service class để quản lý tất cả API calls
 class ApiService {
@@ -22,6 +22,9 @@ class ApiService {
       headers.Authorization = `Bearer ${token}`;
     }
 
+    // Thêm header cho ngrok
+    headers["ngrok-skip-browser-warning"] = "true";
+
     return headers;
   }
 
@@ -30,7 +33,7 @@ class ApiService {
     const config = {
       method: "GET",
       mode: "cors", // Explicitly enable CORS
-      headers: this.buildHeaders(options.headers),
+      headers: this.buildHeaders(),
       ...options,
     };
 
@@ -38,7 +41,10 @@ class ApiService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
       }
 
       const data = await response.json();
@@ -54,7 +60,13 @@ class ApiService {
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
-    return this.makeRequest(fullUrl, { method: "GET" });
+    return this.makeRequest(fullUrl, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   // POST request
@@ -62,6 +74,10 @@ class ApiService {
     return this.makeRequest(url, {
       method: "POST",
       body: JSON.stringify(data),
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
     });
   }
 
@@ -141,6 +157,31 @@ class ApiService {
     return this.makeRequest(fullUrl, { method: "POST" });
   }
 
+  async listDrivers() {
+    const url = getApiUrl("USER", "LIST_DRIVERS");
+    return this.get(url);
+  }
+
+  async listStaff() {
+    const url = getApiUrl("USER", "LIST_STAFF");
+    return this.get(url);
+  }
+
+  async updateUser(userData) {
+    const url = getApiUrl("USER", "UPDATE");
+    // API này sử dụng PUT với query parameters
+    const queryString = new URLSearchParams(userData).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // ===== STATION METHODS =====
   async getStations(params = {}) {
     const url = getApiUrl("STATION", "LIST");
@@ -148,28 +189,84 @@ class ApiService {
   }
 
   async getStationById(stationId) {
-    const url = getApiUrl("STATION", "DETAIL", { id: stationId });
+    const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
     return this.get(url);
   }
 
   async createStation(stationData) {
-    const url = getApiUrl("STATION", "CREATE");
-    return this.post(url, stationData);
+    const url = this.baseURL + "/pinStation/create";
+
+    // Format data for API - x and y should be float
+    const cleanData = {
+      stationName: stationData.stationName,
+      location: stationData.location,
+      status: parseInt(stationData.status),
+      x: parseFloat(stationData.x),
+      y: parseFloat(stationData.y),
+    };
+
+    // API uses POST with query parameters
+    const queryString = new URLSearchParams(cleanData).toString();
+    const fullUrl = `${url}?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
-  async updateStation(stationId, stationData) {
-    const url = getApiUrl("STATION", "UPDATE", { id: stationId });
-    return this.put(url, stationData);
+  async updateStation(stationData) {
+    const url = this.baseURL + "/pinStation/update";
+
+    // Format data for API - only required fields (no status field)
+    const cleanData = {
+      stationID: parseInt(stationData.stationID),
+      stationName: stationData.stationName,
+      location: stationData.location,
+      x: parseFloat(stationData.x),
+      y: parseFloat(stationData.y),
+    };
+
+    // API uses PUT with query parameters
+    const queryString = new URLSearchParams(cleanData).toString();
+    const fullUrl = `${url}?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async updateStationStatus(stationId) {
+    const url = getApiUrl("STATION", "UPDATE_STATUS");
+    return this.get(url, { stationID: stationId });
+  }
+
+  async getStationStatus() {
+    const url = getApiUrl("STATION", "STATUS");
+    return this.get(url);
   }
 
   async deleteStation(stationId) {
-    const url = getApiUrl("STATION", "DELETE", { id: stationId });
-    return this.delete(url);
+    // Note: DELETE endpoint not available in the API documentation
+    // This method is kept for backward compatibility
+    throw new Error("Delete station endpoint not available in current API");
   }
 
   async getNearbyStations(latitude, longitude, radius = 10) {
     const url = getApiUrl("STATION", "NEARBY");
     return this.get(url, { latitude, longitude, radius });
+  }
+
+  async getPinStations() {
+    const url = getApiUrl("STATION", "LIST");
+    return this.get(url);
   }
 
   // ===== BOOKING METHODS =====
@@ -322,7 +419,39 @@ class ApiService {
     const url = getApiUrl("ADMIN", "SETTINGS");
     return this.get(url);
   }
+
+  // ===== RATING METHODS =====
+  async getRatingStatistics(stationId) {
+    const url = getApiUrl("RATING", "STATISTICS", { stationID: stationId });
+    return this.get(url);
+  }
+
+  async createRating(ratingData) {
+    const url = getApiUrl("RATING", "CREATE");
+    // API sử dụng query parameters thay vì body
+    const queryString = new URLSearchParams(ratingData).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async updateRating(ratingId, ratingData) {
+    const url = getApiUrl("RATING", "UPDATE", { id: ratingId });
+    return this.put(url, ratingData);
+  }
+
+  async deleteRating(ratingId) {
+    const url = getApiUrl("RATING", "DELETE", { id: ratingId });
+    return this.delete(url);
+  }
 }
 
-// Export singleton instance
-export default new ApiService();
+// Create and export singleton instance
+const apiService = new ApiService();
+export default apiService;
