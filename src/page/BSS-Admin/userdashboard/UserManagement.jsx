@@ -931,7 +931,7 @@ const UserManagement = () => {
 
                           {/* Sửa */}
                           <button
-                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => {
                               setEditUser({
                                 userID: user.id,
@@ -1209,7 +1209,7 @@ const UserManagement = () => {
 
                           {/* Sửa */}
                           <button
-                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => {
                               setEditUser({
                                 userID: staffMember.id,

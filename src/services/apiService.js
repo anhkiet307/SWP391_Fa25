@@ -460,6 +460,11 @@ class ApiService {
   }
 
   // ===== REPORT METHODS =====
+  async getAllReports(adminID = 1) {
+    const url = getApiUrl("REPORT", "ALL");
+    return this.get(url, { adminID });
+  }
+
   async getDashboardReport(params = {}) {
     const url = getApiUrl("REPORT", "DASHBOARD");
     return this.get(url, params);
