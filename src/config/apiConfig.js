@@ -27,6 +27,7 @@ const API_CONFIG = {
       LIST_DRIVERS: "/user/listDriver",
       LIST_STAFF: "/user/listStaff",
       UPDATE: "/user/update",
+      UPDATE_STATUS: "/user/updateStatus",
     },
 
     // Station management endpoints
@@ -37,6 +38,9 @@ const API_CONFIG = {
       UPDATE: "/pinStation/update",
       UPDATE_STATUS: "/pinStation/updateStatus",
       STATUS: "/pinStation/status",
+      ASSIGN_STAFF: "/pinStation/assignStaff",
+      CHECK_STAFF_ASSIGNMENT: "/pinStation/checkStaffAssignment",
+      GET_BY_USER: "/pinStation/getByUser",
       NEARBY: "/stations/nearby", // Keep this for future use
     },
 
@@ -48,6 +52,10 @@ const API_CONFIG = {
       UPDATE: "/pinSlot/update",
       DELETE: "/pinSlot/delete",
       RESERVE: "/pinSlot/reserve",
+      LIST_ALL: "/pinSlot/listAll",
+      LIST_BY_STATION: "/pinSlot/list",
+      UPDATE_SLOT: "/pinSlot/updateSlot",
+      UNRESERVE: "/pinSlot/unreserve",
     },
 
     // Booking endpoints
@@ -84,6 +92,17 @@ const API_CONFIG = {
       CREATE: "/servicePack/create",
       UPDATE: "/servicePack/:id",
       DELETE: "/servicePack/:id",
+      DETAIL: "/service-packs/:id",
+      CREATE: "/service-packs",
+      UPDATE: "/service-packs/:id",
+      UPDATE_STATUS: "/servicePack/updateStatus",
+      DELETE: "/service-packs/:id",
+    },
+
+    // Vehicle endpoints
+    VEHICLE: {
+      BY_USER: "/vehicle/user",
+      PIN_SWAP: "/vehicle/PinSwap",
     },
 
     // Transaction endpoints
@@ -93,6 +112,8 @@ const API_CONFIG = {
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",
       PAYMENT: "/transactions/payment",
+      GET_BY_STATION: "/transaction/getByStation",
+      UPDATE_STATUS: "/transaction/updateStatus",
     },
 
     // Rating endpoints
@@ -105,6 +126,7 @@ const API_CONFIG = {
 
     // Report endpoints
     REPORT: {
+      ALL: "/report/all",
       DASHBOARD: "/reports/dashboard",
       STATION_REPORT: "/reports/stations",
       USER_REPORT: "/reports/users",

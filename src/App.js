@@ -2,6 +2,8 @@ import "./App.css";
 import "antd/dist/reset.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Header from "./components/layout/header.jsx";
 import Footer from "./components/layout/footer.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -26,6 +28,7 @@ import Upgrade from "./page/upgrade.jsx";
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
 import AdminStationManagement from "./page/BSS-Admin/stationdashboard/StationManagement.jsx";
+import AdminPinslotManagement from "./page/BSS-Admin/stationdashboard/PinslotManagement.jsx";
 import AdminUserManagement from "./page/BSS-Admin/userdashboard/UserManagement.jsx";
 import AdminAddStation from "./page/BSS-Admin/stationdashboard/AddStation.jsx";
 import AdminBatteryDispatch from "./page/BSS-Admin/stationdashboard/BatteryDispatch.jsx";
@@ -33,6 +36,7 @@ import AdminAddCustomer from "./page/BSS-Admin/userdashboard/AddCustomer.jsx";
 import AdminAddStaff from "./page/BSS-Admin/userdashboard/AddStaff.jsx";
 import AdminPackManagement from "./page/BSS-Admin/userdashboard/PackManagement.jsx";
 import AdminReportManagement from "./page/BSS-Admin/reportdashboard/ReportManagement.jsx";
+import AdminStatisticManagement from "./page/BSS-Admin/reportdashboard/StatisticManagement.jsx";
 
 // Layout component cho các trang có header và footer
 function MainLayout({ children }) {
@@ -164,6 +168,14 @@ function App() {
             }
           />
           <Route
+            path="/admin-pinslot-management"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminPinslotManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin-user-management"
             element={
               <ProtectedRoute requiredRole="admin">
@@ -212,6 +224,14 @@ function App() {
             }
           />
           <Route
+            path="/admin-statistic-management"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminStatisticManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin-report-management"
             element={
               <ProtectedRoute requiredRole="admin">
@@ -221,6 +241,7 @@ function App() {
           />
         </Routes>
       </Router>
+      <ToastContainer />
     </AuthProvider>
   );
 }

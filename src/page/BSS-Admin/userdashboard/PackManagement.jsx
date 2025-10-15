@@ -1,200 +1,168 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import AdminLayout from "../component/AdminLayout";
 import AdminHeader from "../component/AdminHeader";
-import { showSuccess, showError } from "../../../utils/toast";
+import apiService from "../../../services/apiService";
+import { useAuth } from "../../../contexts/AuthContext";
 
-const AdminPackManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [showAddModal, setShowAddModal] = useState(false);
+const PackManagement = () => {
+  const { user } = useAuth();
+  const [servicePacks, setServicePacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
   const [editingPack, setEditingPack] = useState(null);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Dữ liệu gói thuê pin từ ServicePack.jsx
-  const [packs, setPacks] = useState([
-    {
-      id: 1,
-      name: "Gói Cơ Bản",
-      type: "Mặc Định",
-      price: "50,000 VNĐ",
-      period: "mỗi lần đổi",
-      description: "Gói mặc định cho tất cả người dùng, đặt lịch và thanh toán khi đổi pin",
-      features: [
-        "Đặt lịch trực tuyến",
-        "Nhân viên hỗ trợ đổi pin",
-        "Thanh toán khi đổi pin",
-        "Không ràng buộc thời gian",
-        "Có sẵn cho mọi tài khoản",
-      ],
-      color: "blue",
-      popular: false,
-      status: "active",
-      createdAt: "2024-01-01",
-      totalUsers: 1250,
-    },
-    {
-      id: 2,
-      name: "Gói Tiết Kiệm",
-      type: "Premium",
-      price: "299,000 VNĐ",
-      period: "tháng",
-      description: "Đổi pin 10 lần/tháng, tiết kiệm 50% so với gói cơ bản",
-      features: [
-        "10 lần đổi pin/tháng",
-        "Không cần thanh toán khi đổi",
-        "Ưu tiên đặt lịch",
-        "Hỗ trợ 24/7",
-        "Tiết kiệm 50% chi phí",
-      ],
-      color: "green",
-      popular: true,
-      status: "active",
-      createdAt: "2024-01-15",
-      totalUsers: 850,
-    },
-    {
-      id: 3,
-      name: "Gói Không Giới Hạn",
-      type: "Unlimited",
-      price: "599,000 VNĐ",
-      period: "tháng",
-      description: "Đổi pin không giới hạn trong 1 tháng",
-      features: [
-        "Đổi pin không giới hạn",
-        "Không cần thanh toán khi đổi",
-        "Ưu tiên cao nhất",
-        "Hỗ trợ VIP 24/7",
-        "Đặt lịch linh hoạt",
-        "Tiết kiệm tối đa",
-      ],
-      color: "purple",
-      popular: false,
-      status: "active",
-      createdAt: "2024-02-01",
-      totalUsers: 320,
-    },
-  ]);
-
-  const [newPack, setNewPack] = useState({
-    name: "",
-    type: "",
-    price: "",
-    period: "",
+  // Form state
+  const [formData, setFormData] = useState({
+    packName: "",
     description: "",
-    features: [],
-    color: "blue",
-    popular: false,
+    price: "",
+    status: 1,
   });
 
-  // Format giá tiền với dấu phẩy
-  const formatPrice = (price) => {
-    if (!price) return "";
-    // Loại bỏ "VNĐ" và các ký tự không phải số
-    const numericPrice = price.replace(/[^\d]/g, "");
-    if (!numericPrice) return price;
+  // Load service packs on component mount
+  useEffect(() => {
+    loadServicePacks();
+  }, []);
+
+  const loadServicePacks = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getServicePacks();
+      
+      if (response.status === "success") {
+        setServicePacks(response.data || []);
+      } else {
+        toast.error("Không thể tải danh sách gói dịch vụ");
+      }
+    } catch (error) {
+      console.error("Error loading service packs:", error);
+      toast.error("Lỗi khi tải danh sách gói dịch vụ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     
-    // Format với dấu phẩy (thay vì dấu chấm)
-    const number = parseInt(numericPrice);
-    const formattedPrice = number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return `${formattedPrice} VNĐ`;
-  };
+    try {
+      const packData = {
+        packName: formData.packName,
+        description: formData.description,
+        price: parseInt(formData.price),
+        status: parseInt(formData.status),
+      };
 
-  // Xác định màu sắc dựa trên tên gói
-  const getPackColor = (name, type) => {
-    if (name === "Gói Không Giới Hạn" || type === "Unlimited") {
-      return "purple";
-    } else if (name === "Gói Tiết Kiệm" || type === "Premium") {
-      return "green";
-    } else {
-      return "blue";
+      if (editingPack) {
+        // Update existing pack
+        await apiService.updateServicePack(editingPack.packID, packData);
+        toast.success("Cập nhật gói dịch vụ thành công");
+      } else {
+        // Create new pack
+        await apiService.createServicePack(packData);
+        toast.success("Tạo gói dịch vụ thành công");
+      }
+
+      // Reset form and close modal
+      setFormData({
+        packName: "",
+        description: "",
+        price: "",
+        status: 1,
+      });
+      setEditingPack(null);
+      setShowModal(false);
+      
+      // Reload data
+      loadServicePacks();
+    } catch (error) {
+      console.error("Error saving service pack:", error);
+      toast.error("Lỗi khi lưu gói dịch vụ");
     }
   };
 
-  const filteredPacks = packs.filter((pack) => {
-    const matchesSearch = pack.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         pack.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === "all" || pack.status === filterType;
-    return matchesSearch && matchesFilter;
+  const handleEdit = (pack) => {
+    setEditingPack(pack);
+    setFormData({
+      packName: pack.packName,
+      description: pack.description || "",
+      price: pack.price.toString(),
+      status: pack.status,
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (packId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa gói dịch vụ này?")) {
+      try {
+        await apiService.deleteServicePack(packId);
+        toast.success("Xóa gói dịch vụ thành công");
+        loadServicePacks();
+      } catch (error) {
+        console.error("Error deleting service pack:", error);
+        toast.error("Lỗi khi xóa gói dịch vụ");
+      }
+    }
+  };
+
+  const handleStatusToggle = async (pack) => {
+    try {
+      const newStatus = pack.status === 1 ? 0 : 1;
+      
+      // Sử dụng API updateStatus mới với packID, adminUserID, và status
+      await apiService.updateServicePackStatus(
+        pack.packID, 
+        user?.userID || 1, // Sử dụng userID từ AuthContext, fallback là 1
+        newStatus
+      );
+      
+      toast.success(`Đã ${newStatus === 1 ? "kích hoạt" : "vô hiệu hóa"} gói dịch vụ`);
+      loadServicePacks();
+    } catch (error) {
+      console.error("Error updating pack status:", error);
+      toast.error("Lỗi khi cập nhật trạng thái gói dịch vụ");
+    }
+  };
+
+  const handleAddNew = () => {
+    setEditingPack(null);
+    setFormData({
+      packName: "",
+      description: "",
+      price: "",
+      status: 1,
+    });
+    setShowModal(true);
+  };
+
+  // Filter and search logic
+  const filteredPacks = servicePacks.filter((pack) => {
+    const matchesStatus = filterStatus === "all" || pack.status.toString() === filterStatus;
+    const matchesSearch = pack.packName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (pack.description && pack.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesStatus && matchesSearch;
   });
 
-  const handleAddPack = () => {
-    if (!newPack.name || !newPack.type || !newPack.price) {
-      showError("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
-
-    const pack = {
-      ...newPack,
-      id: packs.length + 1,
-      price: formatPrice(newPack.price),
-      color: getPackColor(newPack.name, newPack.type),
-      status: "active",
-      createdAt: new Date().toISOString().split('T')[0],
-      totalUsers: 0,
-    };
-
-    setPacks([...packs, pack]);
-    setNewPack({
-      name: "",
-      type: "",
-      price: "",
-      period: "",
-      description: "",
-      features: [],
-      color: "blue",
-      popular: false,
-    });
-    setShowAddModal(false);
-    showSuccess("Thêm gói thuê mới thành công!");
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
   };
 
-  const handleEditPack = (pack) => {
-    setEditingPack(pack);
-    setShowAddModal(true);
+  const formatDate = (dateString) => {
+    if (!dateString) return "Chưa có";
+    return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
-  const handleUpdatePack = () => {
-    if (!editingPack.name || !editingPack.type || !editingPack.price) {
-      showError("Vui lòng điền đầy đủ thông tin!");
-      return;
-    }
-
-    const updatedPack = {
-      ...editingPack,
-      price: formatPrice(editingPack.price),
-      color: getPackColor(editingPack.name, editingPack.type),
-    };
-
-    setPacks(packs.map(pack => 
-      pack.id === editingPack.id ? updatedPack : pack
-    ));
-    setEditingPack(null);
-    setShowAddModal(false);
-    showSuccess("Cập nhật gói thuê thành công!");
-  };
-
-
-  const handleToggleStatus = (id) => {
-    setPacks(packs.map(pack => 
-      pack.id === id ? { ...pack, status: pack.status === "active" ? "inactive" : "active" } : pack
-    ));
-    showSuccess("Cập nhật trạng thái thành công!");
-  };
-
-  const getStatusColor = (status) => {
-    return status === "active" ? "green" : "red";
-  };
-
-  const getStatusText = (status) => {
-    return status === "active" ? "Hoạt động" : "Tạm dừng";
-  };
-
-  const getColorClass = (color) => {
-    const colors = {
-      blue: "bg-blue-100 text-blue-800",
-      green: "bg-green-100 text-green-800",
-      purple: "bg-purple-100 text-purple-800",
-    };
-    return colors[color] || colors.blue;
+  // Tính tổng thống kê
+  const totalStats = {
+    totalPacks: servicePacks.length,
+    activePacks: servicePacks.filter((p) => p.status === 1).length,
+    inactivePacks: servicePacks.filter((p) => p.status === 0).length,
   };
 
   return (
@@ -202,8 +170,8 @@ const AdminPackManagement = () => {
       <div className="p-5 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
         <AdminHeader
-          title="Quản lý Gói Thuê Pin"
-          subtitle="Quản lý và theo dõi tất cả gói thuê pin trong hệ thống"
+          title="Quản lý Gói Dịch vụ"
+          subtitle="Quản lý các gói dịch vụ thuê pin cho hệ thống"
           icon={
             <svg
               className="w-6 h-6 text-white"
@@ -215,458 +183,389 @@ const AdminPackManagement = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
               />
             </svg>
           }
           stats={[
-            { label: "Tổng gói", value: packs.length, color: "bg-blue-400" }
+            { label: "Tổng gói", value: totalStats.totalPacks, color: "bg-blue-400" },
+            { label: "Đang hoạt động", value: totalStats.activePacks, color: "bg-green-400" },
+            { label: "Tạm dừng", value: totalStats.inactivePacks, color: "bg-red-400" }
           ]}
         />
 
-        {/* Controls */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4 flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm gói thuê..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-full md:w-80"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+        {/* Thống kê tổng quan */}
+        <div className="mb-8">
+          <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+            Tổng quan hệ thống
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Tổng gói
+              </h3>
+              <div className="text-4xl font-bold m-0 text-blue-500">
+                {totalStats.totalPacks}
               </div>
-              
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Tạm dừng</option>
-              </select>
             </div>
-            
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Đang hoạt động
+              </h3>
+              <div className="text-4xl font-bold m-0 text-green-500">
+                {totalStats.activePacks}
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+              <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                Tạm dừng
+              </h3>
+              <div className="text-4xl font-bold m-0 text-red-500">
+                {totalStats.inactivePacks}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="mb-6 flex justify-between items-center">
+          <h2 className="text-gray-800 text-2xl font-semibold">
+            Danh sách gói dịch vụ
+          </h2>
+          <div className="flex gap-3">
             <button
-              onClick={() => {
-                setEditingPack(null);
-                setShowAddModal(true);
-              }}
-              className="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all flex items-center space-x-2"
+              onClick={loadServicePacks}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg flex items-center space-x-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
               </svg>
-              <span>Thêm gói mới</span>
+              <span>Tải lại</span>
+            </button>
+            <button
+              onClick={handleAddNew}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              + Thêm gói mới
             </button>
           </div>
         </div>
 
-        {/* Packs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPacks.map((pack) => (
-            <div
-              key={pack.id}
-              className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-white to-gray-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 flex flex-col border border-white/20 backdrop-blur-sm"
-            >
-              {/* Background Pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
-              {/* Popular Badge */}
-              {pack.popular && (
-                <div className="absolute -top-2 -right-2 z-10">
-                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg transform rotate-12">
-                    ⭐ PHỔ BIẾN
-                  </div>
-                </div>
-              )}
-
-              <div className="relative z-10 p-8 flex flex-col flex-grow">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${
-                      pack.color === 'blue' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                      pack.color === 'green' ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                      'bg-gradient-to-br from-purple-500 to-purple-600'
-                    }`}>
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-gray-900 truncate mb-2">{pack.name}</h3>
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
-                        pack.color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                        pack.color === 'green' ? 'bg-green-100 text-green-700' :
-                        'bg-purple-100 text-purple-700'
-                      }`}>
-                        {pack.type}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Price */}
-                <div className="mb-6">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-1">
-                    {pack.price}
-                  </div>
-                  <div className="text-sm text-gray-500 font-medium">/{pack.period}</div>
-                </div>
-
-                {/* Description */}
-                <p className="text-gray-600 text-sm mb-6 line-clamp-3 flex-grow leading-relaxed">{pack.description}</p>
-
-                {/* Stats */}
-                <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl">
-                  <span className="flex items-center text-sm text-gray-600 font-medium">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      </svg>
-                    </div>
-                    <span className="font-semibold">{pack.totalUsers} người dùng</span>
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-sm ${
-                    pack.status === "active" 
-                      ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200" 
-                      : "bg-gradient-to-r from-red-100 to-pink-100 text-red-700 border border-red-200"
-                  }`}>
-                    {getStatusText(pack.status)}
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-3 mt-auto">
-                  <button
-                    onClick={() => handleEditPack(pack)}
-                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <span>Sửa</span>
-                  </button>
-                  <button
-                    onClick={() => handleToggleStatus(pack.id)}
-                    className={`flex-1 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center space-x-2 ${
-                      pack.status === "active" 
-                        ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600" 
-                        : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
-                    }`}
-                  >
-                    {pack.status === "active" ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Tạm dừng</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                        </svg>
-                        <span>Kích hoạt</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <span className="text-lg font-medium text-gray-600">Đang tải danh sách gói dịch vụ...</span>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
-        {/* Add/Edit Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20">
-              {/* Modal Header */}
-              <div className="relative p-6 border-b border-gray-100/50">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-t-2xl"></div>
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                        {editingPack ? "Chỉnh sửa gói thuê" : "Thêm gói thuê mới"}
-                      </h2>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {editingPack ? "Cập nhật thông tin gói thuê" : "Tạo gói thuê pin mới cho hệ thống"}
-                      </p>
-                    </div>
-                  </div>
+        {/* Danh sách gói dịch vụ */}
+        {!loading && (
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <th className="p-4 text-center font-semibold text-base">
+                      Mã gói
+                    </th>
+                    <th className="p-4 text-left font-semibold text-base">
+                      Tên gói
+                    </th>
+                    <th className="p-4 text-left font-semibold text-base">
+                      Mô tả
+                    </th>
+                    <th className="p-4 text-center font-semibold text-base">
+                      Giá
+                    </th>
+                    <th className="p-4 text-center font-semibold text-base">
+                      Trạng thái
+                    </th>
+                    <th className="p-4 text-center font-semibold text-base">
+                      Ngày tạo
+                    </th>
+                    <th className="p-4 text-center font-semibold text-base">
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPacks.map((pack, index) => (
+                    <tr 
+                      key={pack.packID} 
+                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      }`}
+                    >
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center">
+                          <div className="font-bold text-base text-indigo-600">
+                            {pack.packID}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="font-semibold text-base text-gray-800">
+                          {pack.packName}
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="text-sm text-gray-700 max-w-xs">
+                          {pack.description || "Không có mô tả"}
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center">
+                          <div className="text-sm font-medium text-gray-800">
+                            {formatPrice(pack.price)}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center">
+                          <span
+                            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+                              pack.status === 1
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {pack.status === 1 ? "Hoạt động" : "Tạm dừng"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center">
+                          <div className="text-sm text-gray-700 text-center">
+                            <div className="font-medium text-gray-800">
+                              {formatDate(pack.createDate)}
+                            </div>
+                            {pack.createDate && (
+                              <div className="text-xs text-gray-500">
+                                {new Date(pack.createDate).toLocaleTimeString("vi-VN")}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center items-center gap-2">
+                          {/* Chi tiết */}
+                          <button
+                            className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            onClick={() => setEditingPack(pack)}
+                            title="Chi tiết"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chi tiết
+                            </div>
+                          </button>
+
+                          {/* Sửa */}
+                          <button
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            onClick={() => handleEdit(pack)}
+                            title="Sửa"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              Chỉnh sửa
+                            </div>
+                          </button>
+
+                          {/* Toggle Status */}
+                          <button
+                            className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
+                              pack.status === 1
+                                ? "bg-red-500 hover:bg-red-600"
+                                : "bg-green-500 hover:bg-green-600"
+                            }`}
+                            onClick={() => handleStatusToggle(pack)}
+                            title={
+                              pack.status === 1
+                                ? "Tạm ngưng hoạt động"
+                                : "Kích hoạt gói"
+                            }
+                          >
+                            {pack.status === 1 ? (
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                              </svg>
+                            )}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                              {pack.status === 1 ? "Tạm ngưng" : "Kích hoạt"}
+                            </div>
+                          </button>
+
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Modal for Add/Edit */}
+        {showModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {editingPack ? "Chỉnh sửa gói dịch vụ" : "Thêm gói dịch vụ mới"}
+                  </h3>
                   <button
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setEditingPack(null);
-                    }}
-                    className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    onClick={() => setShowModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
                   >
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
-              </div>
 
-              {/* Modal Content */}
-              <div className="p-6">
-                <div className="space-y-4">
-                  {/* Package Name & Type */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
-                          <span>Tên gói</span>
-                        </div>
-                      </label>
-                      {editingPack ? (
-                        <select
-                          value={editingPack.name}
-                          onChange={(e) => {
-                            setEditingPack({...editingPack, name: e.target.value});
-                          }}
-                          disabled={editingPack.name === "Gói Cơ Bản"}
-                          className={`w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-                            editingPack.name === "Gói Cơ Bản" ? "bg-gray-100 cursor-not-allowed opacity-60 [appearance:none]" : ""
-                          }`}
-                        >
-                          <option value={editingPack.name}>{editingPack.name}</option>
-                        </select>
-                      ) : (
-                        <select
-                          value={newPack.name}
-                          onChange={(e) => {
-                            const selectedName = e.target.value;
-                            const autoType = selectedName === "Gói Tiết Kiệm" ? "Premium" : 
-                                            selectedName === "Gói Không Giới Hạn" ? "Unlimited" : "";
-                            const autoPeriod = selectedName === "Gói Tiết Kiệm" ? "tháng" : 
-                                              selectedName === "Gói Không Giới Hạn" ? "năm" : "";
-                            
-                            setNewPack({
-                              ...newPack, 
-                              name: selectedName,
-                              type: autoType || newPack.type,
-                              period: autoPeriod || newPack.period
-                            });
-                          }}
-                          className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                        >
-                          <option value="">Chọn tên gói</option>
-                          <option value="Gói Tiết Kiệm">Gói Tiết Kiệm</option>
-                          <option value="Gói Không Giới Hạn">Gói Không Giới Hạn</option>
-                        </select>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full"></div>
-                          <span>Loại</span>
-                        </div>
-                      </label>
-                      {editingPack ? (
-                        <select
-                          value={editingPack.type}
-                          onChange={(e) => {
-                            setEditingPack({...editingPack, type: e.target.value});
-                          }}
-                          disabled={editingPack.name === "Gói Cơ Bản"}
-                          className={`w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-                            editingPack.name === "Gói Cơ Bản" ? "bg-gray-100 cursor-not-allowed opacity-60 [appearance:none]" : ""
-                          }`}
-                        >
-                          <option value={editingPack.type}>{editingPack.type}</option>
-                        </select>
-                      ) : (
-                        <select
-                          value={newPack.type}
-                          onChange={(e) => {
-                            setNewPack({...newPack, type: e.target.value});
-                          }}
-                          className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                        >
-                          <option value="">Chọn loại gói</option>
-                          <option value="Premium">Premium</option>
-                          <option value="Unlimited">Unlimited</option>
-                        </select>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Price & Period */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"></div>
-                          <span>Giá</span>
-                        </div>
-                      </label>
-                      <input
-                        type="text"
-                        value={editingPack ? editingPack.price.replace(/[^\d,]/g, '') : newPack.price}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Format với dấu phẩy khi nhập
-                          const numericValue = value.replace(/[^\d]/g, '');
-                          const formattedValue = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                          
-                          if (editingPack) {
-                            setEditingPack({...editingPack, price: formattedValue});
-                          } else {
-                            setNewPack({...newPack, price: formattedValue});
-                          }
-                        }}
-                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                        placeholder={editingPack ? "299,000" : "299,000 VNĐ"}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
-                          <span>Chu kỳ</span>
-                        </div>
-                      </label>
-                      {editingPack ? (
-                        <select
-                          value={editingPack.period}
-                          onChange={(e) => {
-                            setEditingPack({...editingPack, period: e.target.value});
-                          }}
-                          disabled={editingPack.name === "Gói Cơ Bản"}
-                          className={`w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-                            editingPack.name === "Gói Cơ Bản" ? "bg-gray-100 cursor-not-allowed opacity-60 [appearance:none]" : ""
-                          }`}
-                        >
-                          <option value={editingPack.period}>{editingPack.period}</option>
-                        </select>
-                      ) : (
-                        <select
-                          value={newPack.period}
-                          onChange={(e) => {
-                            setNewPack({...newPack, period: e.target.value});
-                          }}
-                          className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                        >
-                          <option value="">Chọn chu kỳ</option>                          
-                          <option value="tháng">Tháng</option>
-                          <option value="năm">Năm</option>
-                        </select>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full"></div>
-                        <span>Mô tả</span>
-                      </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tên gói dịch vụ *
                     </label>
-                    <textarea
-                      value={editingPack?.description || newPack.description}
-                      onChange={(e) => {
-                        if (editingPack) {
-                          setEditingPack({...editingPack, description: e.target.value});
-                        } else {
-                          setNewPack({...newPack, description: e.target.value});
-                        }
-                      }}
-                      className="w-full p-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200 bg-white/50 backdrop-blur-sm resize-none"
-                      rows="3"
-                      placeholder="Mô tả chi tiết về gói thuê pin..."
+                    <input
+                      type="text"
+                      required
+                      value={formData.packName}
+                      onChange={(e) => setFormData({ ...formData, packName: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Nhập tên gói dịch vụ"
                     />
                   </div>
 
-                  {/* Popular Checkbox */}
-                  <div className="flex items-center justify-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200/50">
-                    <div className="flex items-center space-x-3">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          id="popular"
-                          checked={editingPack?.popular || newPack.popular}
-                          onChange={(e) => {
-                            if (editingPack) {
-                              setEditingPack({...editingPack, popular: e.target.checked});
-                            } else {
-                              setNewPack({...newPack, popular: e.target.checked});
-                            }
-                          }}
-                          className="w-4 h-4 text-indigo-600 bg-white border-2 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 transition-all duration-200"
-                        />
-                        <div className="absolute inset-0 rounded bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 transition-opacity duration-200 pointer-events-none"></div>
-                      </div>
-                      <label htmlFor="popular" className="text-sm font-semibold text-gray-700 cursor-pointer">
-                        <div className="flex items-center space-x-2">
-                          <span>⭐</span>
-                          <span>Gói phổ biến</span>
-                        </div>
-                      </label>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mô tả
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      rows="3"
+                      placeholder="Nhập mô tả gói dịch vụ"
+                    />
                   </div>
-                </div>
 
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-100/50">
-                  <button
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setEditingPack(null);
-                    }}
-                    className="px-6 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    <span>Hủy</span>
-                  </button>
-                  <button
-                    onClick={editingPack ? handleUpdatePack : handleAddPack}
-                    className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center space-x-2"
-                  >
-                    {editingPack ? (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>Cập nhật</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        <span>Thêm mới</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Giá (VND) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Nhập giá gói dịch vụ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Trạng thái
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: parseInt(e.target.value) })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value={1}>Hoạt động</option>
+                      <option value={0}>Tạm dừng</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+                    >
+                      {editingPack ? "Cập nhật" : "Tạo mới"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -676,4 +575,4 @@ const AdminPackManagement = () => {
   );
 };
 
-export default AdminPackManagement;
+export default PackManagement;

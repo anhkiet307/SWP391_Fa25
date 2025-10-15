@@ -26,6 +26,16 @@ const AdminSidebar = () => {
     return false;
   });
 
+  const [isReportMenuOpen, setIsReportMenuOpen] = useState(() => {
+    const savedState = localStorage.getItem("reportMenuOpen");
+    if (savedState !== null) {
+      return JSON.parse(savedState);
+    }
+
+    // Luôn đóng khi mới login vào admin
+    return false;
+  });
+
   // Lưu trạng thái menu vào localStorage khi thay đổi
   useEffect(() => {
     localStorage.setItem("stationMenuOpen", JSON.stringify(isStationMenuOpen));
@@ -34,6 +44,10 @@ const AdminSidebar = () => {
   useEffect(() => {
     localStorage.setItem("userMenuOpen", JSON.stringify(isUserMenuOpen));
   }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    localStorage.setItem("reportMenuOpen", JSON.stringify(isReportMenuOpen));
+  }, [isReportMenuOpen]);
 
   const menuItems = [
     {
@@ -86,6 +100,10 @@ const AdminSidebar = () => {
           label: "Danh sách trạm",
         },
         {
+          path: "/admin-pinslot-management",
+          label: "Quản lý Pin Slot",
+        },
+        {
           path: "/admin-add-station",
           label: "Thêm trạm mới",
         },
@@ -117,7 +135,7 @@ const AdminSidebar = () => {
       submenu: [
         {
           path: "/admin-user-management",
-          label: "Danh sách khách hàng",
+          label: "Danh sách người dùng",
         },
         {
           path: "/admin-add-customer",
@@ -134,8 +152,9 @@ const AdminSidebar = () => {
       ],
     },
     {
-      path: "/admin-report-management",
+      path: "/admin-statistic-management",
       label: "Báo cáo & Thống kê",
+      hasSubmenu: true,
       icon: (
         <svg
           className="w-5 h-5"
@@ -151,6 +170,16 @@ const AdminSidebar = () => {
           />
         </svg>
       ),
+      submenu: [
+        {
+          path: "/admin-statistic-management",
+          label: "Tổng quan thống kê",
+        },
+        {
+          path: "/admin-report-management",
+          label: "Quản lý báo cáo",
+        },
+      ],
     },
   ];
 
@@ -215,6 +244,10 @@ const AdminSidebar = () => {
                           setIsUserMenuOpen(!isUserMenuOpen);
                           // Navigate to first submenu item (Danh sách khách hàng)
                           navigate("/admin-user-management");
+                        } else if (item.path === "/admin-statistic-management") {
+                          setIsReportMenuOpen(!isReportMenuOpen);
+                          // Navigate to first submenu item (Tổng quan thống kê)
+                          navigate("/admin-statistic-management");
                         }
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
@@ -240,7 +273,9 @@ const AdminSidebar = () => {
                           (item.path === "/admin-station-management" &&
                             isStationMenuOpen) ||
                           (item.path === "/admin-user-management" &&
-                            isUserMenuOpen)
+                            isUserMenuOpen) ||
+                          (item.path === "/admin-statistic-management" &&
+                            isReportMenuOpen)
                             ? "rotate-180"
                             : ""
                         }`}
@@ -260,7 +295,9 @@ const AdminSidebar = () => {
                     {((item.path === "/admin-station-management" &&
                       isStationMenuOpen) ||
                       (item.path === "/admin-user-management" &&
-                        isUserMenuOpen)) && (
+                        isUserMenuOpen) ||
+                      (item.path === "/admin-statistic-management" &&
+                        isReportMenuOpen)) && (
                       <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
                         {item.submenu.map((subItem) => {
                           const isSubActive =

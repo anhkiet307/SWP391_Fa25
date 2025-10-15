@@ -18,11 +18,20 @@ const UserManagement = () => {
   const [staffLoading, setStaffLoading] = useState(true);
   const [staffError, setStaffError] = useState(null);
 
+  // State cho quản lý trạm (để hiển thị tên trạm)
+  const [stations, setStations] = useState([]);
+  const [stationsLoading, setStationsLoading] = useState(true);
+
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [activeTab, setActiveTab] = useState("users");
+  
+  // States cho modal xác nhận
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [userToChangeStatus, setUserToChangeStatus] = useState(null);
+  const [isUserType, setIsUserType] = useState(true); // true: user, false: staff
   const [newUser, setNewUser] = useState({
     userId: "",
     name: "",
@@ -56,6 +65,9 @@ const UserManagement = () => {
         phone: staffMember.phone || "N/A",
         role: staffMember.roleID === 2 ? "staff" : staffMember.roleID === 3 ? "admin" : "user",
         status: staffMember.status === 1 ? "active" : "suspended", // 1: active, 0: suspended
+        assignedStationID: null, // Sẽ được cập nhật sau khi check assignment
+        assignedStationName: null, // Sẽ được cập nhật sau khi check assignment
+        assignedStationAddress: null, // Sẽ được cập nhật sau khi check assignment
         // Thêm các field để tương thích với format user
         totalTransactions: 0,
         totalSpent: 0,
@@ -149,6 +161,38 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  // Fetch stations data from API
+  useEffect(() => {
+    const fetchStations = async () => {
+      try {
+        setStationsLoading(true);
+        const response = await apiService.getStations();
+        console.log("Stations API Response:", response); // Debug log
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          const stationMap = {};
+          response.data.forEach(station => {
+            stationMap[station.stationID] = {
+              name: station.stationName,
+              address: station.location
+            };
+          });
+          setStations(stationMap);
+          console.log("Station map:", stationMap); // Debug log
+        } else {
+          setStations({});
+        }
+      } catch (err) {
+        console.error("Error fetching stations:", err);
+        setStations({});
+      } finally {
+        setStationsLoading(false);
+      }
+    };
+
+    fetchStations();
+  }, []);
+
   // Fetch staff data from API
   useEffect(() => {
     const fetchStaff = async () => {
@@ -172,7 +216,9 @@ const UserManagement = () => {
           console.log("Staff data found:", staffData); // Debug log
           const mappedStaff = mapApiDataToStaff(staffData);
           console.log("Mapped staff:", mappedStaff); // Debug log
-          setStaff(mappedStaff);
+          
+          // Check staff assignments
+          await checkStaffAssignments(mappedStaff);
         } else {
           console.log("No valid staff data found"); // Debug log
           setStaff([]);
@@ -187,7 +233,55 @@ const UserManagement = () => {
     };
 
     fetchStaff();
-  }, []);
+  }, [stations]); // Depend on stations to ensure stations are loaded first
+
+  // Function to check staff assignments and update station names
+  const checkStaffAssignments = async (staffList) => {
+    try {
+      console.log("Checking staff assignments for:", staffList); // Debug log
+      
+      const updatedStaff = await Promise.all(
+        staffList.map(async (staffMember) => {
+          try {
+            const response = await apiService.checkStaffAssignment(staffMember.id);
+            console.log(`Assignment check for staff ${staffMember.id}:`, response); // Debug log
+            
+            // Based on API response format from the image:
+            // If staff is assigned: assignedStationID will have a value
+            // If staff is not assigned: assignedStationID will be null
+            const isAssigned = response && response.data && response.data.assignedStationID !== null;
+            const assignedStationID = response?.data?.assignedStationID || null;
+            const stationInfo = assignedStationID ? stations[assignedStationID] : null;
+            const assignedStationName = stationInfo ? stationInfo.name : (assignedStationID ? `Trạm ${assignedStationID}` : null);
+            const assignedStationAddress = stationInfo ? stationInfo.address : null;
+            
+            return {
+              ...staffMember,
+              assignedStationID: assignedStationID,
+              assignedStationName: assignedStationName,
+              assignedStationAddress: assignedStationAddress,
+            };
+          } catch (error) {
+            console.error(`Error checking assignment for staff ${staffMember.id}:`, error);
+            // If API call fails, assume not assigned
+            return {
+              ...staffMember,
+              assignedStationID: null,
+              assignedStationName: null,
+              assignedStationAddress: null,
+            };
+          }
+        })
+      );
+      
+      console.log("Updated staff with assignments:", updatedStaff); // Debug log
+      setStaff(updatedStaff);
+    } catch (error) {
+      console.error("Error checking staff assignments:", error);
+      // If overall process fails, just set the staff without assignment info
+      setStaff(staffList);
+    }
+  };
 
   // Tính tổng thống kê
   const userStats = {
@@ -201,7 +295,9 @@ const UserManagement = () => {
   const staffStats = {
     totalStaff: staff.length,
     activeStaff: staff.filter((s) => s.status === "active").length,
-    stationManagers: staff.filter((s) => s.role === "station_manager").length,
+    suspendedStaff: staff.filter((s) => s.status === "suspended").length,
+    assignedStaff: staff.filter((s) => s.assignedStationID !== null).length,
+    unassignedStaff: staff.filter((s) => s.assignedStationID === null).length,
   };
 
   // Hàm thêm người dùng mới
@@ -212,14 +308,14 @@ const UserManagement = () => {
         // await apiService.addUser(newUser);
         
         // For now, just add to local state and refresh from API
-        setNewUser({
-          userId: "",
-          name: "",
-          email: "",
-          phone: "",
-          role: "driver",
-        });
-        setShowAddForm(false);
+      setNewUser({
+        userId: "",
+        name: "",
+        email: "",
+        phone: "",
+        role: "driver",
+      });
+      setShowAddForm(false);
         
         // Refresh the user list from API
         const response = await apiService.listDrivers();
@@ -287,7 +383,7 @@ const UserManagement = () => {
         }
       }
       
-      setShowEditForm(false);
+    setShowEditForm(false);
       setEditUser({
         userID: "",
         Name: "",
@@ -310,28 +406,129 @@ const UserManagement = () => {
     });
   };
 
-  // Hàm thay đổi trạng thái người dùng
-  const toggleUserStatus = (id) => {
-    // TODO: Gọi API để cập nhật status thực tế
-    // Hiện tại chỉ cập nhật local state
-    setUsers(
-      users.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: user.status === "active" ? "suspended" : "active",
-            }
-          : user
-      )
-    );
+  // Hàm mở modal xác nhận cho user
+  const openUserStatusModal = (user) => {
+    setUserToChangeStatus(user);
+    setIsUserType(true);
+    setShowStatusModal(true);
+  };
+
+  // Hàm thay đổi trạng thái người dùng với API integration
+  const toggleUserStatus = async () => {
+    if (!userToChangeStatus) return;
     
-    // Hiển thị thông báo
-    const user = users.find(u => u.id === id);
-    if (user) {
-      const newStatus = user.status === "active" ? "suspended" : "active";
-      const statusText = newStatus === "active" ? "kích hoạt" : "tạm khóa";
-      showSuccess(`Đã ${statusText} tài khoản ${user.name}`);
+    const id = userToChangeStatus.id;
+    console.log("toggleUserStatus called for user ID:", id); // Debug log
+    
+    try {
+      const user = userToChangeStatus;
+      const newStatusText = user.status === "active" ? "tạm khóa" : "kích hoạt";
+      const actionText = user.status === "active" ? "khóa" : "mở khóa";
+      
+      console.log("About to call API"); // Debug log
+      
+      // Gọi API để cập nhật status
+      const response = await apiService.updateUserStatus(id);
+      console.log("Update status response:", response);
+
+      // Cập nhật local state sau khi API thành công
+      setUsers(prevUsers =>
+        prevUsers.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                status: u.status === "active" ? "suspended" : "active",
+              }
+            : u
+        )
+      );
+
+      // Hiển thị thông báo thành công
+      showSuccess(`Đã ${newStatusText} tài khoản "${user.name}" thành công!`);
+      
+      // Đóng modal
+      setShowStatusModal(false);
+      setUserToChangeStatus(null);
+
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      
+      // Xử lý các loại lỗi khác nhau
+      if (error.response?.status === 404) {
+        showError("Không tìm thấy người dùng trong hệ thống!");
+      } else if (error.response?.status === 403) {
+        showError("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 400) {
+        showError("Dữ liệu không hợp lệ!");
+      } else {
+        showError(`Không thể cập nhật tài khoản. Vui lòng thử lại sau!`);
+      }
     }
+  };
+
+  // Hàm mở modal xác nhận cho staff
+  const openStaffStatusModal = (staffMember) => {
+    setUserToChangeStatus(staffMember);
+    setIsUserType(false);
+    setShowStatusModal(true);
+  };
+
+  // Hàm thay đổi trạng thái nhân viên với API integration
+  const toggleStaffStatus = async () => {
+    if (!userToChangeStatus) return;
+    
+    const id = userToChangeStatus.id;
+    console.log("toggleStaffStatus called for staff ID:", id); // Debug log
+    
+    try {
+      const staffMember = userToChangeStatus;
+      const newStatusText = staffMember.status === "active" ? "tạm khóa" : "kích hoạt";
+      
+      console.log("About to call API for staff"); // Debug log
+      
+      // Gọi API để cập nhật status (sử dụng cùng API với user)
+      const response = await apiService.updateUserStatus(id);
+      console.log("Update staff status response:", response);
+
+      // Cập nhật local state sau khi API thành công
+      setStaff(prevStaff =>
+        prevStaff.map((s) =>
+          s.id === id
+            ? {
+                ...s,
+                status: s.status === "active" ? "suspended" : "active",
+              }
+            : s
+        )
+      );
+
+      // Hiển thị thông báo thành công
+      showSuccess(`Đã ${newStatusText} tài khoản nhân viên "${staffMember.name}" thành công!`);
+      
+      // Đóng modal
+      setShowStatusModal(false);
+      setUserToChangeStatus(null);
+
+    } catch (error) {
+      console.error("Error updating staff status:", error);
+      
+      // Xử lý các loại lỗi khác nhau
+      if (error.response?.status === 404) {
+        showError("Không tìm thấy nhân viên trong hệ thống!");
+      } else if (error.response?.status === 403) {
+        showError("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 400) {
+        showError("Dữ liệu không hợp lệ!");
+      } else {
+        showError(`Không thể cập nhật tài khoản nhân viên. Vui lòng thử lại sau!`);
+      }
+    }
+  };
+
+  // Hàm hủy modal
+  const cancelStatusChange = () => {
+    setShowStatusModal(false);
+    setUserToChangeStatus(null);
   };
 
   // Hàm tạo gói thuê pin
@@ -366,19 +563,19 @@ const UserManagement = () => {
           title="Quản lý Người dùng"
           subtitle="Quản lý khách hàng, nhân viên và phân quyền hệ thống"
           icon={
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-              />
-            </svg>
+                      <svg
+                        className="w-6 h-6 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                        />
+                      </svg>
           }
           stats={[
             { label: "Tổng người dùng", value: userStats.totalUsers, color: "bg-blue-400" }
@@ -456,6 +653,57 @@ const UserManagement = () => {
                 </h3>
                 <div className="text-4xl font-bold m-0 text-orange-500">
                   {(userStats.totalRevenue / 1000000).toFixed(1)}M
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Thống kê nhân viên */}
+        {activeTab === "staff" && (
+          <div className="mb-8">
+            <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
+              Thống kê nhân viên
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Tổng nhân viên
+                </h3>
+                <div className="text-4xl font-bold m-0 text-blue-500">
+                  {staffStats.totalStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Đang hoạt động
+                </h3>
+                <div className="text-4xl font-bold m-0 text-green-500">
+                  {staffStats.activeStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Tạm khóa
+                </h3>
+                <div className="text-4xl font-bold m-0 text-red-500">
+                  {staffStats.suspendedStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Đã phân công
+                </h3>
+                <div className="text-4xl font-bold m-0 text-purple-500">
+                  {staffStats.assignedStaff}
+                </div>
+              </div>
+              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
+                  Chưa phân công
+                </h3>
+                <div className="text-4xl font-bold m-0 text-orange-500">
+                  {staffStats.unassignedStaff}
                 </div>
               </div>
             </div>
@@ -589,7 +837,7 @@ const UserManagement = () => {
                     >
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          <div className="font-bold text-base text-indigo-600">
+                        <div className="font-bold text-base text-indigo-600">
                             {user.stt}
                           </div>
                         </div>
@@ -611,7 +859,7 @@ const UserManagement = () => {
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
                           <div className="text-sm text-gray-800 font-medium">
-                            {user.phone}
+                            (+84) {user.phone}
                           </div>
                         </div>
                       </td>
@@ -683,7 +931,7 @@ const UserManagement = () => {
 
                           {/* Sửa */}
                           <button
-                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => {
                               setEditUser({
                                 userID: user.id,
@@ -720,7 +968,7 @@ const UserManagement = () => {
                                 ? "bg-red-500 hover:bg-red-600"
                                 : "bg-green-500 hover:bg-green-600"
                             }`}
-                            onClick={() => toggleUserStatus(user.id)}
+                            onClick={() => openUserStatusModal(user)}
                             title={
                               user.status === "active"
                                 ? "Khóa tài khoản"
@@ -867,7 +1115,7 @@ const UserManagement = () => {
                     >
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          <div className="font-bold text-base text-indigo-600">
+                        <div className="font-bold text-base text-indigo-600">
                             {staffMember.stt}
                           </div>
                         </div>
@@ -889,7 +1137,7 @@ const UserManagement = () => {
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
                           <div className="text-sm text-gray-800 font-medium">
-                            {staffMember.phone}
+                            (+84) {staffMember.phone}
                           </div>
                         </div>
                       </td>
@@ -910,7 +1158,7 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          <span
+                            <span
                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${
                               staffMember.role === "admin"
                                 ? "bg-purple-100 text-purple-800"
@@ -924,7 +1172,7 @@ const UserManagement = () => {
                               : staffMember.role === "staff"
                               ? "Nhân viên"
                               : "Khách hàng"}
-                          </span>
+                            </span>
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
@@ -961,7 +1209,7 @@ const UserManagement = () => {
 
                           {/* Sửa */}
                           <button
-                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-yellow-500 hover:bg-yellow-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => {
                               setEditUser({
                                 userID: staffMember.id,
@@ -998,7 +1246,7 @@ const UserManagement = () => {
                                 ? "bg-red-500 hover:bg-red-600"
                                 : "bg-green-500 hover:bg-green-600"
                             }`}
-                            onClick={() => toggleUserStatus(staffMember.id)}
+                            onClick={() => openStaffStatusModal(staffMember)}
                             title={
                               staffMember.status === "active"
                                 ? "Khóa tài khoản"
@@ -1208,7 +1456,7 @@ const UserManagement = () => {
                       placeholder="Nhập họ và tên"
                       required
                     />
-                  </div>
+                        </div>
 
                   {/* Email */}
                   <div className="md:col-span-2">
@@ -1223,7 +1471,7 @@ const UserManagement = () => {
                       placeholder="user@example.com"
                       required
                     />
-                  </div>
+                        </div>
 
                   {/* Vai trò */}
                   <div className="md:col-span-2">
@@ -1239,9 +1487,9 @@ const UserManagement = () => {
                       <option value={2}>Nhân viên</option>
                       <option value={3}>Quản trị viên</option>
                     </select>
+                        </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
               {/* Footer */}
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl flex justify-end space-x-3">
@@ -1266,10 +1514,10 @@ const UserManagement = () => {
                 >
                   <span>Cập nhật</span>
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
         {/* Modal chi tiết người dùng */}
         {selectedUser && !showEditForm && (
@@ -1287,8 +1535,8 @@ const UserManagement = () => {
                     <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-xl">
                       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
+                        </svg>
+                          </div>
                     <div>
                       <h3 className="text-3xl font-bold mb-2">
                         {selectedUser.name}
@@ -1304,9 +1552,9 @@ const UserManagement = () => {
                         }`}>
                           {selectedUser.status === "active" ? "🟢 Hoạt động" : "🔴 Tạm khóa"}
                         </span>
-                      </div>
-                    </div>
-                  </div>
+                          </div>
+                        </div>
+                          </div>
                   <button
                     onClick={() => setSelectedUser(null)}
                     className="p-3 text-white hover:text-red-200 hover:bg-white hover:bg-opacity-10 rounded-xl transition-all duration-200 backdrop-blur-sm"
@@ -1315,8 +1563,8 @@ const UserManagement = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </div>
-              </div>
+                          </div>
+                        </div>
 
               {/* Content */}
               <div className="p-8 bg-gray-50">
@@ -1326,9 +1574,15 @@ const UserManagement = () => {
                       <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-900">Thông tin khách hàng</h4>
-                  </div>
+                            </div>
+                    <h4 className="text-xl font-bold text-gray-900">
+                      {selectedUser.role === "admin"
+                        ? "Thông tin quản trị viên"
+                        : selectedUser.role === "staff"
+                        ? "Thông tin nhân viên"
+                        : "Thông tin khách hàng"}
+                    </h4>
+                            </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Họ tên */}
@@ -1337,7 +1591,7 @@ const UserManagement = () => {
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                      </div>
+                          </div>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-blue-600 mb-1">Họ tên</div>
                         <div className="text-base text-gray-800 font-medium">{selectedUser.name}</div>
@@ -1350,12 +1604,12 @@ const UserManagement = () => {
                         <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                      </div>
+                          </div>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-green-600 mb-1">Email</div>
                         <div className="text-base text-gray-800 font-medium">{selectedUser.email}</div>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
 
                     {/* Số điện thoại */}
                     <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
@@ -1363,12 +1617,12 @@ const UserManagement = () => {
                         <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
-                      </div>
+                          </div>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-orange-600 mb-1">Số điện thoại</div>
                         <div className="text-base text-gray-800 font-medium">(+84) {selectedUser.phone}</div>
-                      </div>
-                    </div>
+                          </div>
+                        </div>
 
                     {/* Vai trò */}
                     <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
@@ -1376,7 +1630,7 @@ const UserManagement = () => {
                         <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                      </div>
+                          </div>
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-purple-600 mb-1">Vai trò</div>
                         <div className="text-base text-gray-800 font-medium">
@@ -1385,11 +1639,191 @@ const UserManagement = () => {
                             : selectedUser.role === "staff"
                             ? "Nhân viên"
                             : "Khách hàng"}
+                          </div>
                         </div>
+                          </div>
+
+                    {/* Trạm đã phân công - chỉ hiển thị cho nhân viên */}
+                    {(selectedUser.role === "staff" || selectedUser.role === "admin") && (
+                      <>
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-indigo-600 mb-1">Trạm đã phân công</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {selectedUser.assignedStationName || "Chưa phân công"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-teal-600 mb-1">Địa chỉ trạm</div>
+                            <div className="text-base text-gray-800 font-medium">
+                              {selectedUser.assignedStationAddress || "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                          </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal xác nhận thay đổi trạng thái */}
+        {showStatusModal && userToChangeStatus && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto bg-yellow-100 rounded-full mb-4">
+                  <svg
+                    className="w-8 h-8 text-yellow-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                  {userToChangeStatus.status === "active"
+                    ? "Khóa tài khoản"
+                    : "Mở khóa tài khoản"}
+                </h3>
+                <p className="text-gray-600 text-center">
+                  Bạn có chắc chắn muốn{" "}
+                  {userToChangeStatus.status === "active"
+                    ? "khóa tài khoản"
+                    : "mở khóa tài khoản"}{" "}
+                  {isUserType ? "này" : "nhân viên này"} không?
+                </p>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900">
+                        {userToChangeStatus.name}
+                      </h4>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          ID: {userToChangeStatus.id}
+                        </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            userToChangeStatus.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {userToChangeStatus.status === "active"
+                            ? "🟢 Hoạt động"
+                            : "🔴 Tạm khóa"}
+                        </span>
                       </div>
                     </div>
-
                   </div>
+                </div>
+                
+                {/* Thông báo */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start">
+                    <svg
+                      className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-800">
+                        {userToChangeStatus.status === "active"
+                          ? "Tài khoản sẽ bị khóa và không thể đăng nhập."
+                          : "Tài khoản sẽ được kích hoạt và có thể đăng nhập bình thường."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={cancelStatusChange}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={isUserType ? toggleUserStatus : toggleStaffStatus}
+                    className={`flex-1 px-4 py-2.5 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 ${
+                      userToChangeStatus.status === "active"
+                        ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                        : "bg-green-600 hover:bg-green-700 focus:ring-green-500"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d={
+                          userToChangeStatus.status === "active"
+                            ? "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            : "M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                        }
+                      />
+                    </svg>
+                    <span>
+                      {userToChangeStatus.status === "active"
+                        ? "Khóa tài khoản"
+                        : "Mở khóa"}
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>

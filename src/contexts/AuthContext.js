@@ -88,9 +88,9 @@ export function AuthProvider({ children }) {
     // Reset user state
     setUser(null);
 
-    // Force redirect về login sau một delay nhỏ
+    // Reset logout flag sau khi hoàn thành
     setTimeout(() => {
-      window.location.href = "/login";
+      setIsLoggingOut(false);
     }, 100);
   };
 
