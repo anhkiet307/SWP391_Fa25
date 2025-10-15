@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://408c73d81ad9.ngrok-free.app/api",
+    "https://98619c2f43d5.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -40,6 +40,7 @@ const API_CONFIG = {
       STATUS: "/pinStation/status",
       ASSIGN_STAFF: "/pinStation/assignStaff",
       CHECK_STAFF_ASSIGNMENT: "/pinStation/checkStaffAssignment",
+      GET_BY_USER: "/pinStation/getByUser",
       NEARBY: "/stations/nearby", // Keep this for future use
     },
 
@@ -48,6 +49,7 @@ const API_CONFIG = {
       LIST_ALL: "/pinSlot/listAll",
       LIST_BY_STATION: "/pinSlot/list",
       UPDATE_SLOT: "/pinSlot/updateSlot",
+      UNRESERVE: "/pinSlot/unreserve",
     },
 
     // Booking endpoints
@@ -79,12 +81,20 @@ const API_CONFIG = {
       DELETE: "/service-packs/:id",
     },
 
+    // Vehicle endpoints
+    VEHICLE: {
+      BY_USER: "/vehicle/user",
+      PIN_SWAP: "/vehicle/PinSwap",
+    },
+
     // Transaction endpoints
     TRANSACTION: {
       LIST: "/transactions",
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",
       PAYMENT: "/transactions/payment",
+      GET_BY_STATION: "/transaction/getByStation",
+      UPDATE_STATUS: "/transaction/updateStatus",
     },
 
     // Rating endpoints

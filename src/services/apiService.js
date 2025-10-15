@@ -203,6 +203,12 @@ class ApiService {
     return this.get(url, params);
   }
 
+  async getStationsByUser(userId) {
+    const url = getApiUrl("STATION", "GET_BY_USER");
+    // API sử dụng GET với query parameter userID
+    return this.get(url, { userID: userId });
+  }
+
   async getStationById(stationId) {
     const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
     return this.get(url);
@@ -266,9 +272,9 @@ class ApiService {
   async assignStaff(userId, stationId) {
     const url = getApiUrl("STATION", "ASSIGN_STAFF");
     // API sử dụng PUT với query parameters userID và stationID
-    const queryString = new URLSearchParams({ 
-      userID: userId, 
-      stationID: stationId 
+    const queryString = new URLSearchParams({
+      userID: userId,
+      stationID: stationId,
     }).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
@@ -284,7 +290,7 @@ class ApiService {
   async checkStaffAssignment(userId) {
     const url = getApiUrl("STATION", "CHECK_STAFF_ASSIGNMENT");
     const queryString = new URLSearchParams({
-      userID: userId
+      userID: userId,
     }).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
@@ -319,7 +325,7 @@ class ApiService {
     const params = {
       pinID: pinId,
       pinPercent: pinData.pinPercent,
-      pinHealth: pinData.pinHealth
+      pinHealth: pinData.pinHealth,
     };
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
@@ -473,6 +479,27 @@ class ApiService {
     return this.get(url, params);
   }
 
+  async getTransactionsByStation(stationId) {
+    const url = getApiUrl("TRANSACTION", "GET_BY_STATION");
+    return this.get(url, { stationID: stationId });
+  }
+
+  async updateTransactionStatus(transactionId, status) {
+    const url = getApiUrl("TRANSACTION", "UPDATE_STATUS");
+    const queryString = new URLSearchParams({
+      transactionID: transactionId,
+      status,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   async processPayment(paymentData) {
     const url = getApiUrl("TRANSACTION", "PAYMENT");
     return this.post(url, paymentData);
@@ -534,6 +561,41 @@ class ApiService {
   async getRatingStatistics(stationId) {
     const url = getApiUrl("RATING", "STATISTICS", { stationID: stationId });
     return this.get(url);
+  }
+
+  // ===== VEHICLE METHODS =====
+  async getVehiclesByUser(userId) {
+    const url = getApiUrl("VEHICLE", "BY_USER");
+    return this.get(url, { userID: userId });
+  }
+
+  async vehiclePinSwap(vehicleId, pinSlotId) {
+    const url = getApiUrl("VEHICLE", "PIN_SWAP");
+    const queryString = new URLSearchParams({
+      vehicleID: vehicleId,
+      pinSlotID: pinSlotId,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async unreservePin(pinId) {
+    const url = getApiUrl("PINSLOT", "UNRESERVE");
+    const queryString = new URLSearchParams({ pinID: pinId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async createRating(ratingData) {
