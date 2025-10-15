@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://506d44d86f44.ngrok-free.app/api",
+    "https://98619c2f43d5.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -27,6 +27,7 @@ const API_CONFIG = {
       LIST_DRIVERS: "/user/listDriver",
       LIST_STAFF: "/user/listStaff",
       UPDATE: "/user/update",
+      UPDATE_STATUS: "/user/updateStatus",
     },
 
     // Station management endpoints
@@ -37,7 +38,18 @@ const API_CONFIG = {
       UPDATE: "/pinStation/update",
       UPDATE_STATUS: "/pinStation/updateStatus",
       STATUS: "/pinStation/status",
+      ASSIGN_STAFF: "/pinStation/assignStaff",
+      CHECK_STAFF_ASSIGNMENT: "/pinStation/checkStaffAssignment",
+      GET_BY_USER: "/pinStation/getByUser",
       NEARBY: "/stations/nearby", // Keep this for future use
+    },
+
+    // PinSlot management endpoints
+    PINSLOT: {
+      LIST_ALL: "/pinSlot/listAll",
+      LIST_BY_STATION: "/pinSlot/list",
+      UPDATE_SLOT: "/pinSlot/updateSlot",
+      UNRESERVE: "/pinSlot/unreserve",
     },
 
     // Booking endpoints
@@ -61,11 +73,17 @@ const API_CONFIG = {
 
     // Service pack endpoints
     SERVICE_PACK: {
-      LIST: "/service-packs",
+      LIST: "/servicePack/list",
       DETAIL: "/service-packs/:id",
       CREATE: "/service-packs",
       UPDATE: "/service-packs/:id",
       DELETE: "/service-packs/:id",
+    },
+
+    // Vehicle endpoints
+    VEHICLE: {
+      BY_USER: "/vehicle/user",
+      PIN_SWAP: "/vehicle/PinSwap",
     },
 
     // Transaction endpoints
@@ -74,6 +92,8 @@ const API_CONFIG = {
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",
       PAYMENT: "/transactions/payment",
+      GET_BY_STATION: "/transaction/getByStation",
+      UPDATE_STATUS: "/transaction/updateStatus",
     },
 
     // Rating endpoints
@@ -86,6 +106,7 @@ const API_CONFIG = {
 
     // Report endpoints
     REPORT: {
+      ALL: "/report/all",
       DASHBOARD: "/reports/dashboard",
       STATION_REPORT: "/reports/stations",
       USER_REPORT: "/reports/users",

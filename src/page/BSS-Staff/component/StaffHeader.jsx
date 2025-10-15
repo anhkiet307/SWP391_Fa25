@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
+import apiService from "../../../services/apiService";
 
 const StaffHeader = () => {
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [station, setStation] = useState(null);
+
+  // Fetch station info by current staff user
+  useEffect(() => {
+    const fetchStation = async () => {
+      if (!user?.userID) return;
+      try {
+        const res = await apiService.getStationsByUser(user.userID);
+        // API trả về { status, message, data: [ ... ] }
+        const stations = Array.isArray(res?.data) ? res.data : [];
+        setStation(stations[0] || null);
+      } catch (e) {
+        console.error("Failed to fetch station by user:", e);
+        setStation(null);
+      }
+    };
+    fetchStation();
+  }, [user?.userID]);
 
   const handleLogout = () => {
     logout();
@@ -51,8 +70,13 @@ const StaffHeader = () => {
                   {user?.name || "Staff"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Staff • {user?.phone || "Chưa có SĐT"}
+                  Staff • {station?.stationName || "Chưa gán trạm"}
                 </p>
+                {station?.location && (
+                  <p className="text-[10px] text-gray-400 truncate max-w-[220px]">
+                    {station.location}
+                  </p>
+                )}
               </div>
               <svg
                 className={`w-4 h-4 text-gray-400 transition-transform ${
@@ -82,6 +106,16 @@ const StaffHeader = () => {
                     <p className="text-xs text-gray-500">
                       {user?.email || "staff@example.com"}
                     </p>
+                    <div className="mt-2 text-xs text-gray-600">
+                      <p className="font-medium">
+                        Trạm: {station?.stationName || "Chưa gán trạm"}
+                      </p>
+                      {station?.location && (
+                        <p className="text-gray-500">
+                          Vị trí: {station.location}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={handleLogout}

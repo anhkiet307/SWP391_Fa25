@@ -16,7 +16,7 @@ export default function Login() {
 
   // Redirect nếu đã đăng nhập
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && user.userID) {
       // Redirect về dashboard phù hợp với role
       if (user.role === "admin") {
         navigate("/admin-dashboard", { replace: true });
@@ -29,7 +29,7 @@ export default function Login() {
   }, [isAuthenticated, user, navigate]);
 
   // Hiển thị loading nếu đang redirect
-  if (isAuthenticated && user) {
+  if (isAuthenticated && user && user.userID) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
         <div className="text-center">

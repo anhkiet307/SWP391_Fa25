@@ -182,10 +182,31 @@ class ApiService {
     });
   }
 
+  async updateUserStatus(userId) {
+    const url = getApiUrl("USER", "UPDATE_STATUS");
+    // API sử dụng PUT với query parameter userID
+    const queryString = new URLSearchParams({ userID: userId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // ===== STATION METHODS =====
   async getStations(params = {}) {
     const url = getApiUrl("STATION", "LIST");
     return this.get(url, params);
+  }
+
+  async getStationsByUser(userId) {
+    const url = getApiUrl("STATION", "GET_BY_USER");
+    // API sử dụng GET với query parameter userID
+    return this.get(url, { userID: userId });
   }
 
   async getStationById(stationId) {
@@ -248,8 +269,79 @@ class ApiService {
     return this.get(url, { stationID: stationId });
   }
 
+  async assignStaff(userId, stationId) {
+    const url = getApiUrl("STATION", "ASSIGN_STAFF");
+    // API sử dụng PUT với query parameters userID và stationID
+    const queryString = new URLSearchParams({
+      userID: userId,
+      stationID: stationId,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async checkStaffAssignment(userId) {
+    const url = getApiUrl("STATION", "CHECK_STAFF_ASSIGNMENT");
+    const queryString = new URLSearchParams({
+      userID: userId,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   async getStationStatus() {
     const url = getApiUrl("STATION", "STATUS");
+    return this.get(url);
+  }
+
+  // PinSlot management methods
+  async getPinslots() {
+    const url = getApiUrl("PINSLOT", "LIST_ALL");
+    return this.get(url);
+  }
+
+  async getPinslotsByStation(stationId) {
+    const url = getApiUrl("PINSLOT", "LIST_BY_STATION");
+    return this.get(url, { stationID: stationId });
+  }
+
+  async updatePinSlot(pinId, pinData) {
+    const url = getApiUrl("PINSLOT", "UPDATE_SLOT");
+    // API sử dụng PUT với query parameters
+    const params = {
+      pinID: pinId,
+      pinPercent: pinData.pinPercent,
+      pinHealth: pinData.pinHealth,
+    };
+    const queryString = new URLSearchParams(params).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  // Pin station methods
+  async getPinStations() {
+    const url = getApiUrl("STATION", "LIST");
     return this.get(url);
   }
 
@@ -368,12 +460,38 @@ class ApiService {
     return this.get(url, params);
   }
 
+  async getTransactionsByStation(stationId) {
+    const url = getApiUrl("TRANSACTION", "GET_BY_STATION");
+    return this.get(url, { stationID: stationId });
+  }
+
+  async updateTransactionStatus(transactionId, status) {
+    const url = getApiUrl("TRANSACTION", "UPDATE_STATUS");
+    const queryString = new URLSearchParams({
+      transactionID: transactionId,
+      status,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   async processPayment(paymentData) {
     const url = getApiUrl("TRANSACTION", "PAYMENT");
     return this.post(url, paymentData);
   }
 
   // ===== REPORT METHODS =====
+  async getAllReports(adminID = 1) {
+    const url = getApiUrl("REPORT", "ALL");
+    return this.get(url, { adminID });
+  }
+
   async getDashboardReport(params = {}) {
     const url = getApiUrl("REPORT", "DASHBOARD");
     return this.get(url, params);
@@ -424,6 +542,41 @@ class ApiService {
   async getRatingStatistics(stationId) {
     const url = getApiUrl("RATING", "STATISTICS", { stationID: stationId });
     return this.get(url);
+  }
+
+  // ===== VEHICLE METHODS =====
+  async getVehiclesByUser(userId) {
+    const url = getApiUrl("VEHICLE", "BY_USER");
+    return this.get(url, { userID: userId });
+  }
+
+  async vehiclePinSwap(vehicleId, pinSlotId) {
+    const url = getApiUrl("VEHICLE", "PIN_SWAP");
+    const queryString = new URLSearchParams({
+      vehicleID: vehicleId,
+      pinSlotID: pinSlotId,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async unreservePin(pinId) {
+    const url = getApiUrl("PINSLOT", "UNRESERVE");
+    const queryString = new URLSearchParams({ pinID: pinId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async createRating(ratingData) {
