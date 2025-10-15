@@ -3,7 +3,7 @@ const API_CONFIG = {
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
-    "https://506d44d86f44.ngrok-free.app/api",
+    "https://98619c2f43d5.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -40,6 +40,16 @@ const API_CONFIG = {
       NEARBY: "/stations/nearby", // Keep this for future use
     },
 
+    // PinSlot management endpoints
+    PINSLOT: {
+      LIST: "/pinSlot/list",
+      DETAIL: "/pinSlot/:pinID",
+      CREATE: "/pinSlot/create",
+      UPDATE: "/pinSlot/update",
+      DELETE: "/pinSlot/delete",
+      RESERVE: "/pinSlot/reserve",
+    },
+
     // Booking endpoints
     BOOKING: {
       CREATE: "/bookings",
@@ -59,17 +69,26 @@ const API_CONFIG = {
       STATUS: "/batteries/:id/status",
     },
 
+    // Subscription endpoints
+    SUBSCRIPTION: {
+      GET_USER_SUBSCRIPTION: "/subscription/getUserSubscription",
+      CREATE: "/subscription/create",
+      UPDATE: "/subscription/update",
+      CANCEL: "/subscription/cancel",
+    },
+
     // Service pack endpoints
     SERVICE_PACK: {
-      LIST: "/service-packs",
-      DETAIL: "/service-packs/:id",
-      CREATE: "/service-packs",
-      UPDATE: "/service-packs/:id",
-      DELETE: "/service-packs/:id",
+      LIST: "/servicePack/list",
+      DETAIL: "/servicePack/:id",
+      CREATE: "/servicePack/create",
+      UPDATE: "/servicePack/:id",
+      DELETE: "/servicePack/:id",
     },
 
     // Transaction endpoints
     TRANSACTION: {
+      CREATE: "/transaction/create",
       LIST: "/transactions",
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",

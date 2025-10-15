@@ -21,6 +21,7 @@ import StationManagement from "./page/BSS-Staff/StationManagement.jsx";
 import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
 import BookingHistory from "./page/EVDriver/bookingHistory.jsx";
 import Profile from "./page/profile.jsx";
+import Upgrade from "./page/upgrade.jsx";
 
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
@@ -84,6 +85,14 @@ function App() {
             element={
               <MainLayout>
                 <Profile />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/upgrade"
+            element={
+              <MainLayout>
+                <Upgrade />
               </MainLayout>
             }
           />

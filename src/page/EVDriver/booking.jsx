@@ -1,179 +1,86 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/layout/header.jsx";
+import apiService from "../../services/apiService";
 import dayjs from "dayjs";
+import {
+  calculateSlotStatistics,
+  isSlotAvailable,
+  getSlotStatusText,
+  getPinStatusText,
+  getSlotStatusColor,
+  getPinStatusColor,
+  formatPinPercent,
+  formatPinHealth,
+  getPinPercentColor,
+  getPinHealthColor,
+} from "../../utils/pinSlotUtils";
+import {
+  findNearestStation,
+  getUserCurrentLocation,
+  formatDistance,
+} from "../../utils/locationUtils";
 import {
   Button,
   Card,
   Form,
-  Select,
-  DatePicker,
   Row,
   Col,
   Typography,
   Space,
   message,
-  Spin,
   Result,
-  Divider,
-  Tabs,
-  Tag,
   Alert,
 } from "antd";
 import {
-  PoweroffOutlined,
   EnvironmentOutlined,
   ClockCircleOutlined,
   CalendarOutlined,
-  LeftOutlined,
   CheckOutlined,
-  CloseOutlined,
-  ThunderboltOutlined,
-  SafetyOutlined,
-  DollarOutlined,
-  AimOutlined,
-  StarOutlined,
 } from "@ant-design/icons";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { batteryStations } from "../../data/stations";
+
+// Import các component mới
+import BookingForm from "./component/booking/BookingForm";
+import LocationMap from "./component/booking/LocationMap";
+import PinInventory from "./component/booking/PinInventory";
+import BookingSummary from "./component/booking/BookingSummary";
 
 const { Title, Paragraph } = Typography;
-const { Option } = Select;
-const { TabPane } = Tabs;
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
-  iconUrl: require("leaflet/dist/images/marker-icon.png"),
-  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
-});
-
-// Tạo icon tùy chỉnh
-const createBatteryIcon = (color) => {
-  return L.divIcon({
-    className: "custom-slottery-icon",
-    html: `
-      <div style="
-        background-color: ${color};
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-      ">
-        ⚡
-      </div>
-    `,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
-  });
-};
-
-const createUserIcon = () => {
-  return L.divIcon({
-    className: "custom-user-icon",
-    html: `
-      <div style="
-        background-color: #4285F4;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-      ">
-        📍
-      </div>
-    `,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
-  });
-};
-
-const createNearestStationIcon = (color) => {
-  return L.divIcon({
-    className: "custom-nearest-station-icon",
-    html: `
-      <div style="
-        background-color: ${color};
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        border: 4px solid #FFD700;
-        box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3), 0 4px 8px rgba(0,0,0,0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        animation: pulse 2s infinite;
-      ">
-        ⚡
-      </div>
-    `,
-    iconSize: [35, 35],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -17],
-  });
-};
-
-const createSelectedStationIcon = (color) => {
-  return L.divIcon({
-    className: "custom-selected-station-icon",
-    html: `
-      <div style="
-        background-color: ${color};
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        border: 4px solid #3B82F6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 8px rgba(0,0,0,0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        animation: pulse 2s infinite;
-      ">
-        🎯
-      </div>
-    `,
-    iconSize: [35, 35],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -17],
-  });
-};
 
 export default function Booking() {
   const [form] = Form.useForm();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const [isBooking, setIsBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
   const [validationErrors, setValidationErrors] = useState([]);
-  const [activeTab, setActiveTab] = useState("today");
-  const [userLocation, setUserLocation] = useState(null);
-  const [nearestStation, setNearestStation] = useState(null);
   const [selectedCity, setSelectedCity] = useState("HN");
+
+  // States cho service packs
+  const [servicePacks, setServicePacks] = useState([]);
+  const [loadingServicePacks, setLoadingServicePacks] = useState(false);
+
+  // States cho subscription
+  const [userSubscription, setUserSubscription] = useState(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+
+  // States cho station detail và pinSlots từ API
+  const [stationDetail, setStationDetail] = useState(null);
+  const [pinSlots, setPinSlots] = useState([]);
+
+  // States cho danh sách trạm từ API
+  const [stationsList, setStationsList] = useState([]);
+  const [loadingStationsList, setLoadingStationsList] = useState(false);
+
+  // States cho vị trí và trạm gần nhất
+  const [userLocation, setUserLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const summaryCardRef = useRef(null);
-  const [summaryCardHeight, setSummaryCardHeight] = useState(null);
-  const [visibleSlots, setVisibleSlots] = useState(6);
-  const slotsPerLoad = 6;
+  const [locationError, setLocationError] = useState(null);
+  const [nearestStation, setNearestStation] = useState(null);
+  const [allStations, setAllStations] = useState([]);
 
   const [formValues, setFormValues] = useState({
     station: null,
@@ -182,73 +89,288 @@ export default function Booking() {
     selectedSlot: null,
   });
 
+  // State cho ổ pin được chọn
+  const [selectedPinSlot, setSelectedPinSlot] = useState(null);
+
   // Chỉ cho phép đặt trong ngày: luôn dùng ngày hôm nay
   useEffect(() => {
     const today = dayjs();
-    setSelectedDate(today);
     setFormValues((prev) => ({ ...prev, date: today }));
   }, []);
 
+  // Fetch station data khi có StationID từ URL
+  useEffect(() => {
+    const stationID = searchParams.get("stationID");
+    if (stationID && stationsList.length > 0) {
+      fetchStationData(stationID);
+    }
+  }, [searchParams, stationsList]);
+
+  // Fetch danh sách trạm, service packs và subscription khi component mount
+  useEffect(() => {
+    fetchStationsList();
+    fetchServicePacks();
+    checkUserSubscription();
+  }, []);
+
+  // Re-check subscription when user info is ready (fix F5 refresh case)
+  useEffect(() => {
+    if (user?.userID) {
+      checkUserSubscription();
+    }
+  }, [user]);
+
+  // Function để lấy danh sách service packs
+  const fetchServicePacks = async () => {
+    console.log("Bắt đầu lấy danh sách service pack");
+    setLoadingServicePacks(true);
+    try {
+      const response = await apiService.getServicePacks();
+      console.log("Service pack response:", response);
+
+      if (response?.status === "success") {
+        setServicePacks(response.data);
+        console.log("Danh sách service pack:", response.data);
+      } else {
+        console.log("❌ Service pack API không thành công:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching service packs:", error);
+      message.error("Không thể tải danh sách gói dịch vụ");
+    } finally {
+      setLoadingServicePacks(false);
+    }
+  };
+
+  // Function để kiểm tra subscription của user
+  const checkUserSubscription = async () => {
+    if (!user?.userID) {
+      console.log("Không có user ID, không thể kiểm tra subscription");
+      return;
+    }
+
+    console.log("Bắt đầu kiểm tra subscription cho user ID:", user.userID);
+    setLoadingSubscription(true);
+    try {
+      const subscriptionResponse = await apiService.getUserSubscription(
+        user.userID
+      );
+      console.log("Subscription response:", subscriptionResponse);
+
+      if (subscriptionResponse?.status === "success") {
+        if (subscriptionResponse.data && subscriptionResponse.data !== null) {
+          // User có subscription
+          setUserSubscription(subscriptionResponse.data);
+          console.log("✅ User có subscription:", subscriptionResponse.data);
+        } else {
+          // User không có subscription (data = null)
+          console.log("❌ User không có subscription (data = null)");
+          setUserSubscription(null);
+        }
+      } else {
+        console.log(
+          "❌ Subscription API không thành công:",
+          subscriptionResponse
+        );
+        setUserSubscription(null);
+      }
+    } catch (error) {
+      console.error("Error checking user subscription:", error);
+      message.error("Không thể kiểm tra subscription");
+      setUserSubscription(null);
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
+
+  // Tự động định vị vị trí khi load trang
+  useEffect(() => {
+    const autoGetLocation = async () => {
+      try {
+        const location = await getUserCurrentLocation();
+        setUserLocation([location.lat, location.lng]);
+
+        // Tìm trạm gần nhất
+        const nearest = findNearestStation(
+          allStations,
+          location.lat,
+          location.lng
+        );
+        setNearestStation(nearest);
+
+        // Tự động chọn trạm gần nhất nếu có
+        if (nearest) {
+          form.setFieldsValue({ station: nearest.stationName });
+          setFormValues((prev) => ({
+            ...prev,
+            station: nearest.stationName,
+          }));
+
+          // Fetch dữ liệu trạm gần nhất
+          await fetchStationData(nearest.stationID);
+
+          message.success(
+            `Đã tự động chọn trạm gần nhất: ${
+              nearest.stationName
+            } (${formatDistance(nearest.distance)})`
+          );
+        }
+      } catch (error) {
+        console.error("Error getting user location:", error);
+        setLocationError(error.message);
+        // Không hiển thị error message để không làm phiền người dùng
+      }
+    };
+
+    // Chỉ tự động định vị nếu có danh sách trạm
+    if (allStations.length > 0) {
+      autoGetLocation();
+    }
+  }, [allStations]); // Chạy khi allStations thay đổi
+
+  // Function để fetch danh sách trạm từ API
+  const fetchStationsList = async () => {
+    setLoadingStationsList(true);
+    try {
+      const response = await apiService.getPinStations();
+      if (response?.status === "success") {
+        // Chỉ lấy các trạm có status = 1 (đang hoạt động), ẩn các trạm status = 0 (bảo dưỡng)
+        const activeStations = response.data.filter(
+          (station) => station.status === 1
+        );
+        setStationsList(activeStations);
+        setAllStations(activeStations); // Lưu các trạm đang hoạt động để tính toán khoảng cách
+      }
+    } catch (error) {
+      console.error("Error fetching stations list:", error);
+      message.error("Không thể tải danh sách trạm");
+    } finally {
+      setLoadingStationsList(false);
+    }
+  };
+
+  // Function để lấy vị trí hiện tại của người dùng
+  const handleGetUserLocation = async () => {
+    setIsLoadingLocation(true);
+    setLocationError(null);
+
+    try {
+      const location = await getUserCurrentLocation();
+      setUserLocation([location.lat, location.lng]);
+
+      // Tìm trạm gần nhất
+      const nearest = findNearestStation(
+        allStations,
+        location.lat,
+        location.lng
+      );
+      setNearestStation(nearest);
+
+      // Tự động chọn trạm gần nhất nếu có
+      if (nearest) {
+        form.setFieldsValue({ station: nearest.stationName });
+        setFormValues((prev) => ({
+          ...prev,
+          station: nearest.stationName,
+        }));
+
+        // Fetch dữ liệu trạm gần nhất
+        await fetchStationData(nearest.stationID);
+
+        message.success(
+          `Đã tự động chọn trạm gần nhất: ${
+            nearest.stationName
+          } (${formatDistance(nearest.distance)})`
+        );
+      }
+    } catch (error) {
+      console.error("Error getting user location:", error);
+      setLocationError(error.message);
+      message.error(error.message);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  // Function để fetch station detail và pinSlots
+  const fetchStationData = async (stationID) => {
+    try {
+      // Fetch station detail
+      const stationResponse = await apiService.getStationDetail(stationID);
+      if (stationResponse?.status === "success") {
+        setStationDetail(stationResponse.data);
+
+        // Set station trong form
+        // Set station name vào form (form expect string, không phải object)
+        form.setFieldsValue({ station: stationResponse.data.stationName });
+        setFormValues((prev) => ({
+          ...prev,
+          station: stationResponse.data.stationName,
+        }));
+      }
+
+      // Fetch pinSlots
+      const pinSlotsResponse = await apiService.getPinSlots(stationID);
+      if (pinSlotsResponse?.status === "success") {
+        setPinSlots(pinSlotsResponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching station data:", error);
+      message.error("Không thể tải thông tin trạm");
+    }
+  };
+
   const watchedStation = formValues.station;
-  const watchedDate = formValues.date;
-  const watchedTime = formValues.time;
-  const watchedSelectedSlot = formValues.selectedSlot;
-
-  const serviceFee = 50000;
-  const formatVND = (value) =>
-    value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-
-  const stations = batteryStations;
-
-  const selectedStationData = stations.find(
-    (s) => s.name === formValues.station
+  const selectedStationForSummary = stationsList.find(
+    (station) => station.stationName === watchedStation
   );
-  const stationSlots = selectedStationData?.slots || [];
+  const selectedStationIdForSummary = selectedStationForSummary?.stationID;
 
-  // Tìm ổ pin được chọn
-  const selectedSlotObj = stationSlots.find(
-    (slot) => slot.id === watchedSelectedSlot
-  );
+  // Sử dụng stationDetail từ API với format đúng
+  const selectedStationData = stationDetail
+    ? {
+        ...stationDetail,
+        slots: pinSlots.map((slot) => ({
+          pinID: slot.pinID,
+          id: slot.pinID,
+          slotNumber: slot.pinID,
+          soc: slot.pinPercent || 0, // SoC từ API
+          soh: slot.pinHealth || 0, // SoH từ API
+          status: slot.status, // Trạng thái khả dụng (0, 1, 2)
+          pinStatus: slot.pinStatus, // Trạng thái pin (0, 1)
+          userID: slot.userID, // ID người dùng đang thuê
+          stationID: slot.stationID, // ID trạm sạc
+          // Thêm các trường helper để dễ sử dụng
+          isAvailable: isSlotAvailable(slot),
+          statusText: getSlotStatusText(slot.status),
+          pinStatusText: getPinStatusText(slot.pinStatus),
+          statusColor: getSlotStatusColor(slot.status),
+          pinStatusColor: getPinStatusColor(slot.pinStatus),
+          socFormatted: formatPinPercent(slot.pinPercent),
+          sohFormatted: formatPinHealth(slot.pinHealth),
+          socColor: getPinPercentColor(slot.pinPercent),
+          sohColor: getPinHealthColor(slot.pinHealth),
+        })),
+      }
+    : null;
 
-  // Thống kê tổng quan toàn trạm
-  const totalSlotsAll = stationSlots.length;
-  // Sẵn sàng = không bảo dưỡng và đã đầy 100%
-  const readySlotsAll = stationSlots.filter(
-    (slot) => slot.status !== "maintenance" && (slot.soc || 0) === 100
-  ).length;
-  const bookedSlotsAll = stationSlots.filter(
-    (slot) => slot.status === "booked"
-  ).length;
-  const chargingSlotsAll = stationSlots.filter(
-    (slot) => slot.status === "charging"
-  ).length;
-  const maintenanceSlotsAll = stationSlots.filter(
-    (slot) => slot.status === "maintenance"
-  ).length;
-
-  // Sắp xếp tất cả ổ pin theo slotNumber từ 1-15
-  const sortedAllSlots = stationSlots
-    .slice()
-    .sort((a, b) => a.slotNumber - b.slotNumber);
-
-  // Tính toán slots hiển thị
-  const currentSlots = sortedAllSlots.slice(0, visibleSlots);
-  const hasMoreSlots = visibleSlots < sortedAllSlots.length;
+  // Thống kê tổng quan toàn trạm sử dụng utility functions
+  // const slotStatistics = calculateSlotStatistics(pinSlots);
 
   useEffect(() => {
     const stationId = searchParams.get("stationId");
     const stationName = searchParams.get("stationName");
 
     if (stationId && stationName) {
-      const selectedStation = stations.find(
-        (station) => station.id === parseInt(stationId)
+      const selectedStation = stationsList.find(
+        (station) => station.stationID === parseInt(stationId)
       );
 
       if (selectedStation) {
-        form.setFieldsValue({ station: selectedStation.name });
+        form.setFieldsValue({ station: selectedStation.stationName });
         setFormValues((prev) => ({
           ...prev,
-          station: selectedStation.name,
+          station: selectedStation.stationName,
         }));
 
         const cityCode = selectedStation.city === "Hà Nội" ? "HN" : "HCM";
@@ -262,91 +384,7 @@ export default function Booking() {
         navigate("/booking", { replace: true });
       }
     }
-  }, [searchParams, stations, form, navigate]);
-
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 8; hour < 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 10) {
-        const startTime = `${hour.toString().padStart(2, "0")}:${minute
-          .toString()
-          .padStart(2, "0")}`;
-        const endMinute = minute + 10;
-        const endHour = endMinute >= 60 ? hour + 1 : hour;
-        const endMinuteFormatted = endMinute >= 60 ? endMinute - 60 : endMinute;
-        const endTime = `${endHour
-          .toString()
-          .padStart(2, "0")}:${endMinuteFormatted.toString().padStart(2, "0")}`;
-
-        if (endHour < 20 || (endHour === 20 && endMinuteFormatted === 0)) {
-          slots.push(`${startTime} - ${endTime}`);
-        }
-      }
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
-
-  // Demo dự đoán khả dụng theo giờ (tạm thời giả lập, sẽ chuyển sang lấy từ BE)
-  const bufferMinutesWorstCase = 100; // 100 phút sạc từ 0% -> 100%
-  const existingBookings = ["08:00", "10:00"]; // giả lập có người đặt 08:00 và 10:00 trong ngày
-
-  const parseHHmm = (hhmm) => {
-    const [hh, mm] = (hhmm || "").split(":");
-    const h = parseInt(hh, 10);
-    const m = parseInt(mm, 10);
-    if (Number.isNaN(h) || Number.isNaN(m)) return 0;
-    return h * 60 + m;
-  };
-
-  const formatHHmm = (totalMinutes) => {
-    const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
-    const mm = String(totalMinutes % 60).padStart(2, "0");
-    return `${hh}:${mm}`;
-  };
-
-  // Tính thời điểm sớm nhất có ít nhất 1 pin đạt 100%
-  const now = dayjs();
-  const nowMinutes = now.hour() * 60 + now.minute();
-  const etaFromSlots = (selectedStationData?.slots || []).map((slot) => {
-    // Các trạng thái bảo dưỡng/coi như không khả dụng vô thời hạn
-    if (slot.status === "maintenance") return Number.POSITIVE_INFINITY;
-    // Với mọi ổ pin, giả định có thể sạc ngay bây giờ với tốc độ 1%/phút
-    const remainingToFull = Math.max(0, 100 - (slot.soc || 0));
-    return nowMinutes + remainingToFull;
-  });
-
-  // Ảnh hưởng các đặt chỗ hiện có (demo): sau mỗi đặt, cần 100 phút mới có pin full
-  const etaFromExistingBookings = existingBookings.map((t) => {
-    const end = parseHHmm(t) + bufferMinutesWorstCase; // t + 100 phút
-    return Math.max(end, nowMinutes);
-  });
-
-  const combinedEtas = [...etaFromSlots, ...etaFromExistingBookings];
-  const earliestAvailableMinutes = combinedEtas.length
-    ? Math.min(...combinedEtas)
-    : nowMinutes; // nếu không có dữ liệu, cho phép ngay bây giờ
-
-  const isTimeDisabled = (slotLabel) => {
-    const start = (slotLabel || "").split(" - ")[0];
-    const startMins = parseHHmm(start);
-    return startMins < earliestAvailableMinutes;
-  };
-
-  // Đồng bộ chiều cao: đo chiều cao card Tóm tắt để áp cho card Tồn kho
-  useEffect(() => {
-    if (summaryCardRef.current) {
-      setSummaryCardHeight(summaryCardRef.current.offsetHeight);
-    }
-  }, [
-    watchedStation,
-    watchedDate,
-    watchedTime,
-    watchedSelectedSlot,
-    selectedTimeSlot,
-    isBooking,
-  ]);
+  }, [searchParams, stationsList, form, navigate]);
 
   // Component hiển thị lỗi validation
   const ValidationErrorsAlert = () => {
@@ -401,179 +439,10 @@ export default function Booking() {
     );
   };
 
-  const DynamicTimeAlert = () => {
-    if (!selectedTimeSlot) return null;
-
-    return (
-      <Alert
-        message="⚠️ Lưu ý quan trọng về thời gian"
-        description={
-          <div>
-            <div style={{ marginBottom: "8px" }}>
-              <strong>Quy định về thời gian đến:</strong>
-            </div>
-            <ul
-              style={{
-                margin: "8px 0",
-                paddingLeft: "20px",
-                fontSize: "13px",
-              }}
-            >
-              {selectedDate && activeTab === "future" && (
-                <li>
-                  <strong>Ngày đã chọn:</strong>{" "}
-                  <strong style={{ color: "#00083B" }}>
-                    {selectedDate.format("DD/MM/YYYY")}
-                  </strong>
-                </li>
-              )}
-              <li>
-                <strong>Slot đã chọn:</strong>{" "}
-                <strong style={{ color: "#00083B" }}>{selectedTimeSlot}</strong>
-              </li>
-              <li>
-                ✅ <strong>Được phép:</strong> Đến từ{" "}
-                <strong style={{ color: "#10b981" }}>
-                  {selectedTimeSlot.split(" - ")[0]}
-                </strong>{" "}
-                đến{" "}
-                <strong style={{ color: "#10b981" }}>
-                  {selectedTimeSlot.split(" - ")[1]}
-                </strong>
-              </li>
-              <li>
-                ❌ <strong>Bị hủy:</strong> Đến sau{" "}
-                <strong style={{ color: "#dc2626" }}>
-                  {selectedTimeSlot.split(" - ")[1]}
-                </strong>
-              </li>
-              <li>
-                Lịch đổi pin sẽ bị{" "}
-                <strong style={{ color: "#dc2626" }}>hủy tự động</strong> nếu
-                đến muộn
-              </li>
-            </ul>
-            <div
-              style={{
-                marginTop: "8px",
-                fontSize: "12px",
-                color: "#64748b",
-              }}
-            >
-              💡 <strong>Gợi ý:</strong> Hãy đến trong khung giờ{" "}
-              <strong>{selectedTimeSlot}</strong> để đảm bảo không bị hủy lịch!
-            </div>
-          </div>
-        }
-        type="warning"
-        showIcon
-        style={{
-          marginBottom: "32px",
-          borderRadius: "16px",
-          background:
-            "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%)",
-          border: "1px solid rgba(245, 158, 11, 0.2)",
-        }}
-      />
-    );
-  };
-
-  // Hàm tính khoảng cách
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  // Lấy vị trí người dùng
-  const getUserLocation = () => {
-    if (!navigator.geolocation) {
-      message.error("Trình duyệt không hỗ trợ định vị");
-      return;
-    }
-
-    setIsLoadingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userPos = [position.coords.latitude, position.coords.longitude];
-        setUserLocation(userPos);
-
-        // Tìm trạm gần nhất
-        let minDistance = Infinity;
-        let nearest = null;
-
-        stations.forEach((station) => {
-          const distance = calculateDistance(
-            userPos[0],
-            userPos[1],
-            station.position[0],
-            station.position[1]
-          );
-
-          if (distance < minDistance) {
-            minDistance = distance;
-            nearest = { ...station, distance };
-          }
-        });
-
-        setNearestStation(nearest);
-        setIsLoadingLocation(false);
-        message.success("Đã định vị thành công!");
-      },
-      (error) => {
-        setIsLoadingLocation(false);
-        message.error("Không thể lấy vị trí hiện tại");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    );
-  };
-
-  useEffect(() => {
-    getUserLocation();
-  }, []);
-
-  // Đặt mặc định ngày hôm nay vào form
-  useEffect(() => {
-    const today = dayjs();
-    form.setFieldsValue({ date: today });
-  }, [form]);
-
   // Handler để cập nhật formValues
   const handleFormChange = (changedValues, allValues) => {
     setFormValues((prev) => ({ ...prev, ...changedValues }));
   };
-
-  // Reset số slots hiển thị khi chọn trạm mới
-  useEffect(() => {
-    setVisibleSlots(6);
-  }, [watchedStation]);
-
-  // Infinite scroll handler
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    // Khi cuộn gần đến cuối (còn 10px) thì tải thêm
-    if (scrollHeight - scrollTop - clientHeight < 10 && hasMoreSlots) {
-      console.log("Loading more slots...", {
-        visibleSlots,
-        totalSlots: sortedAllSlots.length,
-      });
-      setVisibleSlots(visibleSlots + slotsPerLoad);
-    }
-  };
-
-  // Không tự động chuyển thành phố theo trạm gần nhất để tránh làm thay đổi lựa chọn của người dùng
 
   const handleBooking = async (values) => {
     // Validate form data
@@ -583,11 +452,9 @@ export default function Booking() {
       errors.push("Vui lòng chọn trạm đổi pin");
     }
 
-    if (!values.time) {
-      errors.push("Vui lòng chọn khung giờ");
+    if (!user?.userID) {
+      errors.push("Vui lòng đăng nhập để đặt lịch");
     }
-
-    // Không còn chọn ổ pin và chọn ngày trước
 
     if (errors.length > 0) {
       setValidationErrors(errors);
@@ -598,47 +465,99 @@ export default function Booking() {
     setValidationErrors([]);
     setIsBooking(true);
 
-    // Chuẩn hóa dữ liệu trước khi điều hướng (serialize date)
-    const normalizedValues = {
-      ...values,
-      date: dayjs().format("YYYY-MM-DD"),
-      selectedSlot: undefined,
-    };
-    setBookingData(normalizedValues);
+    try {
+      // Tìm trạm được chọn để lấy stationID
+      const selectedStation = stationsList.find(
+        (station) => station.stationName === values.station
+      );
 
-    // Simulate booking process
-    setTimeout(() => {
-      setIsBooking(false);
-      message.success("Đặt lịch thành công!");
+      if (!selectedStation) {
+        message.error("Không tìm thấy thông tin trạm");
+        return;
+      }
 
-      // Navigate to success page with booking data
-      try {
-        console.log(
-          "Navigating to booking-success with data:",
-          normalizedValues
-        );
+      // Kiểm tra ổ pin được chọn
+      if (!selectedPinSlot) {
+        message.error("Vui lòng chọn ổ pin để đặt lịch");
+        return;
+      }
+
+      // Kiểm tra pinStatus và status: chỉ cho phép khi pinStatus = 1 (đầy) và status = 1 (khả dụng)
+      if (selectedPinSlot.pinStatus !== 1) {
+        message.error("Ổ pin đang sạc, vui lòng chọn ổ pin khác");
+        return;
+      }
+      if (selectedPinSlot.status !== 1) {
+        message.error("Ổ pin đã chọn không khả dụng");
+        return;
+      }
+
+      // Chuẩn bị dữ liệu transaction dựa trên subscription
+      const basicPack = servicePacks.find(
+        (pack) => pack.packID === 1 && pack.status === 1
+      );
+
+      const transactionData = {
+        userID: user.userID,
+        amount: userSubscription ? 0 : basicPack?.price || 0, // Nếu có subscription thì 0, không thì giá gói cơ bản
+        // pack: 0 = thanh toán tiền mặt tại trạm, 1 = thanh toán bằng lượt (subscription)
+        pack: userSubscription ? 1 : 0,
+        stationID: selectedStation.stationID,
+        pinID: selectedPinSlot.pinID, // Sử dụng ổ pin được chọn
+        status: 0, // Mặc định là pending
+      };
+
+      console.log("Tạo transaction với dữ liệu:", transactionData);
+
+      // Gọi đồng thời: tạo transaction và reserve pin slot
+      const [transactionResponse, reserveResponse] = await Promise.all([
+        apiService.createTransaction(transactionData),
+        apiService.reservePinSlot(selectedPinSlot.pinID, user.userID),
+      ]);
+
+      if (
+        transactionResponse?.status === "success" &&
+        reserveResponse?.status === "success"
+      ) {
+        message.success("Đặt lịch thành công!");
+
+        // Chuẩn hóa dữ liệu trước khi điều hướng
+        const normalizedValues = {
+          ...values,
+          date: dayjs().format("YYYY-MM-DD"),
+          selectedSlot: selectedPinSlot.pinID,
+          transactionData: transactionResponse.data,
+          amount: transactionData.amount,
+          pack: transactionData.pack,
+        };
+
+        setBookingData(normalizedValues);
+        setBookingSuccess(true);
+
+        // Navigate to success page with booking data
         navigate("/booking-success", {
           state: { bookingData: normalizedValues },
         });
-      } catch (error) {
-        console.error("Navigation error:", error);
-        message.error("Có lỗi khi chuyển trang. Vui lòng thử lại!");
+      } else {
+        const errorMsg =
+          transactionResponse?.message ||
+          reserveResponse?.message ||
+          "Có lỗi khi tạo giao dịch hoặc giữ ổ pin";
+        message.error(errorMsg);
       }
-    }, 2000);
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      message.error("Có lỗi khi đặt lịch. Vui lòng thử lại!");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const resetBooking = () => {
     form.resetFields();
     setBookingSuccess(false);
     setBookingData(null);
-    setSelectedTimeSlot(null);
-    setSelectedDate(null);
   };
-
-  // Get tomorrow's date as minimum date
-  const tomorrow = dayjs();
-  dayjs().add(1, "day");
-  const minDate = tomorrow.format("YYYY-MM-DD");
 
   if (bookingSuccess) {
     return (
@@ -762,7 +681,12 @@ export default function Booking() {
                       />
                       <strong style={{ color: "#00083B" }}>Ngày:</strong>
                       <span style={{ color: "#475569" }}>
-                        {bookingData?.date?.format("DD/MM/YYYY")}
+                        {(() => {
+                          const parsed = dayjs(bookingData?.date);
+                          return parsed.isValid()
+                            ? parsed.format("DD/MM/YYYY")
+                            : bookingData?.date || "";
+                        })()}
                       </span>
                     </Space>
                   )}
@@ -810,17 +734,17 @@ export default function Booking() {
                       <li>
                         ✅ <strong>Được phép:</strong> Đến từ{" "}
                         <strong style={{ color: "#10b981" }}>
-                          {bookingData?.time?.split(" - ")[0]}
+                          {bookingData?.time?.split(" - ")[0] || ""}
                         </strong>{" "}
                         đến{" "}
                         <strong style={{ color: "#10b981" }}>
-                          {bookingData?.time?.split(" - ")[1]}
+                          {bookingData?.time?.split(" - ")[1] || ""}
                         </strong>
                       </li>
                       <li>
                         ❌ <strong>Bị hủy:</strong> Đến sau{" "}
                         <strong style={{ color: "#dc2626" }}>
-                          {bookingData?.time?.split(" - ")[1]}
+                          {bookingData?.time?.split(" - ")[1] || ""}
                         </strong>
                       </li>
                       <li>
@@ -890,6 +814,12 @@ export default function Booking() {
           </Paragraph>
         </div>
 
+        {/* Subscription info hidden - API vẫn gọi ngầm để tính phí, không hiển thị UI */}
+
+        {/* Service packs UI ẩn - vẫn tải dữ liệu ngầm để xác định phí, không hiển thị */}
+
+        {/* Loading UI cho service packs ẩn */}
+
         {/* Validation Errors Alert */}
         <ValidationErrorsAlert />
 
@@ -900,1101 +830,20 @@ export default function Booking() {
             lg={14}
             style={{ display: "flex", flexDirection: "column" }}
           >
-            <Card
-              className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative overflow-hidden"
-              style={{ height: 700 }}
-            >
-              {/* Simple Decorative Elements */}
-              <div className="absolute -top-[30px] -right-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
-              <div className="absolute -bottom-[20px] -left-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
-
-              <div
-                className="text-center mb-2"
-                style={{ position: "relative", zIndex: 1 }}
-              >
-                <Title
-                  level={4}
-                  className="mb-0 text-[#00083B] text-[18px] font-semibold"
-                >
-                  Chọn Thông Tin Đặt Lịch
-                </Title>
-                <Paragraph className="text-slate-500 text-[12px]">
-                  Điền đầy đủ thông tin để đặt lịch đổi pin
-                </Paragraph>
-              </div>
-
-              <Tabs
-                activeKey={activeTab}
-                onChange={(key) => {
-                  setActiveTab(key);
-                  // Clear date when switching tabs, keep other fields
-                  if (key === "future") {
-                    form.setFieldsValue({ date: null });
-                    setSelectedDate(null);
-                    setFormValues((prev) => ({ ...prev, date: null }));
-                  } else if (key === "today") {
-                    const today = dayjs();
-                    form.setFieldsValue({ date: today });
-                    setSelectedDate(today);
-                    setFormValues((prev) => ({ ...prev, date: today }));
-                  }
-                }}
-                style={{
-                  marginBottom: "20px",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-                tabBarStyle={{
-                  background: "rgba(0, 8, 59, 0.05)",
-                  borderRadius: "12px",
-                  padding: "6px",
-                  marginBottom: "16px",
-                }}
-              >
-                <TabPane
-                  tab={
-                    <Space size="middle">
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          background:
-                            activeTab === "today"
-                              ? "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)"
-                              : "rgba(0, 8, 59, 0.1)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: "all 0.3s ease",
-                        }}
-                      >
-                        <ClockCircleOutlined
-                          style={{
-                            color: activeTab === "today" ? "white" : "#00083B",
-                            fontSize: "18px",
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <div
-                          style={{
-                            color: "#00083B",
-                            fontWeight: "600",
-                            fontSize: "16px",
-                          }}
-                        >
-                          Đổi trong ngày
-                        </div>
-                        <div style={{ color: "#64748b", fontSize: "12px" }}>
-                          Ngay hôm nay
-                        </div>
-                      </div>
-                    </Space>
-                  }
-                  key="today"
-                >
-                  <Alert
-                    message={
-                      <Space>
-                        <ThunderboltOutlined style={{ color: "#00083B" }} />
-                        <span style={{ fontWeight: "600" }}>
-                          Đổi pin trong ngày
-                        </span>
-                      </Space>
-                    }
-                    description="Chọn thời gian từ bây giờ đến hết ngày hôm nay. Thời gian hoạt động: 8:00 - 20:00"
-                    type="info"
-                    showIcon
-                    style={{
-                      marginBottom: "16px",
-                      borderRadius: "16px",
-                      background:
-                        "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                      border: "1px solid rgba(0, 8, 59, 0.1)",
-                    }}
-                  />
-
-                  <Form
-                    form={form}
-                    onFinish={handleBooking}
-                    onValuesChange={handleFormChange}
-                    layout="vertical"
-                    size="large"
-                  >
-                    <Row gutter={[24, 24]}>
-                      {/* Station Selection */}
-                      <Col xs={24}>
-                        <Form.Item
-                          name="station"
-                          label={
-                            <Space size="small">
-                              <EnvironmentOutlined
-                                style={{ color: "#00083B", fontSize: "14px" }}
-                              />
-                              <span
-                                style={{
-                                  color: "#00083B",
-                                  fontWeight: "600",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                Chọn trạm đổi pin
-                              </span>
-                            </Space>
-                          }
-                          rules={[
-                            {
-                              required: true,
-                              message: "Vui lòng chọn trạm!",
-                            },
-                          ]}
-                        >
-                          <div>
-                            {nearestStation && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  form.setFieldsValue({
-                                    station: nearestStation.name,
-                                  });
-                                  setFormValues((prev) => ({
-                                    ...prev,
-                                    station: nearestStation.name,
-                                  }));
-                                }}
-                                className="w-full mb-3 text-left"
-                              >
-                                <div className="p-[2px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_6px_14px_rgba(34,211,238,0.25)]">
-                                  <div className="flex items-center gap-3 rounded-full px-4 py-2 bg-[#0b1448]/90 border border-white/10">
-                                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/40">
-                                      <AimOutlined
-                                        style={{
-                                          fontSize: 16,
-                                          color: "#67e8f9",
-                                        }}
-                                      />
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-[11px] leading-none text-cyan-200/80">
-                                        Vị trí gần nhất
-                                      </div>
-                                      <div className="text-white font-semibold truncate">
-                                        {nearestStation.name}
-                                      </div>
-                                    </div>
-                                    {nearestStation?.distance !== undefined && (
-                                      <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-cyan-200 border border-cyan-400/40 bg-cyan-500/10">
-                                        {nearestStation.distance.toFixed(1)} km
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </button>
-                            )}
-
-                            {/* City toggle */}
-                            <div className="flex items-center gap-2 mb-2">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedCity("HN")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                  selectedCity === "HN"
-                                    ? "bg-cyan-600 text-white border-cyan-500"
-                                    : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                }`}
-                              >
-                                Hà Nội
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedCity("HCM")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                  selectedCity === "HCM"
-                                    ? "bg-cyan-600 text-white border-cyan-500"
-                                    : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                }`}
-                              >
-                                TP.HCM
-                              </button>
-                              <span className="ml-2 text-xs text-slate-500">
-                                Chọn thành phố để lọc danh sách trạm
-                              </span>
-                            </div>
-                            <Select
-                              placeholder="-- Chọn trạm --"
-                              size="large"
-                              style={{ borderRadius: "12px" }}
-                              dropdownStyle={{
-                                borderRadius: 12,
-                                padding: 8,
-                                background:
-                                  "linear-gradient(135deg,#ffffff,#f8fbff)",
-                                boxShadow:
-                                  "0 12px 24px rgba(0,8,59,0.12), 0 4px 10px rgba(0,8,59,0.08)",
-                              }}
-                              onDropdownVisibleChange={undefined}
-                              optionLabelProp="label"
-                              showSearch
-                              filterOption={(input, option) =>
-                                (option?.value || "")
-                                  .toLowerCase()
-                                  .includes((input || "").toLowerCase())
-                              }
-                              value={form.getFieldValue("station")}
-                              onChange={(value) => {
-                                // Update both form value and formValues state
-                                form.setFieldsValue({ station: value });
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  station: value,
-                                }));
-                              }}
-                            >
-                              {(() => {
-                                const items = stations
-                                  .filter((s) =>
-                                    selectedCity === "HN"
-                                      ? s.city === "Hà Nội"
-                                      : s.city === "TP.HCM"
-                                  )
-                                  .map((s) => ({
-                                    ...s,
-                                    distance: userLocation
-                                      ? calculateDistance(
-                                          userLocation[0],
-                                          userLocation[1],
-                                          s.position[0],
-                                          s.position[1]
-                                        )
-                                      : Number.POSITIVE_INFINITY,
-                                  }))
-                                  .sort(
-                                    (a, b) =>
-                                      (a.distance || 0) - (b.distance || 0)
-                                  );
-
-                                const nearestId =
-                                  nearestStation?.id || items[0]?.id;
-                                const renderOption = (station, highlight) => (
-                                  <Option
-                                    key={station.id}
-                                    value={station.name}
-                                    label={
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 8,
-                                        }}
-                                      >
-                                        <span style={{ fontWeight: 700 }}>
-                                          {station.name}
-                                        </span>
-                                        {userLocation && (
-                                          <span
-                                            style={{
-                                              padding: "2px 6px",
-                                              borderRadius: 8,
-                                              border:
-                                                "1px solid rgba(34,197,94,0.3)",
-                                              background:
-                                                "rgba(34,197,94,0.08)",
-                                              color: "#15803d",
-                                              fontSize: 10,
-                                              fontWeight: 700,
-                                            }}
-                                          >
-                                            {station.distance.toFixed(1)} km
-                                          </span>
-                                        )}
-                                      </div>
-                                    }
-                                  >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 12,
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          width: 32,
-                                          height: 32,
-                                          borderRadius: 16,
-                                          background: highlight
-                                            ? "linear-gradient(135deg,#06b6d4 0%, #3b82f6 100%)"
-                                            : "linear-gradient(135deg,#22d3ee 0%, #3b82f6 100%)",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          boxShadow:
-                                            "0 6px 12px rgba(34,211,238,0.25)",
-                                          flex: "0 0 auto",
-                                        }}
-                                      >
-                                        <span
-                                          style={{
-                                            color: "white",
-                                            fontSize: 16,
-                                          }}
-                                        >
-                                          ⚡
-                                        </span>
-                                      </div>
-                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
-                                          }}
-                                        >
-                                          <div
-                                            style={{
-                                              fontWeight: 700,
-                                              color: "#0f172a",
-                                              whiteSpace: "nowrap",
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                            }}
-                                          >
-                                            {station.name}
-                                          </div>
-                                          {highlight && (
-                                            <span
-                                              style={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: 4,
-                                                padding: "2px 8px",
-                                                borderRadius: 9999,
-                                                background:
-                                                  "linear-gradient(135deg, rgba(34,211,238,0.25) 0%, rgba(59,130,246,0.25) 100%)",
-                                                border:
-                                                  "1px solid rgba(34,211,238,0.6)",
-                                                color: "#06b6d4",
-                                                fontSize: 10,
-                                                fontWeight: 800,
-                                                letterSpacing: 0.3,
-                                                boxShadow:
-                                                  "0 0 0 1px rgba(255,255,255,0.1) inset, 0 6px 12px rgba(34,211,238,0.25)",
-                                              }}
-                                            >
-                                              <span style={{ fontSize: 12 }}>
-                                                🎯
-                                              </span>
-                                              <span>Gần nhất</span>
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div
-                                          style={{
-                                            fontSize: 12,
-                                            color: "#64748b",
-                                          }}
-                                        >
-                                          {station.address}
-                                        </div>
-                                      </div>
-                                      {userLocation && (
-                                        <span
-                                          style={{
-                                            padding: "2px 8px",
-                                            borderRadius: 8,
-                                            border:
-                                              "1px solid rgba(34,197,94,0.3)",
-                                            background: "rgba(34,197,94,0.08)",
-                                            color: "#15803d",
-                                            fontSize: 12,
-                                            fontWeight: 700,
-                                          }}
-                                        >
-                                          {station.distance.toFixed(1)} km
-                                        </span>
-                                      )}
-                                    </div>
-                                  </Option>
-                                );
-
-                                const elements = [];
-                                const nearest = items.find(
-                                  (i) => i.id === nearestId
-                                );
-                                if (nearest) {
-                                  elements.push(
-                                    <Option
-                                      disabled
-                                      key="hdr-nearest"
-                                      value="hdr-nearest"
-                                    >
-                                      <div
-                                        style={{
-                                          fontSize: 11,
-                                          fontWeight: 800,
-                                          letterSpacing: 1,
-                                          color: "#0891b2",
-                                          padding: "6px 8px",
-                                        }}
-                                      >
-                                        ĐỀ XUẤT GẦN NHẤT
-                                      </div>
-                                    </Option>
-                                  );
-                                  elements.push(renderOption(nearest, true));
-                                  elements.push(
-                                    <Option
-                                      disabled
-                                      key="sep-nearest"
-                                      value="sep-nearest"
-                                    >
-                                      <div
-                                        style={{
-                                          height: 1,
-                                          background: "#e2e8f0",
-                                          margin: "6px 0",
-                                        }}
-                                      />
-                                    </Option>
-                                  );
-                                }
-
-                                items
-                                  .filter((i) => i.id !== nearestId)
-                                  .forEach((i) =>
-                                    elements.push(renderOption(i, false))
-                                  );
-                                return elements;
-                              })()}
-                            </Select>
-                          </div>
-                        </Form.Item>
-                      </Col>
-
-                      {/* Time Selection */}
-
-                      {/* Time Selection */}
-                      <Col xs={24}>
-                        <Form.Item
-                          name="time"
-                          label={
-                            <Space size="small">
-                              <ClockCircleOutlined
-                                style={{ color: "#00083B", fontSize: "14px" }}
-                              />
-                              <span
-                                style={{
-                                  color: "#00083B",
-                                  fontWeight: "600",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                Chọn giờ (8:00 - 20:00)
-                              </span>
-                            </Space>
-                          }
-                          rules={[
-                            { required: true, message: "Vui lòng chọn giờ!" },
-                          ]}
-                        >
-                          <Select
-                            placeholder="-- Chọn giờ --"
-                            size="large"
-                            style={{ borderRadius: "12px" }}
-                            onChange={(value) => {
-                              setSelectedTimeSlot(value);
-                              setFormValues((prev) => ({
-                                ...prev,
-                                time: value,
-                              }));
-                            }}
-                          >
-                            {timeSlots.map((time, index) => {
-                              const disabled = isTimeDisabled(time);
-                              const availableCount = readySlotsAll; // demo: số ổ sẵn sàng hiện tại
-                              return (
-                                <Option
-                                  key={index}
-                                  value={time}
-                                  disabled={disabled}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <span>{time}</span>
-                                    <span
-                                      style={{
-                                        fontSize: 12,
-                                        color: disabled ? "#dc2626" : "#059669",
-                                        fontWeight: 700,
-                                      }}
-                                    >
-                                      {disabled
-                                        ? "Không khả dụng"
-                                        : `Khả dụng: ${availableCount}`}
-                                    </span>
-                                  </div>
-                                </Option>
-                              );
-                            })}
-                          </Select>
-                          {/* Thông tin xe hiển thị dưới Select xe, không đặt ở đây */}
-                        </Form.Item>
-                      </Col>
-                    </Row>
-
-                    {/* Hidden field for selectedSlot */}
-                    <Form.Item name="selectedSlot" style={{ display: "none" }}>
-                      <input type="hidden" />
-                    </Form.Item>
-
-                    {/* Action Buttons removed per request */}
-                  </Form>
-                </TabPane>
-
-                {false && (
-                  <TabPane
-                    tab={
-                      <Space size="middle">
-                        <div
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            borderRadius: "50%",
-                            background:
-                              activeTab === "future"
-                                ? "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)"
-                                : "rgba(0, 8, 59, 0.1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            transition: "all 0.3s ease",
-                          }}
-                        >
-                          <CalendarOutlined
-                            style={{
-                              color:
-                                activeTab === "future" ? "white" : "#00083B",
-                              fontSize: "18px",
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <div
-                            style={{
-                              color: "#00083B",
-                              fontWeight: "600",
-                              fontSize: "16px",
-                            }}
-                          >
-                            Đặt trước
-                          </div>
-                          <div style={{ color: "#64748b", fontSize: "12px" }}>
-                            3 ngày tới
-                          </div>
-                        </div>
-                      </Space>
-                    }
-                    key="future"
-                  >
-                    <Alert
-                      message={
-                        <Space>
-                          <CalendarOutlined style={{ color: "#00083B" }} />
-                          <span style={{ fontWeight: "600" }}>
-                            Đặt lịch trước
-                          </span>
-                        </Space>
-                      }
-                      description="Đặt lịch đổi pin trong vòng 3 ngày tới. Thời gian hoạt động: 8:00 - 20:00"
-                      type="success"
-                      showIcon
-                      style={{
-                        marginBottom: "16px",
-                        borderRadius: "16px",
-                        background:
-                          "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%)",
-                        border: "1px solid rgba(16, 185, 129, 0.2)",
-                      }}
-                    />
-
-                    <Form
-                      form={form}
-                      onFinish={handleBooking}
-                      onValuesChange={handleFormChange}
-                      layout="vertical"
-                      size="large"
-                    >
-                      <Row gutter={[24, 24]}>
-                        {/* Station Selection */}
-                        <Col xs={24}>
-                          <Form.Item
-                            name="station"
-                            label={
-                              <Space size="small">
-                                <EnvironmentOutlined
-                                  style={{ color: "#00083B", fontSize: "14px" }}
-                                />
-                                <span
-                                  style={{
-                                    color: "#00083B",
-                                    fontWeight: "600",
-                                    fontSize: "14px",
-                                  }}
-                                >
-                                  Chọn trạm đổi pin
-                                </span>
-                              </Space>
-                            }
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng chọn trạm!",
-                              },
-                            ]}
-                          >
-                            <div>
-                              {nearestStation && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    form.setFieldsValue({
-                                      station: nearestStation.name,
-                                    });
-                                    setFormValues((prev) => ({
-                                      ...prev,
-                                      station: nearestStation.name,
-                                    }));
-                                  }}
-                                  className="w-full mb-3 text-left"
-                                >
-                                  <div className="p-[2px] rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_6px_14px_rgba(34,211,238,0.25)]">
-                                    <div className="flex items-center gap-3 rounded-full px-4 py-2 bg-[#0b1448]/90 border border-white/10">
-                                      <span className="flex items-center justify-center w-7 h-7 rounded-full bg-cyan-500/20 border border-cyan-400/40">
-                                        <AimOutlined
-                                          style={{
-                                            fontSize: 16,
-                                            color: "#67e8f9",
-                                          }}
-                                        />
-                                      </span>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-[11px] leading-none text-cyan-200/80">
-                                          Vị trí gần nhất
-                                        </div>
-                                        <div className="text-white font-semibold truncate">
-                                          {nearestStation.name}
-                                        </div>
-                                      </div>
-                                      {nearestStation?.distance !==
-                                        undefined && (
-                                        <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold text-cyan-200 border border-cyan-400/40 bg-cyan-500/10">
-                                          {nearestStation.distance.toFixed(1)}{" "}
-                                          km
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </button>
-                              )}
-
-                              {/* City toggle */}
-                              <div className="flex items-center gap-2 mb-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedCity("HN")}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                    selectedCity === "HN"
-                                      ? "bg-cyan-600 text-white border-cyan-500"
-                                      : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                  }`}
-                                >
-                                  Hà Nội
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedCity("HCM")}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                                    selectedCity === "HCM"
-                                      ? "bg-cyan-600 text-white border-cyan-500"
-                                      : "bg-white/40 text-[#00083B] border-slate-300 hover:bg-white"
-                                  }`}
-                                >
-                                  TP.HCM
-                                </button>
-                                <span className="ml-2 text-xs text-slate-500">
-                                  Chọn thành phố để lọc danh sách trạm
-                                </span>
-                              </div>
-                              <Select
-                                placeholder="-- Chọn trạm --"
-                                size="large"
-                                style={{ borderRadius: "12px" }}
-                                dropdownStyle={{
-                                  borderRadius: 12,
-                                  padding: 8,
-                                  background:
-                                    "linear-gradient(135deg,#ffffff,#f8fbff)",
-                                  boxShadow:
-                                    "0 12px 24px rgba(0,8,59,0.12), 0 4px 10px rgba(0,8,59,0.08)",
-                                }}
-                                onDropdownVisibleChange={undefined}
-                                optionLabelProp="label"
-                                showSearch
-                                filterOption={(input, option) =>
-                                  (option?.value || "")
-                                    .toLowerCase()
-                                    .includes((input || "").toLowerCase())
-                                }
-                                value={form.getFieldValue("station")}
-                                onChange={(value) => {
-                                  // Update both form value and formValues state
-                                  form.setFieldsValue({ station: value });
-                                  setFormValues((prev) => ({
-                                    ...prev,
-                                    station: value,
-                                  }));
-                                }}
-                              >
-                                {(() => {
-                                  const items = stations
-                                    .filter((s) =>
-                                      selectedCity === "HN"
-                                        ? s.city === "Hà Nội"
-                                        : s.city === "TP.HCM"
-                                    )
-                                    .map((s) => ({
-                                      ...s,
-                                      distance: userLocation
-                                        ? calculateDistance(
-                                            userLocation[0],
-                                            userLocation[1],
-                                            s.position[0],
-                                            s.position[1]
-                                          )
-                                        : Number.POSITIVE_INFINITY,
-                                    }))
-                                    .sort(
-                                      (a, b) =>
-                                        (a.distance || 0) - (b.distance || 0)
-                                    );
-
-                                  const nearestId =
-                                    nearestStation?.id || items[0]?.id;
-                                  const renderOption = (station, highlight) => (
-                                    <Option
-                                      key={station.id}
-                                      value={station.name}
-                                      label={
-                                        <div
-                                          style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 8,
-                                          }}
-                                        >
-                                          <span style={{ fontWeight: 700 }}>
-                                            {station.name}
-                                          </span>
-                                          {userLocation && (
-                                            <span
-                                              style={{
-                                                padding: "2px 6px",
-                                                borderRadius: 8,
-                                                border:
-                                                  "1px solid rgba(34,197,94,0.3)",
-                                                background:
-                                                  "rgba(34,197,94,0.08)",
-                                                color: "#15803d",
-                                                fontSize: 10,
-                                                fontWeight: 700,
-                                              }}
-                                            >
-                                              {station.distance.toFixed(1)} km
-                                            </span>
-                                          )}
-                                        </div>
-                                      }
-                                    >
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 12,
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: 16,
-                                            background: highlight
-                                              ? "linear-gradient(135deg,#06b6d4 0%, #3b82f6 100%)"
-                                              : "linear-gradient(135deg,#22d3ee 0%, #3b82f6 100%)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            boxShadow:
-                                              "0 6px 12px rgba(34,211,238,0.25)",
-                                            flex: "0 0 auto",
-                                          }}
-                                        >
-                                          <span
-                                            style={{
-                                              color: "white",
-                                              fontSize: 16,
-                                            }}
-                                          >
-                                            ⚡
-                                          </span>
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <div
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: 8,
-                                            }}
-                                          >
-                                            <div
-                                              style={{
-                                                fontWeight: 700,
-                                                color: "#0f172a",
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                              }}
-                                            >
-                                              {station.name}
-                                            </div>
-                                            {highlight && (
-                                              <span
-                                                style={{
-                                                  display: "inline-flex",
-                                                  alignItems: "center",
-                                                  gap: 4,
-                                                  padding: "2px 8px",
-                                                  borderRadius: 9999,
-                                                  background:
-                                                    "linear-gradient(135deg, rgba(34,211,238,0.25) 0%, rgba(59,130,246,0.25) 100%)",
-                                                  border:
-                                                    "1px solid rgba(34,211,238,0.6)",
-                                                  color: "#06b6d4",
-                                                  fontSize: 10,
-                                                  fontWeight: 800,
-                                                  letterSpacing: 0.3,
-                                                  boxShadow:
-                                                    "0 0 0 1px rgba(255,255,255,0.1) inset, 0 6px 12px rgba(34,211,238,0.25)",
-                                                }}
-                                              >
-                                                <span style={{ fontSize: 12 }}>
-                                                  🎯
-                                                </span>
-                                                <span>Gần nhất</span>
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div
-                                            style={{
-                                              fontSize: 12,
-                                              color: "#64748b",
-                                            }}
-                                          >
-                                            {station.address}
-                                          </div>
-                                        </div>
-                                        {userLocation && (
-                                          <span
-                                            style={{
-                                              padding: "2px 8px",
-                                              borderRadius: 8,
-                                              border:
-                                                "1px solid rgba(34,197,94,0.3)",
-                                              background:
-                                                "rgba(34,197,94,0.08)",
-                                              color: "#15803d",
-                                              fontSize: 12,
-                                              fontWeight: 700,
-                                            }}
-                                          >
-                                            {station.distance.toFixed(1)} km
-                                          </span>
-                                        )}
-                                      </div>
-                                    </Option>
-                                  );
-
-                                  const elements = [];
-                                  const nearest = items.find(
-                                    (i) => i.id === nearestId
-                                  );
-                                  if (nearest) {
-                                    elements.push(
-                                      <Option
-                                        disabled
-                                        key="hdr-nearest"
-                                        value="hdr-nearest"
-                                      >
-                                        <div
-                                          style={{
-                                            fontSize: 11,
-                                            fontWeight: 800,
-                                            letterSpacing: 1,
-                                            color: "#0891b2",
-                                            padding: "6px 8px",
-                                          }}
-                                        >
-                                          ĐỀ XUẤT GẦN NHẤT
-                                        </div>
-                                      </Option>
-                                    );
-                                    elements.push(renderOption(nearest, true));
-                                    elements.push(
-                                      <Option
-                                        disabled
-                                        key="sep-nearest"
-                                        value="sep-nearest"
-                                      >
-                                        <div
-                                          style={{
-                                            height: 1,
-                                            background: "#e2e8f0",
-                                            margin: "6px 0",
-                                          }}
-                                        />
-                                      </Option>
-                                    );
-                                  }
-
-                                  items
-                                    .filter((i) => i.id !== nearestId)
-                                    .forEach((i) =>
-                                      elements.push(renderOption(i, false))
-                                    );
-                                  return elements;
-                                })()}
-                              </Select>
-                            </div>
-                          </Form.Item>
-                        </Col>
-
-                        {/* Date Selection */}
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            name="date"
-                            label={
-                              <Space size="small">
-                                <CalendarOutlined
-                                  style={{ color: "#00083B", fontSize: "14px" }}
-                                />
-                                <span
-                                  style={{
-                                    color: "#00083B",
-                                    fontWeight: "600",
-                                    fontSize: "14px",
-                                  }}
-                                >
-                                  Chọn ngày
-                                </span>
-                              </Space>
-                            }
-                            rules={[
-                              {
-                                required: true,
-                                message: "Vui lòng chọn ngày!",
-                              },
-                            ]}
-                          >
-                            <DatePicker
-                              style={{ width: "100%", borderRadius: "12px" }}
-                              placeholder="Chọn ngày"
-                              size="large"
-                              onChange={(date) => {
-                                setSelectedDate(date);
-                                // Update both form value and formValues state
-                                form.setFieldsValue({ date: date });
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  date: date,
-                                }));
-                              }}
-                              disabledDate={(current) => {
-                                const today = dayjs();
-                                const maxDate = dayjs().add(3, "day");
-                                return (
-                                  current &&
-                                  (current < today || current > maxDate)
-                                );
-                              }}
-                            />
-                          </Form.Item>
-                        </Col>
-
-                        {/* Time Selection */}
-                        <Col xs={24} md={12}>
-                          <Form.Item
-                            name="time"
-                            label={
-                              <Space size="small">
-                                <ClockCircleOutlined
-                                  style={{ color: "#00083B", fontSize: "14px" }}
-                                />
-                                <span
-                                  style={{
-                                    color: "#00083B",
-                                    fontWeight: "600",
-                                    fontSize: "14px",
-                                  }}
-                                >
-                                  Chọn giờ (8:00 - 20:00)
-                                </span>
-                              </Space>
-                            }
-                            rules={[
-                              { required: true, message: "Vui lòng chọn giờ!" },
-                            ]}
-                          >
-                            <Select
-                              placeholder="-- Chọn giờ --"
-                              size="large"
-                              style={{ borderRadius: "12px" }}
-                              onChange={(value) => {
-                                setSelectedTimeSlot(value);
-                                setFormValues((prev) => ({
-                                  ...prev,
-                                  time: value,
-                                }));
-                              }}
-                            >
-                              {timeSlots.map((time, index) => (
-                                <Option key={index} value={time}>
-                                  {time}
-                                </Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      {/* Hidden field for selectedSlot */}
-                      <Form.Item
-                        name="selectedSlot"
-                        style={{ display: "none" }}
-                      >
-                        <input type="hidden" />
-                      </Form.Item>
-
-                      {/* Action Buttons removed per request */}
-                    </Form>
-                  </TabPane>
-                )}
-              </Tabs>
-            </Card>
+            <BookingForm
+              form={form}
+              stationsList={stationsList}
+              loadingStationsList={loadingStationsList}
+              selectedCity={selectedCity}
+              setSelectedCity={setSelectedCity}
+              nearestStation={nearestStation}
+              userLocation={userLocation}
+              isLoadingLocation={isLoadingLocation}
+              locationError={locationError}
+              handleGetUserLocation={handleGetUserLocation}
+              handleFormChange={handleFormChange}
+              fetchStationData={fetchStationData}
+            />
           </Col>
           {/* Right Side - Map + Summary */}
           <Col
@@ -2003,1652 +852,46 @@ export default function Booking() {
             style={{ display: "flex", flexDirection: "column" }}
           >
             <div>
-              <Card
-                className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative"
-                style={{ height: 700, overflow: "hidden" }}
-              >
-                {/* Simple Decorative Elements */}
-                <div className="absolute -top-[30px] -left-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
-                <div className="absolute -bottom-[20px] -right-[20px] w-[40px] h-[40px] bg-[rgba(16,185,129,0.05)] rounded-full z-0" />
-
-                <div
-                  className="text-center mb-2"
-                  style={{ position: "relative", zIndex: 1 }}
-                >
-                  <div
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      marginBottom: "8px",
-                      boxShadow: "0 8px 20px rgba(0, 8, 59, 0.15)",
-                    }}
-                  >
-                    <EnvironmentOutlined
-                      style={{ fontSize: "16px", color: "white" }}
-                    />
-                  </div>
-                  <Title
-                    level={4}
-                    style={{
-                      margin: 0,
-                      color: "#00083B",
-                      fontSize: "18px",
-                      fontWeight: 700,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Vị trí của bạn
-                  </Title>
-                </div>
-
-                {/* Map */}
-                <div
-                  style={{
-                    height: "400px",
-                    borderRadius: "16px",
-                    overflow: "hidden",
-                    position: "relative",
-                    zIndex: 1,
-                    boxShadow:
-                      "0 8px 20px rgba(0, 8, 59, 0.1), 0 4px 8px rgba(0, 8, 59, 0.05)",
-                    border: "2px solid rgba(0, 8, 59, 0.08)",
-                  }}
-                >
-                  {userLocation ? (
-                    <MapContainer
-                      center={userLocation}
-                      zoom={13}
-                      style={{ height: "100%", width: "100%" }}
-                    >
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-
-                      {/* User Location */}
-                      <Marker position={userLocation} icon={createUserIcon()}>
-                        <Popup>
-                          <div className="p-3 min-w-[240px] sm:min-w-[260px]">
-                            <div style={{ marginBottom: "16px" }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  marginBottom: "8px",
-                                }}
-                              >
-                                <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
-                                  Vị trí của bạn
-                                </h3>
-                                <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white px-2 py-0.5 rounded-md text-[10px] font-bold border border-blue-500 shadow">
-                                  📍 HIỆN TẠI
-                                </div>
-                              </div>
-                            </div>
-
-                            <div style={{ marginBottom: "16px" }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  marginBottom: "12px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "24px",
-                                    height: "24px",
-                                    borderRadius: "50%",
-                                    background:
-                                      "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginRight: "8px",
-                                  }}
-                                >
-                                  <span
-                                    style={{ fontSize: "12px", color: "white" }}
-                                  >
-                                    🎯
-                                  </span>
-                                </div>
-                                <div>
-                                  <div
-                                    style={{
-                                      fontSize: "12px",
-                                      fontWeight: "600",
-                                      color: "#00083B",
-                                      marginBottom: "2px",
-                                    }}
-                                  >
-                                    Trạng thái định vị
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#475569",
-                                    }}
-                                  >
-                                    Đã xác định vị trí thành công
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  marginBottom: "12px",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "24px",
-                                    height: "24px",
-                                    borderRadius: "50%",
-                                    background:
-                                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginRight: "8px",
-                                  }}
-                                >
-                                  <span
-                                    style={{ fontSize: "12px", color: "white" }}
-                                  >
-                                    🔍
-                                  </span>
-                                </div>
-                                <div>
-                                  <div
-                                    style={{
-                                      fontSize: "12px",
-                                      fontWeight: "600",
-                                      color: "#00083B",
-                                      marginBottom: "2px",
-                                    }}
-                                  >
-                                    Độ chính xác
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#475569",
-                                    }}
-                                  >
-                                    GPS độ chính xác cao
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 text-center">
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: "20px",
-                                    height: "20px",
-                                    borderRadius: "50%",
-                                    background:
-                                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginRight: "8px",
-                                  }}
-                                >
-                                  <EnvironmentOutlined
-                                    style={{ fontSize: "10px", color: "white" }}
-                                  />
-                                </div>
-                                <span className="text-[12px] font-semibold text-[#00083B]">
-                                  Trạm đổi pin VoltSwap
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </Popup>
-                      </Marker>
-
-                      {/* Battery Stations */}
-                      {stations.map((station) => {
-                        // Kiểm tra xem đây có phải trạm gần nhất không
-                        const isNearest =
-                          nearestStation && nearestStation.id === station.id;
-
-                        return (
-                          <Marker
-                            key={station.id}
-                            position={station.position}
-                            icon={
-                              isNearest
-                                ? createNearestStationIcon(
-                                    station.id <= 5 ? "#00ff00" : "#ff6b35"
-                                  )
-                                : createBatteryIcon(
-                                    station.id <= 5 ? "#00ff00" : "#ff6b35"
-                                  )
-                            }
-                          >
-                            <Popup>
-                              <div className="p-3 min-w-[240px] sm:min-w-[260px]">
-                                <div style={{ marginBottom: "16px" }}>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "space-between",
-                                      marginBottom: "8px",
-                                    }}
-                                  >
-                                    <h3 className="text-base font-bold text-[#00083B] m-0 leading-tight">
-                                      {station.name}
-                                    </h3>
-                                    <div
-                                      style={{ display: "flex", gap: "4px" }}
-                                    >
-                                      {isNearest && (
-                                        <div className="bg-gradient-to-br from-amber-300 to-amber-500 text-amber-900 px-2 py-0.5 rounded-md text-[10px] font-bold border border-amber-500 shadow">
-                                          ⭐ GẦN NHẤT
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div style={{ marginBottom: "16px" }}>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "flex-start",
-                                      marginBottom: "8px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: "20px",
-                                        height: "20px",
-                                        borderRadius: "50%",
-                                        background:
-                                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        marginRight: "8px",
-                                        marginTop: "2px",
-                                      }}
-                                    >
-                                      <EnvironmentOutlined
-                                        style={{
-                                          fontSize: "10px",
-                                          color: "white",
-                                        }}
-                                      />
-                                    </div>
-                                    <div>
-                                      <div
-                                        style={{
-                                          fontSize: "12px",
-                                          fontWeight: "600",
-                                          color: "#00083B",
-                                          marginBottom: "2px",
-                                        }}
-                                      >
-                                        Địa chỉ
-                                      </div>
-                                      <div
-                                        style={{
-                                          fontSize: "13px",
-                                          color: "#475569",
-                                          lineHeight: "1.4",
-                                        }}
-                                      >
-                                        {station.address}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      marginBottom: "8px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: "20px",
-                                        height: "20px",
-                                        borderRadius: "50%",
-                                        background:
-                                          "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        marginRight: "8px",
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          fontSize: "10px",
-                                          color: "white",
-                                        }}
-                                      >
-                                        🏙️
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <div
-                                        style={{
-                                          fontSize: "12px",
-                                          fontWeight: "600",
-                                          color: "#00083B",
-                                          marginBottom: "2px",
-                                        }}
-                                      >
-                                        Thành phố
-                                      </div>
-                                      <div
-                                        style={{
-                                          fontSize: "13px",
-                                          color: "#475569",
-                                        }}
-                                      >
-                                        {station.address
-                                          .split(",")[1]
-                                          ?.trim() || "Hà Nội"}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      marginBottom: "12px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: "20px",
-                                        height: "20px",
-                                        borderRadius: "50%",
-                                        background:
-                                          "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        marginRight: "8px",
-                                      }}
-                                    >
-                                      <span
-                                        style={{
-                                          fontSize: "10px",
-                                          color: "white",
-                                        }}
-                                      >
-                                        📍
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <div
-                                        style={{
-                                          fontSize: "12px",
-                                          fontWeight: "600",
-                                          color: "#00083B",
-                                          marginBottom: "2px",
-                                        }}
-                                      >
-                                        Quận/Huyện
-                                      </div>
-                                      <div
-                                        style={{
-                                          fontSize: "13px",
-                                          color: "#475569",
-                                        }}
-                                      >
-                                        {station.address
-                                          .split(",")[2]
-                                          ?.trim() || "Ba Đình"}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {isNearest && (
-                                  <div
-                                    style={{
-                                      background:
-                                        "linear-gradient(135deg, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%)",
-                                      border:
-                                        "1px solid rgba(220, 38, 38, 0.1)",
-                                      borderRadius: "12px",
-                                      padding: "12px",
-                                      marginBottom: "16px",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          width: "24px",
-                                          height: "24px",
-                                          borderRadius: "50%",
-                                          background:
-                                            "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          marginRight: "8px",
-                                        }}
-                                      >
-                                        <span
-                                          style={{
-                                            fontSize: "12px",
-                                            color: "white",
-                                          }}
-                                        >
-                                          🚗
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <div
-                                          style={{
-                                            fontSize: "12px",
-                                            fontWeight: "600",
-                                            color: "#00083B",
-                                            marginBottom: "2px",
-                                          }}
-                                        >
-                                          Khoảng cách
-                                        </div>
-                                        <div
-                                          style={{
-                                            fontSize: "14px",
-                                            color: "#dc2626",
-                                            fontWeight: "700",
-                                          }}
-                                        >
-                                          {nearestStation.distance.toFixed(1)}{" "}
-                                          km
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="bg-[linear-gradient(135deg,rgba(0,8,59,0.05)_0%,rgba(0,8,59,0.02)_100%)] border border-[rgba(0,8,59,0.1)] rounded-xl p-3 mb-4 text-center">
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: "20px",
-                                        height: "20px",
-                                        borderRadius: "50%",
-                                        background:
-                                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        marginRight: "8px",
-                                      }}
-                                    >
-                                      <PoweroffOutlined
-                                        style={{
-                                          fontSize: "10px",
-                                          color: "white",
-                                        }}
-                                      />
-                                    </div>
-                                    <span className="text-[12px] font-semibold text-[#00083B]">
-                                      Trạm đổi pin VoltSwap
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Chỉ giữ nút Chỉ đường */}
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => {
-                                      // Sử dụng địa chỉ văn bản thay vì tọa độ
-                                      const stationAddress = station.address
-                                        .replace(/ /g, "+")
-                                        .replace(/,/g, "%2C");
-
-                                      if (userLocation) {
-                                        // Nếu có vị trí người dùng, tạo chỉ đường từ vị trí hiện tại
-                                        const userLat = userLocation[0];
-                                        const userLng = userLocation[1];
-                                        const googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${stationAddress}`;
-                                        window.open(googleMapsUrl, "_blank");
-                                      } else {
-                                        // Nếu chưa có vị trí, chỉ hiển thị vị trí trạm
-                                        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationAddress}`;
-                                        window.open(googleMapsUrl, "_blank");
-                                      }
-                                    }}
-                                    className="flex-1 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white px-3 py-2 rounded-xl text-[13px] font-semibold border-0 cursor-pointer transition-all flex items-center justify-center gap-1 shadow hover:-translate-y-0.5"
-                                  >
-                                    <EnvironmentOutlined
-                                      style={{ fontSize: "12px" }}
-                                    />
-                                    <span>Chỉ đường</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </Popup>
-                          </Marker>
-                        );
-                      })}
-                    </MapContainer>
-                  ) : (
-                    <div
-                      style={{
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "#f5f5f5",
-                        borderRadius: "12px",
-                      }}
-                    >
-                      <div style={{ textAlign: "center" }}>
-                        <Spin size="large" />
-                        <div style={{ marginTop: "16px", color: "#666" }}>
-                          Đang định vị vị trí của bạn...
-                        </div>
-                        <Button
-                          type="primary"
-                          onClick={getUserLocation}
-                          loading={isLoadingLocation}
-                          style={{ marginTop: "16px" }}
-                        >
-                          Định vị lại
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick Info - gọn lại, không dư khoảng trống */}
-                <div style={{ marginTop: "12px" }}>
-                  <Row gutter={[16, 16]}>
-                    <Col span={8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px 10px",
-                          background:
-                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                          borderRadius: "12px",
-                          border: "1px solid rgba(0, 8, 59, 0.1)",
-                          transition: "all 0.3s ease",
-                        }}
-                        className="hover:shadow-md"
-                      >
-                        <div
-                          style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto 6px",
-                          }}
-                        >
-                          <ThunderboltOutlined
-                            style={{ fontSize: "16px", color: "white" }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            color: "#00083B",
-                            fontWeight: "600",
-                          }}
-                        >
-                          5 phút
-                        </div>
-                        <div style={{ fontSize: "10px", color: "#64748b" }}>
-                          Nhanh chóng
-                        </div>
-                      </div>
-                    </Col>
-                    <Col span={8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px 10px",
-                          background:
-                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                          borderRadius: "12px",
-                          border: "1px solid rgba(0, 8, 59, 0.1)",
-                          transition: "all 0.3s ease",
-                        }}
-                        className="hover:shadow-md"
-                      >
-                        <div
-                          style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto 6px",
-                          }}
-                        >
-                          <SafetyOutlined
-                            style={{ fontSize: "16px", color: "white" }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            color: "#00083B",
-                            fontWeight: "600",
-                          }}
-                        >
-                          An toàn
-                        </div>
-                        <div style={{ fontSize: "10px", color: "#64748b" }}>
-                          100% chính hãng
-                        </div>
-                      </div>
-                    </Col>
-                    <Col span={8}>
-                      <div
-                        style={{
-                          textAlign: "center",
-                          padding: "12px 10px",
-                          background:
-                            "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-                          borderRadius: "12px",
-                          border: "1px solid rgba(0, 8, 59, 0.1)",
-                          transition: "all 0.3s ease",
-                        }}
-                        className="hover:shadow-md"
-                      >
-                        <div
-                          style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            background:
-                              "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto 6px",
-                          }}
-                        >
-                          <DollarOutlined
-                            style={{ fontSize: "16px", color: "white" }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            color: "#00083B",
-                            fontWeight: "600",
-                          }}
-                        >
-                          50k/lần
-                        </div>
-                        <div style={{ fontSize: "10px", color: "#64748b" }}>
-                          Tiết kiệm
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-                {/* Booking Summary moved out to bottom-right card */}
-                {false && (
-                  <div style={{ marginTop: 16 }}>
-                    <Card
-                      style={{
-                        borderRadius: 16,
-                        background:
-                          "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
-                        border: "1px solid rgba(0,8,59,0.08)",
-                        boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
-                      }}
-                      bodyStyle={{ padding: 20 }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 12,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 4,
-                            background: "#00083B",
-                          }}
-                        />
-                        <span
-                          style={{
-                            color: "#00083B",
-                            fontWeight: 700,
-                            fontSize: 18,
-                          }}
-                        >
-                          Tóm tắt đặt lịch
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          color: "#475569",
-                          fontSize: 14,
-                          display: "grid",
-                          gridTemplateColumns: "120px 1fr",
-                          rowGap: 12,
-                        }}
-                      >
-                        <span>Trạm:</span>
-                        <span style={{ color: "#0f172a", fontWeight: 700 }}>
-                          {watchedStation || "Chưa chọn"}
-                        </span>
-                        <span>Ngày:</span>
-                        <span style={{ color: "#0f172a" }}>
-                          {activeTab === "today"
-                            ? dayjs().format("DD/MM/YYYY")
-                            : watchedDate
-                            ? watchedDate.format("DD/MM/YYYY")
-                            : "Chưa chọn"}
-                        </span>
-                        <span>Giờ:</span>
-                        <span style={{ color: "#0f172a" }}>
-                          {watchedTime || "Chưa chọn"}
-                        </span>
-                        <span>Ổ pin đã chọn:</span>
-                        <span style={{ color: "#0f172a" }}>
-                          {selectedSlotObj
-                            ? `Ổ pin #${selectedSlotObj.slotNumber}`
-                            : "Chưa chọn"}
-                        </span>
-                        <span style={{ color: "#10b981", fontWeight: 700 }}>
-                          Phí dịch vụ:
-                        </span>
-                        <span style={{ color: "#10b981", fontWeight: 700 }}>
-                          {formatVND(serviceFee)}
-                        </span>
-                      </div>
-
-                      {selectedTimeSlot && (
-                        <Alert
-                          message="⚠️ Lưu ý quan trọng về thời gian"
-                          description={
-                            <div>
-                              <div style={{ marginBottom: "8px" }}>
-                                <strong>Quy định về thời gian đến:</strong>
-                              </div>
-                              <ul
-                                style={{
-                                  margin: "8px 0",
-                                  paddingLeft: "20px",
-                                  fontSize: "13px",
-                                }}
-                              >
-                                {selectedDate && activeTab === "future" && (
-                                  <li>
-                                    <strong>Ngày đã chọn:</strong>{" "}
-                                    <strong style={{ color: "#00083B" }}>
-                                      {selectedDate.format("DD/MM/YYYY")}
-                                    </strong>
-                                  </li>
-                                )}
-                                <li>
-                                  <strong>Slot đã chọn:</strong>{" "}
-                                  <strong style={{ color: "#00083B" }}>
-                                    {selectedTimeSlot}
-                                  </strong>
-                                </li>
-                                <li>
-                                  ✅ <strong>Được phép:</strong> Đến từ{" "}
-                                  <strong style={{ color: "#10b981" }}>
-                                    {selectedTimeSlot.split(" - ")[0]}
-                                  </strong>{" "}
-                                  đến{" "}
-                                  <strong style={{ color: "#10b981" }}>
-                                    {selectedTimeSlot.split(" - ")[1]}
-                                  </strong>
-                                </li>
-                                <li>
-                                  ❌ <strong>Bị hủy:</strong> Đến sau{" "}
-                                  <strong style={{ color: "#dc2626" }}>
-                                    {selectedTimeSlot.split(" - ")[1]}
-                                  </strong>
-                                </li>
-                                <li>
-                                  Lịch đổi pin sẽ bị{" "}
-                                  <strong style={{ color: "#dc2626" }}>
-                                    hủy tự động
-                                  </strong>{" "}
-                                  nếu đến muộn
-                                </li>
-                              </ul>
-                            </div>
-                          }
-                          type="warning"
-                          showIcon
-                          style={{
-                            marginTop: "16px",
-                            borderRadius: "16px",
-                            background:
-                              "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%)",
-                            border: "1px solid rgba(245, 158, 11, 0.2)",
-                          }}
-                        />
-                      )}
-
-                      <div style={{ marginTop: 16 }}>
-                        <Button
-                          type="primary"
-                          size="large"
-                          loading={isBooking}
-                          style={{
-                            height: 48,
-                            borderRadius: 12,
-                            background:
-                              "linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)",
-                            border: "none",
-                            fontWeight: 700,
-                          }}
-                          onClick={() => {
-                            form
-                              .validateFields()
-                              .then((values) => handleBooking(values))
-                              .catch(() => {
-                                message.error(
-                                  "Vui lòng điền đầy đủ thông tin!"
-                                );
-                              });
-                          }}
-                        >
-                          {isBooking ? "Đang xử lý..." : "Xác nhận đặt lịch"}
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                )}
-              </Card>
+              <LocationMap
+                userLocation={userLocation}
+                stationsList={stationsList}
+                nearestStation={nearestStation}
+                isLoadingLocation={isLoadingLocation}
+                handleGetUserLocation={handleGetUserLocation}
+              />
             </div>
-            {/* Booking Summary moved below the row to avoid increasing right column height */}
           </Col>
         </Row>
 
         {/* Bottom grid: Inventory (left) and Booking Summary (right) */}
-        <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
+        <Row gutter={[32, 32]} align="stretch" style={{ marginTop: 16 }}>
           {selectedStationData ? (
             <Col xs={24} lg={14}>
-              <Card
-                style={{
-                  borderRadius: 16,
-                  background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
-                  border: "1px solid rgba(0,8,59,0.08)",
-                  boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
-                  height: 560,
-                }}
-                bodyStyle={{
-                  padding: 20,
-                  display: "flex",
-                  flexDirection: "column",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: "#10b981",
-                    }}
-                  />
-                  <span
-                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
-                  >
-                    Tồn kho ổ pin tại trạm đã chọn
-                  </span>
-                </div>
-                <div style={{ color: "#475569", fontSize: 14 }}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
-                      <div style={{ fontWeight: 700 }}>
-                        {selectedStationData.name}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Tổng ổ pin / Sẵn sàng
-                      </div>
-                      <div style={{ fontWeight: 700 }}>
-                        {totalSlotsAll} / {readySlotsAll}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <strong>Tổng quan theo trạng thái:</strong>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fill, minmax(160px, 1fr))",
-                        gap: 8,
-                        marginTop: 8,
-                      }}
-                    >
-                      <div
-                        style={{
-                          border: "2px solid #10b981",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#f0fdf4",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#059669",
-                          }}
-                        >
-                          Sẵn sàng
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {readySlotsAll} ổ pin
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          border: "2px solid #f59e0b",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#fffbeb",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#d97706",
-                          }}
-                        >
-                          Đang sạc
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {chargingSlotsAll} ổ pin
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          border: "2px solid #6b7280",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#f9fafb",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#4b5563",
-                          }}
-                        >
-                          Bảo dưỡng
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {maintenanceSlotsAll} ổ pin
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Danh sách ổ pin (chỉ xem):</strong>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#64748b",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      Tổng {sortedAllSlots.length} ổ
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(220px, 1fr))",
-                      gap: 12,
-                      flex: 1,
-                      minHeight: 0,
-                      maxHeight: 270,
-                      overflowY: "auto",
-                      paddingRight: 6,
-                    }}
-                  >
-                    {sortedAllSlots.map((slot) => {
-                      const isMaintenance = slot.status === "maintenance";
-                      const socValue = slot.soc || 0;
-                      const isFull = socValue === 100;
-                      const isChargingVisual = !isFull && !isMaintenance;
-
-                      const remainingToFull = Math.max(0, 100 - socValue);
-                      const etaFullMinutes = remainingToFull; // 1%/phút
-                      const etaFullTime = dayjs()
-                        .add(etaFullMinutes, "minute")
-                        .format("HH:mm");
-
-                      return (
-                        <div
-                          key={slot.id}
-                          style={{
-                            border: "1px solid rgba(0,8,59,0.1)",
-                            borderRadius: 12,
-                            padding: 12,
-                            background: isFull
-                              ? "rgba(0, 8, 59, 0.03)"
-                              : isChargingVisual
-                              ? "#fff7ed"
-                              : "#f3f4f6",
-                            opacity: isMaintenance ? 0.6 : 1,
-                            position: "relative",
-                            height: 140,
-                            overflow: "hidden",
-                            ...(isMaintenance && {
-                              backgroundImage:
-                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.06) 10px, rgba(0,0,0,0.06) 20px)",
-                            }),
-                          }}
-                        >
-                          <div style={{ fontWeight: 700, color: "#0f172a" }}>
-                            Ổ pin #{slot.slotNumber}
-                          </div>
-                          <div style={{ marginTop: 6, fontSize: 13 }}>
-                            SoH: <strong>{slot.soh}%</strong>
-                          </div>
-                          <div style={{ fontSize: 13 }}>
-                            SoC: <strong>{slot.soc}%</strong>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: isFull
-                                ? "#059669"
-                                : isChargingVisual
-                                ? "#a16207"
-                                : "#6b7280",
-                              fontWeight: 600,
-                              marginTop: 8,
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                              backgroundColor: isFull
-                                ? "#dcfce7"
-                                : isChargingVisual
-                                ? "#ffedd5"
-                                : "#f3f4f6",
-                              textAlign: "center",
-                            }}
-                          >
-                            {isMaintenance
-                              ? "Bảo dưỡng"
-                              : isFull
-                              ? "Sẵn sàng (100%)"
-                              : "Đang sạc"}
-                          </div>
-                          {!isMaintenance && !isFull && (
-                            <div
-                              style={{
-                                marginTop: 6,
-                                fontSize: 12,
-                                color: "#0f172a",
-                              }}
-                            >
-                              ETA đầy 100%: <strong>{etaFullTime}</strong> (
-                              {etaFullMinutes} phút)
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </Card>
+              <PinInventory
+                selectedStationData={selectedStationData}
+                pinSlots={pinSlots}
+                watchedStation={watchedStation}
+                selectedPinSlot={selectedPinSlot}
+                setSelectedPinSlot={setSelectedPinSlot}
+              />
             </Col>
           ) : (
             <Col xs={24} lg={14} />
           )}
           <Col xs={24} lg={10}>
-            <Card
-              ref={summaryCardRef}
-              style={{
-                borderRadius: 16,
-                background: "linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)",
-                border: "1px solid rgba(0,8,59,0.08)",
-                boxShadow: "0 8px 24px rgba(0,8,59,0.08)",
-              }}
-              bodyStyle={{ padding: 20 }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    background: "#00083B",
-                  }}
-                />
-                <span
-                  style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
-                >
-                  Tóm tắt đặt lịch
-                </span>
-              </div>
-              <div
-                style={{
-                  color: "#475569",
-                  fontSize: 14,
-                  display: "grid",
-                  gridTemplateColumns: "120px 1fr",
-                  rowGap: 12,
-                }}
-              >
-                <span>Trạm:</span>
-                <span style={{ color: "#0f172a", fontWeight: 700 }}>
-                  {watchedStation || "Chưa chọn"}
-                </span>
-                <span>Ngày:</span>
-                <span style={{ color: "#0f172a" }}>
-                  {activeTab === "today"
-                    ? dayjs().format("DD/MM/YYYY")
-                    : watchedDate
-                    ? watchedDate.format("DD/MM/YYYY")
-                    : "Chưa chọn"}
-                </span>
-                <span>Giờ:</span>
-                <span style={{ color: "#0f172a" }}>
-                  {watchedTime || "Chưa chọn"}
-                </span>
-                {/* Bỏ hiển thị ổ pin đã chọn */}
-                <span style={{ color: "#10b981", fontWeight: 700 }}>
-                  Phí dịch vụ:
-                </span>
-                <span style={{ color: "#10b981", fontWeight: 700 }}>
-                  {formatVND(serviceFee)}
-                </span>
-              </div>
-              {/* Lưu ý quan trọng về thời gian */}
-              {selectedTimeSlot && (
-                <Alert
-                  message="⚠️ Lưu ý quan trọng về thời gian"
-                  description={
-                    <div>
-                      <div style={{ marginBottom: "8px" }}>
-                        <strong>Quy định về thời gian đến:</strong>
-                      </div>
-                      <ul
-                        style={{
-                          margin: "8px 0",
-                          paddingLeft: "20px",
-                          fontSize: "13px",
-                        }}
-                      >
-                        {selectedDate && activeTab === "future" && (
-                          <li>
-                            <strong>Ngày đã chọn:</strong>{" "}
-                            <strong style={{ color: "#00083B" }}>
-                              {selectedDate.format("DD/MM/YYYY")}
-                            </strong>
-                          </li>
-                        )}
-                        <li>
-                          <strong>Slot đã chọn:</strong>{" "}
-                          <strong style={{ color: "#00083B" }}>
-                            {selectedTimeSlot}
-                          </strong>
-                        </li>
-                        <li>
-                          ✅ <strong>Được phép:</strong> Đến từ{" "}
-                          <strong style={{ color: "#10b981" }}>
-                            {selectedTimeSlot.split(" - ")[0]}
-                          </strong>{" "}
-                          đến{" "}
-                          <strong style={{ color: "#10b981" }}>
-                            {selectedTimeSlot.split(" - ")[1]}
-                          </strong>
-                        </li>
-                        <li>
-                          ❌ <strong>Bị hủy:</strong> Đến sau{" "}
-                          <strong style={{ color: "#dc2626" }}>
-                            {selectedTimeSlot.split(" - ")[1]}
-                          </strong>
-                        </li>
-                        <li>
-                          Lịch đổi pin sẽ bị{" "}
-                          <strong style={{ color: "#dc2626" }}>
-                            hủy tự động
-                          </strong>{" "}
-                          nếu đến muộn
-                        </li>
-                      </ul>
-                      <div
-                        style={{
-                          marginTop: "8px",
-                          fontSize: "12px",
-                          color: "#64748b",
-                        }}
-                      >
-                        💡 <strong>Gợi ý:</strong> Hãy đến trong khung giờ{" "}
-                        <strong>{selectedTimeSlot}</strong> để đảm bảo không bị
-                        hủy lịch!
-                      </div>
-                    </div>
-                  }
-                  type="warning"
-                  showIcon
-                  style={{
-                    marginTop: "16px",
-                    borderRadius: "16px",
-                    background:
-                      "linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(245, 158, 11, 0.02) 100%)",
-                    border: "1px solid rgba(245, 158, 11, 0.2)",
-                  }}
-                />
-              )}
-
-              <div style={{ marginTop: 16 }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  loading={isBooking}
-                  style={{
-                    height: 48,
-                    borderRadius: 12,
-                    background:
-                      "linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)",
-                    border: "none",
-                    fontWeight: 700,
-                  }}
-                  onClick={() => {
-                    // Trigger form submission manually
-                    console.log(
-                      "Button clicked, attempting form submission..."
-                    );
-                    console.log("Form values:", form.getFieldsValue());
-                    console.log("Form errors:", form.getFieldsError());
-
-                    // Validate form first
-                    form
-                      .validateFields()
-                      .then((values) => {
-                        console.log(
-                          "Form validation successful, calling handleBooking..."
-                        );
-                        handleBooking(values);
-                      })
-                      .catch((errorInfo) => {
-                        console.log("Form validation failed:", errorInfo);
-                        message.error("Vui lòng điền đầy đủ thông tin!");
-                      });
-                  }}
-                >
-                  {isBooking ? "Đang xử lý..." : "Xác nhận đặt lịch"}
-                </Button>
-              </div>
-            </Card>
+            <BookingSummary
+              watchedStation={watchedStation}
+              isBooking={isBooking}
+              handleBooking={handleBooking}
+              form={form}
+              userSubscription={userSubscription}
+              servicePacks={servicePacks}
+              loadingSubscription={loadingSubscription}
+              selectedStationId={selectedStationIdForSummary}
+              selectedPinSlotId={selectedPinSlot?.pinID || null}
+            />
           </Col>
         </Row>
-
-        {/* Removed obsolete full-width inventory duplicate */}
-        {false && selectedStationData && watchedSelectedSlot && (
-          <Row gutter={[32, 32]} style={{ marginTop: 16 }}>
-            <Col xs={24} lg={24}>
-              <Card style={{ borderRadius: 16 }} bodyStyle={{ padding: 20 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
-                      background: "#10b981",
-                    }}
-                  />
-                  <span
-                    style={{ color: "#00083B", fontWeight: 700, fontSize: 18 }}
-                  >
-                    Tồn kho ổ pin tại trạm đã chọn
-                  </span>
-                </div>
-                <div style={{ color: "#475569", fontSize: 14 }}>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 12,
-                      marginBottom: 12,
-                    }}
-                  >
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>Trạm</div>
-                      <div style={{ fontWeight: 700 }}>
-                        {selectedStationData.name}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        border: "1px solid rgba(0,8,59,0.1)",
-                        borderRadius: 12,
-                        padding: 12,
-                        background: "rgba(0,8,59,0.03)",
-                      }}
-                    >
-                      <div style={{ fontSize: 12, color: "#64748b" }}>
-                        Tổng ổ pin / Sẵn sàng
-                      </div>
-                      <div style={{ fontWeight: 700 }}>
-                        {totalSlotsAll} / {readySlotsAll}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <strong>Tổng quan theo trạng thái:</strong>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fill, minmax(160px, 1fr))",
-                        gap: 8,
-                        marginTop: 8,
-                      }}
-                    >
-                      <div
-                        style={{
-                          border: "2px solid #10b981",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#f0fdf4",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#059669",
-                          }}
-                        >
-                          Sẵn sàng
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {readySlotsAll} ổ pin
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          border: "2px solid #f59e0b",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#fffbeb",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#d97706",
-                          }}
-                        >
-                          Đang sạc
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {chargingSlotsAll} ổ pin
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          border: "2px solid #6b7280",
-                          borderRadius: 10,
-                          padding: 10,
-                          backgroundColor: "#f9fafb",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: "#4b5563",
-                          }}
-                        >
-                          Bảo dưỡng
-                        </div>
-                        <div style={{ fontSize: 12, color: "#64748b" }}>
-                          {maintenanceSlotsAll} ổ pin
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: 8 }}>
-                    <strong>Danh sách chi tiết các ổ pin:</strong>
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#64748b",
-                        marginLeft: "8px",
-                      }}
-                    >
-                      (Hiển thị {currentSlots.length}/{sortedAllSlots.length} ổ
-                      pin)
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(200px, 1fr))",
-                      gap: 12,
-                      maxHeight: "400px",
-                      overflowY: "auto",
-                      paddingRight: "8px",
-                    }}
-                  >
-                    {currentSlots.map((slot) => {
-                      const isSelected = slot.id === watchedSelectedSlot;
-                      const isReady = slot.status === "ready";
-                      const isBooked = slot.status === "booked";
-                      const isCharging = slot.status === "charging";
-                      const isMaintenance = slot.status === "maintenance";
-
-                      return (
-                        <div
-                          key={slot.id}
-                          onClick={() => {
-                            if (isReady) {
-                              form.setFieldsValue({ selectedSlot: slot.id });
-                              setFormValues((prev) => ({
-                                ...prev,
-                                selectedSlot: slot.id,
-                              }));
-                            }
-                          }}
-                          style={{
-                            border: isSelected
-                              ? "2px solid #00083B"
-                              : "1px solid rgba(0,8,59,0.1)",
-                            borderRadius: 12,
-                            padding: 12,
-                            background: isSelected
-                              ? "linear-gradient(135deg, rgba(0,8,59,0.1) 0%, rgba(0,8,59,0.05) 100%)"
-                              : isReady
-                              ? "rgba(0, 8, 59, 0.03)"
-                              : "rgba(0, 0, 0, 0.05)",
-                            cursor: isReady ? "pointer" : "not-allowed",
-                            opacity: isReady ? 1 : 0.6,
-                            position: "relative",
-                            ...(isMaintenance && {
-                              backgroundImage:
-                                "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px)",
-                            }),
-                          }}
-                        >
-                          <div style={{ fontWeight: 700, color: "#0f172a" }}>
-                            Ổ pin #{slot.slotNumber}
-                          </div>
-                          <div style={{ marginTop: 6, fontSize: 13 }}>
-                            SoH: <strong>{slot.soh}%</strong>
-                          </div>
-                          <div style={{ fontSize: 13 }}>
-                            SoC: <strong>{slot.soc}%</strong>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: isReady
-                                ? "#059669"
-                                : isCharging
-                                ? "#a16207"
-                                : "#6b7280",
-                              fontWeight: 600,
-                              marginTop: 8,
-                              padding: "4px 8px",
-                              borderRadius: 6,
-                              backgroundColor: isReady
-                                ? "#dcfce7"
-                                : isCharging
-                                ? "#fef3c7"
-                                : "#f3f4f6",
-                              textAlign: "center",
-                            }}
-                          >
-                            {isReady
-                              ? "Sẵn sàng"
-                              : isBooked
-                              ? "Đã đặt"
-                              : isCharging
-                              ? "Đang sạc"
-                              : "Bảo dưỡng"}
-                          </div>
-                          {isSelected && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: 8,
-                                right: 8,
-                                width: 20,
-                                height: 20,
-                                borderRadius: "50%",
-                                backgroundColor: "#00083B",
-                                color: "white",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 12,
-                                fontWeight: "bold",
-                              }}
-                            >
-                              ✓
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {sortedAllSlots.length > 6 && (
-                    <div style={{ textAlign: "center", marginTop: "12px" }}>
-                      <span style={{ color: "#64748b", fontSize: "12px" }}>
-                        Hiển thị 6/15 ổ pin. Cuộn để xem thêm.
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        )}
       </div>
     </div>
   );

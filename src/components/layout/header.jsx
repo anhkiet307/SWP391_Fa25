@@ -1,18 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import apiService from "../../services/apiService";
 
 const logo = "/assets/images/voltswap_logo.png";
 
 const navItems = [
   { label: "Trang chủ", to: "/", active: true, icon: "⚡" },
-  { label: "Trạm", href: "/#map-section", icon: "◦" },
-  { label: "Phân tích", href: "#", icon: "📊" },
+  { label: "Bản đồ", href: "/#map-section", icon: "🗺️" },
+  { label: "Đặt lịch", href: "/#booking-section", icon: "🗓️" },
 ];
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [packName, setPackName] = useState(null);
+  const [subscriptionTotal, setSubscriptionTotal] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadSubscription = async () => {
+      try {
+        if (!isAuthenticated) return;
+        const uid = user?.userID || user?.id;
+        if (!uid) return;
+        const res = await apiService.getUserSubscription(uid);
+        // API trả về { data: { userID, total } } nếu là thành viên
+        const total = res?.data?.total;
+        if (typeof total === "number") {
+          if (mounted) {
+            setPackName("Thành viên");
+            setSubscriptionTotal(total);
+          }
+        } else {
+          // Fallback: lấy packName của gói có packID = 1
+          try {
+            const packsRes = await apiService.getServicePacks();
+            const list = Array.isArray(packsRes?.data)
+              ? packsRes.data
+              : Array.isArray(packsRes)
+              ? packsRes
+              : [];
+            const basic = list.find((p) => p.packID === 1);
+            if (mounted && basic?.packName) setPackName(basic.packName);
+          } catch (_) {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to default label
+      }
+    };
+    loadSubscription();
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout(); // logout() sẽ tự động chuyển hướng về /login
@@ -20,14 +63,20 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-[9999] w-full border-b border-white/10 bg-[#00083B]">
-      <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
+      <div className="mx-auto relative flex h-16 max-w-screen-2xl items-center px-4 sm:h-20 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link className="flex items-center gap-3" to="/" aria-label="VoltSwap">
-          <img src={logo} alt="VoltSwap" className="h-10 w-auto sm:h-12" />
-        </Link>
+        <div className="shrink-0">
+          <Link
+            className="flex items-center gap-3"
+            to="/"
+            aria-label="VoltSwap"
+          >
+            <img src={logo} alt="VoltSwap" className="h-10 w-auto sm:h-12" />
+          </Link>
+        </div>
 
-        {/* Center nav */}
-        <nav className="hidden items-center space-x-6 lg:flex">
+        {/* Center nav (fixed center, unaffected by left/right width) */}
+        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 items-center space-x-6">
           {navItems.map((item) =>
             item.to ? (
               <Link
@@ -60,7 +109,17 @@ export default function Header() {
         </nav>
 
         {/* Right actions */}
-        <div className="flex items-center gap-4">
+        <div className="shrink-0 ml-auto flex items-center gap-4">
+          {isAuthenticated && (
+            <Link
+              to="/upgrade"
+              className="hidden lg:inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/10 transition-colors"
+              title="Nâng cấp gói"
+            >
+              <span>⬆</span>
+              <span>Nâng cấp</span>
+            </Link>
+          )}
           {isAuthenticated ? (
             /* User Profile Menu */
             <div className="relative">
@@ -76,11 +135,10 @@ export default function Header() {
                 <div className="hidden lg:flex flex-col items-start">
                   <span className="text-sm">{user?.name || "User"}</span>
                   <span className="text-xs text-white/60">
-                    {user?.role === "admin"
-                      ? "Admin"
-                      : user?.role === "staff"
-                      ? "Staff"
-                      : "EV Driver"}
+                    Gói: {packName || "Cơ bản"}
+                    {packName === "Thành viên" &&
+                      typeof subscriptionTotal === "number" &&
+                      ` [${subscriptionTotal} lượt đổi]`}
                   </span>
                 </div>
                 <svg
@@ -137,6 +195,14 @@ export default function Header() {
                             </span>
                           )}
                         </div>
+                        {
+                          <p className="text-xs text-white/60 mt-1">
+                            Gói hiện tại: {packName || "Cơ bản"}
+                            {packName === "Thành viên" &&
+                              typeof subscriptionTotal === "number" &&
+                              ` [${subscriptionTotal}]`}
+                          </p>
+                        }
                       </div>
                     </div>
                   </div>

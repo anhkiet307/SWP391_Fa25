@@ -1,8 +1,18 @@
-import React, { useState } from "react";
-import { Card, Row, Col, Typography, Button, Space, Tag } from "antd";
+import React, { useEffect, useState } from "react";
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Button,
+  Space,
+  Tag,
+  message,
+  Modal,
+  Radio,
+} from "antd";
 import {
   PoweroffOutlined,
-  CrownOutlined,
   CheckCircleOutlined,
   ThunderboltOutlined,
   SafetyOutlined,
@@ -10,294 +20,449 @@ import {
   DollarOutlined,
   StarOutlined,
   RocketOutlined,
+  CrownOutlined,
 } from "@ant-design/icons";
+import apiService from "../services/apiService";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Title, Paragraph } = Typography;
 
+// Mock data for demo
+
 export default function ServicePack() {
+  const { user, isAuthenticated } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [servicePlans, setServicePlans] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState(null);
 
-  const servicePlans = [
-    {
-      id: 1,
-      name: "Gói Cơ Bản",
-      type: "Mặc Định",
-      price: "50,000 VNĐ",
-      period: "mỗi lần đổi",
-      description:
-        "Gói mặc định cho tất cả người dùng, đặt lịch và thanh toán khi đổi pin",
-      features: [
-        "Đặt lịch trực tuyến",
-        "Nhân viên hỗ trợ đổi pin",
-        "Thanh toán khi đổi pin",
-        "Không ràng buộc thời gian",
-        "Có sẵn cho mọi tài khoản",
-      ],
-      color: "blue",
-      icon: <DollarOutlined />,
-      popular: false,
-    },
-    {
-      id: 2,
-      name: "Gói Tiết Kiệm",
-      type: "Premium",
-      price: "299,000 VNĐ",
-      period: "tháng",
-      description: "Đổi pin 10 lần/tháng, tiết kiệm 50% so với gói cơ bản",
-      features: [
-        "10 lần đổi pin/tháng",
-        "Không cần thanh toán khi đổi",
-        "Ưu tiên đặt lịch",
-        "Hỗ trợ 24/7",
-        "Tiết kiệm 50% chi phí",
-      ],
-      color: "green",
-      icon: <StarOutlined />,
-      popular: true,
-    },
-    {
-      id: 3,
-      name: "Gói Không Giới Hạn",
-      type: "Unlimited",
-      price: "599,000 VNĐ",
-      period: "tháng",
-      description: "Đổi pin không giới hạn trong 1 tháng",
-      features: [
-        "Đổi pin không giới hạn",
-        "Không cần thanh toán khi đổi",
-        "Ưu tiên cao nhất",
-        "Hỗ trợ VIP 24/7",
-        "Đặt lịch linh hoạt",
-        "Tiết kiệm tối đa",
-      ],
-      color: "purple",
-      icon: <RocketOutlined />,
-      popular: false,
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPacks = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await apiService.getServicePacks();
+        const packs = Array.isArray(res?.data) ? res.data : [];
+        const activePacks = packs.filter((p) => p.status === 1);
 
-  const handleSelectPlan = (plan) => {
-    setSelectedPlan(plan);
-    // Có thể thêm logic xử lý đăng ký gói ở đây
-    console.log("Đã chọn gói:", plan.name);
+        const formatVND = (amount) =>
+          new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+            maximumFractionDigits: 0,
+          }).format(Number(amount || 0));
+
+        const mapped = activePacks.map((p, idx) => {
+          const isDefault = p.packID === 1;
+          const type = isDefault ? "Mặc định" : "Thành viên";
+          const period = isDefault ? "mỗi lần đổi" : "gói"; // giữ để tương thích cũ
+          const color = isDefault ? "blue" : idx % 2 === 0 ? "green" : "purple";
+          const icon = isDefault ? (
+            <DollarOutlined />
+          ) : idx % 2 === 0 ? (
+            <StarOutlined />
+          ) : (
+            <RocketOutlined />
+          );
+
+          const desc = typeof p.description === "string" ? p.description : "";
+          const parsedFeatures = desc
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+          const features = parsedFeatures.length
+            ? parsedFeatures
+            : isDefault
+            ? ["Gói cơ bản"]
+            : [`Tổng số lượt đổi miễn phí: ${p.total || 0}`, "Ưu tiên hỗ trợ"];
+
+          return {
+            id: p.packID,
+            name: p.packName || (isDefault ? "Free" : "Membership"),
+            type,
+            price: formatVND(p.price || 0),
+            period,
+            total: p.total || (isDefault ? 1 : 0),
+            description: p.description || "",
+            features,
+            color,
+            icon,
+            popular: !isDefault && idx === 0,
+          };
+        });
+
+        if (isMounted) setServicePlans(mapped);
+      } catch (e) {
+        if (isMounted) setError("Không tải được danh sách gói dịch vụ");
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchPacks();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubscribe = async (plan) => {
+    if (!isAuthenticated) {
+      message.warning("Vui lòng đăng nhập để đăng ký gói.");
+      return;
+    }
+    setPendingPlan(plan);
+    setConfirmOpen(true);
   };
 
-  const getIconColor = (color) => {
-    const colors = {
-      blue: "#00083B", // Màu xanh đậm của header
-      green: "#00083B", // Sử dụng cùng màu header
-      purple: "#00083B", // Sử dụng cùng màu header
-    };
-    return colors[color] || colors.blue;
-  };
+  const confirmPayment = async () => {
+    if (!pendingPlan) return;
+    try {
+      message.loading({
+        content: "Đang tạo liên kết thanh toán...",
+        key: "pay",
+      });
+      const userID = user?.userID || user?.id;
+      const amount =
+        Number(String(pendingPlan.price).replace(/[^0-9]/g, "")) || 0;
+      const extractedTotal =
+        Number(
+          (pendingPlan.features || [])
+            .find((f) => f.toLowerCase().includes("tổng số lượt đổi"))
+            ?.match(/\d+/)?.[0]
+        ) ||
+        pendingPlan.total ||
+        0;
 
-  const getButtonColor = (color) => {
-    const colors = {
-      blue: "#00083B", // Màu xanh đậm của header
-      green: "#00083B", // Sử dụng cùng màu header
-      purple: "#00083B", // Sử dụng cùng màu header
-    };
-    return colors[color] || colors.blue;
+      const payload = {
+        userID,
+        packID: pendingPlan.id,
+        amount,
+        orderInfo: "Mua gói đổi pin",
+        total: extractedTotal,
+      };
+
+      const res = await apiService.createVnpayUrl(payload);
+      const paymentUrl = res?.data || res; // API trả trực tiếp URL ở field data
+
+      setSelectedPlan(pendingPlan);
+      setConfirmOpen(false);
+
+      if (paymentUrl) {
+        window.open(paymentUrl, "_blank", "noopener,noreferrer");
+        message.success({
+          content: "Chuyển đến cổng thanh toán VNPay",
+          key: "pay",
+        });
+      } else {
+        message.error({
+          content: "Không nhận được URL thanh toán",
+          key: "pay",
+        });
+      }
+    } catch (e) {
+      message.error({ content: "Tạo URL thanh toán thất bại.", key: "pay" });
+    }
   };
 
   return (
-    <section
-      className="py-16"
+    <div
       style={{
-        background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
+        padding: "80px 0",
       }}
     >
-      <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <Space direction="vertical" size="large" className="w-full">
-            <Space size="large" className="justify-center">
-              <PoweroffOutlined
-                style={{ fontSize: "48px", color: "#00083B" }}
-              />
-              <Title level={1} style={{ margin: 0 }}>
-                Gói Dịch Vụ Đổi Pin VoltSwap
-              </Title>
-            </Space>
-            <Paragraph
-              style={{ fontSize: "20px", maxWidth: "800px", margin: "0 auto" }}
-            >
-              Chọn gói dịch vụ phù hợp với nhu cầu sử dụng của bạn. Tất cả gói
-              đều bao gồm đặt lịch trực tuyến và hỗ trợ 24/7.
-            </Paragraph>
-          </Space>
+      <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 24px" }}>
+        {/* Hero Section */}
+        <div style={{ textAlign: "center", marginBottom: "80px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100px",
+              height: "100px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+              marginBottom: "32px",
+              boxShadow: "0 20px 60px rgba(59, 130, 246, 0.4)",
+              animation: "pulse 2s ease-in-out infinite",
+            }}
+          >
+            <PoweroffOutlined style={{ fontSize: "48px", color: "white" }} />
+          </div>
+
+          <Title
+            level={1}
+            style={{
+              margin: 0,
+              color: "#ffffff",
+              fontSize: "56px",
+              fontWeight: "800",
+              marginBottom: "16px",
+              textShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            Gói Dịch Vụ VoltSwap
+          </Title>
+
+          <Paragraph
+            style={{
+              fontSize: "20px",
+              maxWidth: "700px",
+              margin: "0 auto",
+              color: "#cbd5e1",
+              lineHeight: "1.8",
+              fontWeight: "400",
+            }}
+          >
+            Chọn gói dịch vụ phù hợp với nhu cầu của bạn.
+            <br />
+            Đổi pin nhanh chóng, tiện lợi và an toàn.
+          </Paragraph>
         </div>
 
-        {/* Service Plans Grid */}
-        <Row gutter={[32, 32]} className="mb-12">
+        {/* Pricing Cards */}
+        {loading && (
+          <div
+            style={{ textAlign: "center", color: "#94a3b8", fontSize: "18px" }}
+          >
+            Đang tải gói dịch vụ...
+          </div>
+        )}
+
+        <Row gutter={[32, 32]} style={{ marginBottom: "80px" }}>
           {servicePlans.map((plan) => (
-            <Col xs={24} md={12} lg={8} key={plan.id}>
+            <Col xs={24} md={8} key={plan.id}>
               <Card
-                className="relative h-full"
                 style={{
-                  borderRadius: "20px",
-                  boxShadow: plan.popular
-                    ? "0 20px 40px rgba(0, 8, 59, 0.15), 0 8px 16px rgba(0, 8, 59, 0.1)"
-                    : "0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05)",
-                  border: plan.popular
-                    ? "2px solid #00083B"
-                    : "1px solid rgba(0, 8, 59, 0.1)",
-                  transform: plan.popular ? "scale(1.05)" : "scale(1)",
-                  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                  height: "100%",
+                  borderRadius: "24px",
                   background: plan.popular
-                    ? "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)"
-                    : "linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)",
+                    ? "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)"
+                    : "rgba(30, 41, 59, 0.5)",
+                  backdropFilter: "blur(20px)",
+                  border: plan.popular
+                    ? "2px solid rgba(59, 130, 246, 0.5)"
+                    : "1px solid rgba(148, 163, 184, 0.2)",
+                  boxShadow: plan.popular
+                    ? "0 30px 60px rgba(59, 130, 246, 0.3)"
+                    : "0 10px 30px rgba(0, 0, 0, 0.3)",
+                  transform: plan.popular ? "scale(1.05)" : "scale(1)",
+                  transition: "all 0.3s ease",
+                  position: "relative",
+                  overflow: "visible",
                 }}
+                bodyStyle={{ padding: "40px 32px" }}
                 hoverable
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <Tag
-                    color="#00083B"
-                    style={{
-                      position: "absolute",
-                      top: "-18px",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      padding: "6px 20px",
-                      borderRadius: "20px",
-                      boxShadow:
-                        "0 8px 20px rgba(0, 8, 59, 0.25), 0 4px 8px rgba(0, 8, 59, 0.15)",
-                      background:
-                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      border: "2px solid #ffffff",
-                    }}
-                  >
-                    ⭐ PHỔ BIẾN NHẤT
-                  </Tag>
-                )}
-
-                {/* Plan Header */}
-                <div className="text-center mb-6">
                   <div
                     style={{
-                      fontSize: "48px",
-                      marginBottom: "16px",
-                      color: getIconColor(plan.color),
+                      position: "absolute",
+                      top: "-16px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
                       background:
-                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                      filter: "drop-shadow(0 2px 4px rgba(0, 8, 59, 0.2))",
+                        "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                      color: "white",
+                      padding: "8px 24px",
+                      borderRadius: "20px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      letterSpacing: "0.5px",
+                      boxShadow: "0 8px 20px rgba(59, 130, 246, 0.4)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
                     }}
                   >
-                    {plan.icon}
+                    <CrownOutlined /> PHỔ BIẾN NHẤT
                   </div>
-                  <Title level={3} style={{ marginBottom: "8px" }}>
-                    {plan.name}
-                  </Title>
-                  <Tag color={plan.color} style={{ marginBottom: "16px" }}>
+                )}
+
+                {/* Icon */}
+                <div
+                  style={{
+                    fontSize: "56px",
+                    marginBottom: "24px",
+                    color: "#93c5fd",
+                    filter: "drop-shadow(0 6px 20px rgba(59,130,246,0.35))",
+                    textAlign: "center",
+                  }}
+                >
+                  {plan.icon}
+                </div>
+
+                {/* Plan Name */}
+                <Title
+                  level={3}
+                  style={{
+                    color: "#ffffff",
+                    marginBottom: "12px",
+                    textAlign: "center",
+                    fontSize: "28px",
+                    fontWeight: "700",
+                  }}
+                >
+                  {plan.name}
+                </Title>
+
+                {/* Type Tag */}
+                <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                  <Tag
+                    style={{
+                      background: "rgba(59, 130, 246, 0.28)",
+                      border: "1px solid rgba(59, 130, 246, 0.6)",
+                      color: "#bfdbfe",
+                      padding: "4px 16px",
+                      borderRadius: "12px",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                    }}
+                  >
                     {plan.type}
                   </Tag>
-                  <div style={{ marginBottom: "16px" }}>
+                </div>
+
+                {/* Price */}
+                <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      justifyContent: "center",
+                      gap: "8px",
+                    }}
+                  >
                     <span
                       style={{
-                        fontSize: "36px",
-                        fontWeight: "bold",
+                        fontSize: "48px",
+                        fontWeight: "800",
                         background:
-                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                          "linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
-                        backgroundClip: "text",
                       }}
                     >
                       {plan.price}
                     </span>
-                    <span
-                      style={{
-                        color: "#64748b",
-                        marginLeft: "8px",
-                        fontSize: "16px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      /{plan.period}
+                    <span style={{ color: "#94a3b8", fontSize: "16px" }}>
+                      /{plan.total} lượt
                     </span>
                   </div>
-                  <Paragraph style={{ color: "#666", margin: 0 }}>
-                    {plan.description}
-                  </Paragraph>
                 </div>
 
+                {/* Description */}
+                <Paragraph
+                  style={{
+                    color: "#94a3b8",
+                    textAlign: "center",
+                    marginBottom: "32px",
+                    fontSize: "15px",
+                    lineHeight: "1.6",
+                    minHeight: "48px",
+                  }}
+                >
+                  {plan.description}
+                </Paragraph>
+
+                {/* Divider */}
+                <div
+                  style={{
+                    height: "1px",
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent)",
+                    marginBottom: "32px",
+                  }}
+                />
+
                 {/* Features */}
-                <div style={{ marginBottom: "24px" }}>
-                  <Space
-                    direction="vertical"
-                    size="small"
-                    style={{ width: "100%" }}
-                  >
-                    {plan.features.map((feature, index) => (
-                      <Space key={index}>
-                        <CheckCircleOutlined
-                          style={{
-                            color: "#10b981",
-                            fontSize: "16px",
-                            filter:
-                              "drop-shadow(0 1px 2px rgba(16, 185, 129, 0.3))",
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: "14px",
-                            color: "#475569",
-                            fontWeight: "500",
-                            lineHeight: "1.5",
-                          }}
-                        >
-                          {feature}
-                        </span>
-                      </Space>
-                    ))}
-                  </Space>
-                </div>
+                <Space
+                  direction="vertical"
+                  size="middle"
+                  style={{ width: "100%", marginBottom: "32px" }}
+                >
+                  {plan.features.map((feature, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "12px",
+                      }}
+                    >
+                      <CheckCircleOutlined
+                        style={{
+                          color: "#22c55e",
+                          fontSize: "18px",
+                          marginTop: "2px",
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: "#f8fafc",
+                          fontSize: "15px",
+                          lineHeight: "1.6",
+                        }}
+                      >
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
+                </Space>
 
                 {/* Action Button */}
                 {plan.id === 1 ? (
                   <Button
                     block
                     disabled
+                    size="large"
                     style={{
-                      height: "48px",
+                      height: "56px",
                       fontSize: "16px",
                       fontWeight: "600",
-                      borderRadius: "8px",
+                      borderRadius: "16px",
+                      background: "rgba(51, 65, 85, 0.5)",
+                      border: "1px solid rgba(148, 163, 184, 0.3)",
+                      color: "#64748b",
                     }}
                   >
-                    <CheckCircleOutlined />
-                    Đã có sẵn
+                    <CheckCircleOutlined /> Đã có sẵn
                   </Button>
                 ) : (
                   <Button
-                    type={selectedPlan?.id === plan.id ? "default" : "primary"}
+                    type="primary"
                     block
-                    onClick={() => handleSelectPlan(plan)}
+                    size="large"
+                    onClick={() => handleSubscribe(plan)}
                     style={{
-                      height: "52px",
+                      height: "56px",
                       fontSize: "16px",
-                      fontWeight: "600",
-                      borderRadius: "12px",
+                      fontWeight: "700",
+                      borderRadius: "16px",
                       background:
                         selectedPlan?.id === plan.id
-                          ? "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)"
-                          : "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      borderColor:
-                        selectedPlan?.id === plan.id ? "#cbd5e1" : "#00083B",
-                      boxShadow:
-                        selectedPlan?.id === plan.id
-                          ? "0 4px 12px rgba(0,0,0,0.1)"
-                          : "0 8px 20px rgba(0, 8, 59, 0.25), 0 4px 8px rgba(0, 8, 59, 0.15)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                          : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                      border: "none",
+                      boxShadow: "0 10px 30px rgba(59, 130, 246, 0.3)",
+                      transition: "all 0.3s ease",
                     }}
                   >
-                    {selectedPlan?.id === plan.id ? "Đã Chọn" : "Chọn Gói Này"}
+                    {selectedPlan?.id === plan.id ? (
+                      <>
+                        <CheckCircleOutlined /> Tiếp tục thanh toán
+                      </>
+                    ) : (
+                      "Mua gói này"
+                    )}
                   </Button>
                 )}
               </Card>
@@ -305,316 +470,79 @@ export default function ServicePack() {
           ))}
         </Row>
 
-        {/* Selected Plan Info */}
-        {selectedPlan && (
-          <Card
-            style={{
-              borderRadius: "24px",
-              boxShadow:
-                "0 20px 40px rgba(0, 8, 59, 0.15), 0 8px 16px rgba(0, 8, 59, 0.1)",
-              border: "2px solid #00083B",
-              marginBottom: "48px",
-              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {/* Decorative Background */}
-            <div
-              style={{
-                position: "absolute",
-                top: "-50px",
-                right: "-50px",
-                width: "100px",
-                height: "100px",
-                background:
-                  "linear-gradient(135deg, rgba(0, 8, 59, 0.1) 0%, rgba(26, 31, 92, 0.05) 100%)",
-                borderRadius: "50%",
-                zIndex: 0,
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                bottom: "-30px",
-                left: "-30px",
-                width: "60px",
-                height: "60px",
-                background:
-                  "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-                borderRadius: "50%",
-                zIndex: 0,
-              }}
-            />
+        {/* Selected Plan Info removed per requirement */}
 
-            <div
-              className="text-center"
-              style={{ position: "relative", zIndex: 1 }}
-            >
-              <Space direction="vertical" size="large" className="w-full">
-                <Space size="middle">
-                  <div
-                    style={{
-                      width: "64px",
-                      height: "64px",
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow:
-                        "0 8px 20px rgba(16, 185, 129, 0.3), 0 4px 8px rgba(16, 185, 129, 0.2)",
-                    }}
-                  >
-                    <CheckCircleOutlined
-                      style={{ fontSize: "32px", color: "white" }}
-                    />
-                  </div>
-                  <div>
-                    <Title level={2} style={{ margin: 0, color: "#00083B" }}>
-                      Bạn đã chọn: {selectedPlan.name}
-                    </Title>
-                    <Tag
-                      color="#00083B"
-                      style={{
-                        marginTop: "8px",
-                        padding: "4px 12px",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        background:
-                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                        border: "none",
-                      }}
-                    >
-                      {selectedPlan.type}
-                    </Tag>
-                  </div>
-                </Space>
-
-                <div
-                  style={{
-                    background: "rgba(0, 8, 59, 0.05)",
-                    padding: "20px",
-                    borderRadius: "16px",
-                    border: "1px solid rgba(0, 8, 59, 0.1)",
-                  }}
-                >
-                  <Paragraph
-                    style={{
-                      fontSize: "18px",
-                      color: "#475569",
-                      margin: 0,
-                      fontWeight: "500",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    {selectedPlan.description}
-                  </Paragraph>
-                  <div style={{ marginTop: "16px" }}>
-                    <span
-                      style={{
-                        fontSize: "28px",
-                        fontWeight: "bold",
-                        background:
-                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        backgroundClip: "text",
-                      }}
-                    >
-                      {selectedPlan.price}
-                    </span>
-                    <span
-                      style={{
-                        color: "#64748b",
-                        marginLeft: "8px",
-                        fontSize: "16px",
-                      }}
-                    >
-                      /{selectedPlan.period}
-                    </span>
-                  </div>
-                </div>
-
-                <Space size="large">
-                  <Button
-                    type="primary"
-                    size="large"
-                    icon={<ThunderboltOutlined />}
-                    style={{
-                      height: "56px",
-                      fontSize: "18px",
-                      fontWeight: "700",
-                      borderRadius: "16px",
-                      background:
-                        "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                      border: "none",
-                      boxShadow:
-                        "0 12px 24px rgba(0, 8, 59, 0.3), 0 4px 8px rgba(0, 8, 59, 0.2)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    }}
-                    className="hover:scale-105"
-                  >
-                    Đăng Ký Ngay
-                  </Button>
-                  <Button
-                    size="large"
-                    onClick={() => setSelectedPlan(null)}
-                    style={{
-                      height: "56px",
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      borderRadius: "16px",
-                      background:
-                        "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
-                      border: "2px solid #cbd5e1",
-                      color: "#475569",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    }}
-                    className="hover:scale-105"
-                  >
-                    Chọn Lại
-                  </Button>
-                </Space>
-              </Space>
-            </div>
-          </Card>
-        )}
-
-        {/* Additional Info */}
+        {/* Features Section */}
         <Card
           style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-            border: "1px solid rgba(0, 8, 59, 0.1)",
             borderRadius: "24px",
-            boxShadow:
-              "0 20px 40px rgba(0, 8, 59, 0.1), 0 8px 16px rgba(0, 8, 59, 0.05)",
-            position: "relative",
-            overflow: "hidden",
+            background: "rgba(30, 41, 59, 0.5)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(148, 163, 184, 0.2)",
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
           }}
+          bodyStyle={{ padding: "60px 48px" }}
         >
-          {/* Decorative Background */}
-          <div
-            style={{
-              position: "absolute",
-              top: "-40px",
-              left: "-40px",
-              width: "80px",
-              height: "80px",
-              background:
-                "linear-gradient(135deg, rgba(0, 8, 59, 0.08) 0%, rgba(26, 31, 92, 0.04) 100%)",
-              borderRadius: "50%",
-              zIndex: 0,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: "-30px",
-              right: "-30px",
-              width: "60px",
-              height: "60px",
-              background:
-                "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%)",
-              borderRadius: "50%",
-              zIndex: 0,
-            }}
-          />
-
-          <div
-            className="text-center mb-8"
-            style={{ position: "relative", zIndex: 1 }}
-          >
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                marginBottom: "24px",
-                boxShadow:
-                  "0 12px 24px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
-              }}
-            >
-              <MobileOutlined style={{ fontSize: "36px", color: "white" }} />
-            </div>
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
             <Title
               level={2}
-              style={{ color: "#00083B", margin: 0, marginBottom: "8px" }}
+              style={{
+                color: "#ffffff",
+                marginBottom: "16px",
+                fontSize: "36px",
+              }}
             >
               Tại sao chọn VoltSwap?
             </Title>
             <Paragraph
               style={{
-                color: "#64748b",
+                color: "#94a3b8",
                 fontSize: "18px",
-                margin: 0,
                 maxWidth: "600px",
                 margin: "0 auto",
-                lineHeight: "1.6",
               }}
             >
               Giải pháp đổi pin xe điện hiện đại, nhanh chóng và tiện lợi nhất
             </Paragraph>
           </div>
 
-          <Row gutter={[32, 32]} style={{ position: "relative", zIndex: 1 }}>
+          <Row gutter={[48, 48]}>
             <Col xs={24} md={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "32px 24px",
-                  borderRadius: "20px",
-                  background:
-                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
-                  border: "1px solid rgba(0, 8, 59, 0.08)",
-                  height: "100%",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                className="hover:shadow-lg"
-              >
+              <div style={{ textAlign: "center" }}>
                 <div
                   style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: "0 auto 20px",
-                    boxShadow:
-                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "20px",
+                    background:
+                      "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                    marginBottom: "24px",
+                    boxShadow: "0 15px 40px rgba(59, 130, 246, 0.3)",
                   }}
                 >
                   <ThunderboltOutlined
-                    style={{ fontSize: "28px", color: "white" }}
+                    style={{ fontSize: "36px", color: "white" }}
                   />
                 </div>
                 <Title
                   level={4}
                   style={{
-                    color: "#00083B",
-                    margin: "0 0 12px 0",
-                    fontSize: "20px",
+                    color: "#ffffff",
+                    marginBottom: "12px",
+                    fontSize: "22px",
                   }}
                 >
                   Nhanh Chóng
                 </Title>
                 <Paragraph
                   style={{
-                    color: "#64748b",
+                    color: "#94a3b8",
                     margin: 0,
                     fontSize: "16px",
-                    lineHeight: "1.6",
-                    fontWeight: "500",
+                    lineHeight: "1.7",
                   }}
                 >
                   Đổi pin chỉ trong 5 phút, không cần chờ đợi
@@ -623,55 +551,41 @@ export default function ServicePack() {
             </Col>
 
             <Col xs={24} md={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "32px 24px",
-                  borderRadius: "20px",
-                  background:
-                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
-                  border: "1px solid rgba(0, 8, 59, 0.08)",
-                  height: "100%",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                className="hover:shadow-lg"
-              >
+              <div style={{ textAlign: "center" }}>
                 <div
                   style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: "0 auto 20px",
-                    boxShadow:
-                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "20px",
+                    background:
+                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    marginBottom: "24px",
+                    boxShadow: "0 15px 40px rgba(16, 185, 129, 0.3)",
                   }}
                 >
                   <SafetyOutlined
-                    style={{ fontSize: "28px", color: "white" }}
+                    style={{ fontSize: "36px", color: "white" }}
                   />
                 </div>
                 <Title
                   level={4}
                   style={{
-                    color: "#00083B",
-                    margin: "0 0 12px 0",
-                    fontSize: "20px",
+                    color: "#ffffff",
+                    marginBottom: "12px",
+                    fontSize: "22px",
                   }}
                 >
                   An Toàn
                 </Title>
                 <Paragraph
                   style={{
-                    color: "#64748b",
+                    color: "#94a3b8",
                     margin: 0,
                     fontSize: "16px",
-                    lineHeight: "1.6",
-                    fontWeight: "500",
+                    lineHeight: "1.7",
                   }}
                 >
                   Pin chính hãng, đảm bảo chất lượng 100%
@@ -680,55 +594,41 @@ export default function ServicePack() {
             </Col>
 
             <Col xs={24} md={8}>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "32px 24px",
-                  borderRadius: "20px",
-                  background:
-                    "linear-gradient(135deg, rgba(0, 8, 59, 0.02) 0%, rgba(0, 8, 59, 0.01) 100%)",
-                  border: "1px solid rgba(0, 8, 59, 0.08)",
-                  height: "100%",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                className="hover:shadow-lg"
-              >
+              <div style={{ textAlign: "center" }}>
                 <div
                   style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    background:
-                      "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
-                    display: "flex",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    margin: "0 auto 20px",
-                    boxShadow:
-                      "0 8px 20px rgba(0, 8, 59, 0.2), 0 4px 8px rgba(0, 8, 59, 0.1)",
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "20px",
+                    background:
+                      "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                    marginBottom: "24px",
+                    boxShadow: "0 15px 40px rgba(245, 158, 11, 0.3)",
                   }}
                 >
                   <MobileOutlined
-                    style={{ fontSize: "28px", color: "white" }}
+                    style={{ fontSize: "36px", color: "white" }}
                   />
                 </div>
                 <Title
                   level={4}
                   style={{
-                    color: "#00083B",
-                    margin: "0 0 12px 0",
-                    fontSize: "20px",
+                    color: "#ffffff",
+                    marginBottom: "12px",
+                    fontSize: "22px",
                   }}
                 >
                   Tiện Lợi
                 </Title>
                 <Paragraph
                   style={{
-                    color: "#64748b",
+                    color: "#94a3b8",
                     margin: 0,
                     fontSize: "16px",
-                    lineHeight: "1.6",
-                    fontWeight: "500",
+                    lineHeight: "1.7",
                   }}
                 >
                   Đặt lịch online, thanh toán linh hoạt
@@ -738,6 +638,45 @@ export default function ServicePack() {
           </Row>
         </Card>
       </div>
-    </section>
+
+      {/* Modal xác nhận mua gói */}
+      <Modal
+        title="Xác nhận mua gói"
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onOk={confirmPayment}
+        okText="Đồng ý"
+        cancelText="Hủy"
+        centered
+      >
+        <Paragraph>
+          Bạn có chắc sẽ mua <strong>{pendingPlan?.name}</strong> với giá
+          <strong> {pendingPlan?.price}</strong>? Bạn sẽ được chuyển sang trang
+          thanh toán VNPay.
+        </Paragraph>
+      </Modal>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 25px 70px rgba(59, 130, 246, 0.6);
+          }
+        }
+
+        .ant-card:hover {
+          transform: translateY(-8px) !important;
+        }
+
+        .ant-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5) !important;
+        }
+      `}</style>
+    </div>
   );
 }
