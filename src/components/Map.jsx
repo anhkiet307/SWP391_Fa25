@@ -10,7 +10,9 @@ import {
   CheckCircleOutlined,
   ReloadOutlined,
   StarOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { batteryStations } from "../data/stations";
 import apiService from "../services/apiService";
 import RatingModal from "./RatingModal";
@@ -420,7 +422,9 @@ function Map() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedStationForRating, setSelectedStationForRating] =
     useState(null);
+
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Hàm transform dữ liệu từ API sang format cần thiết
   const transformApiStationData = useCallback((apiData) => {
@@ -526,6 +530,26 @@ function Map() {
     [isAuthenticated]
   );
 
+  // Hàm mở booking modal
+  const handleOpenBookingModal = useCallback(
+    (station) => {
+      if (!isAuthenticated) {
+        // Redirect to login nếu chưa đăng nhập
+        window.location.href = "/login";
+        return;
+      }
+      // Chuyển hướng đến trang booking với StationID
+      navigate(`/booking?stationID=${station.id}`);
+    },
+    [isAuthenticated, navigate]
+  );
+
+  // Hàm xử lý booking submit
+  const handleBookingSubmit = useCallback((bookingData) => {
+    console.log("Booking data:", bookingData);
+    // TODO: Implement booking logic here
+  }, []);
+
   // Load stations khi component mount
   useEffect(() => {
     fetchStationsFromAPI();
@@ -629,25 +653,61 @@ function Map() {
 
   return (
     <div className="w-full relative z-0">
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Bộ lọc bên trái */}
-        <div className="lg:w-1/3">
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              <EnvironmentOutlined style={{ marginRight: "8px" }} />
-              Bộ lọc trạm sạc
-            </h3>
+        <div className="w-full lg:w-[320px] xl:w-[380px] 2xl:w-[440px] pl-0 ml-0">
+          <div
+            className="rounded-2xl lg:rounded-l-none shadow-lg p-6"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 100%)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.3)",
+              boxShadow:
+                "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)",
+              marginLeft: 0,
+            }}
+          >
+            {/* Header accent */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                <EnvironmentOutlined style={{ marginRight: "8px" }} />
+                Bộ lọc trạm sạc
+              </h3>
+              <div
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "9999px",
+                  background:
+                    "linear-gradient(135deg, rgba(125,211,252,0.25) 0%, rgba(147,197,253,0.25) 100%)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  color: "#e5f2ff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                }}
+              >
+                UI Glass
+              </div>
+            </div>
 
             <div className="space-y-4">
               {/* Chọn thành phố */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/80 mb-2">
                   Thành phố
                 </label>
                 <select
                   value={selectedCity}
                   onChange={(e) => handleCityChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent text-white"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)",
+                    border: "1px solid rgba(255,255,255,0.3)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                  }}
                 >
                   <option value="Tất cả">Tất cả thành phố</option>
                   <option value="Hà Nội">Hà Nội</option>
@@ -656,21 +716,63 @@ function Map() {
               </div>
 
               {/* Thống kê */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.10) 100%)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  boxShadow:
+                    "0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
+                }}
+              >
+                <h4 className="text-sm font-semibold text-white/90 mb-3">
                   📊 Thống kê
                 </h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Tổng trạm:</span>
-                    <span className="font-semibold">
+                <div className="space-y-2 text-sm text-white/80">
+                  <div className="flex items-center justify-between group">
+                    <span className="group-hover:text-white transition-colors">
+                      Tổng trạm
+                    </span>
+                    <span
+                      className="font-semibold"
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "9999px",
+                        background:
+                          "linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(34,197,94,0.25) 100%)",
+                        border: "1px solid rgba(255,255,255,0.25)",
+                        color: "#eafff5",
+                      }}
+                    >
                       {filteredStations.length}
                     </span>
                   </div>
+                  <div
+                    className="h-px w-full"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+                    }}
+                  />
                   {selectedCity !== "Tất cả" && (
-                    <div className="flex justify-between">
-                      <span>Tại {selectedCity}:</span>
-                      <span className="font-semibold">
+                    <div className="flex items-center justify-between group">
+                      <span className="group-hover:text-white transition-colors">
+                        Tại {selectedCity}
+                      </span>
+                      <span
+                        className="font-semibold"
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "9999px",
+                          background:
+                            "linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(99,102,241,0.25) 100%)",
+                          border: "1px solid rgba(255,255,255,0.25)",
+                          color: "#e8f0ff",
+                        }}
+                      >
                         {
                           apiStations.filter((s) => s.city === selectedCity)
                             .length
@@ -688,7 +790,15 @@ function Map() {
                   setMapCenter([16.0, 108.0]);
                   setMapZoom(6);
                 }}
-                className="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="w-full px-4 py-2 text-white rounded-xl transition-all"
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  boxShadow:
+                    "0 8px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
+                }}
               >
                 <ReloadOutlined style={{ marginRight: "8px" }} />
                 Reset bộ lọc
@@ -698,14 +808,17 @@ function Map() {
         </div>
 
         {/* Bản đồ bên phải */}
-        <div className="lg:w-2/3">
+        {/* Divider giữa filter và map */}
+        <div className="hidden lg:block w-px bg-white/10" />
+
+        <div className="flex-1 min-w-0">
           {/* Nút điều khiển */}
           <div className="mb-4 flex justify-between items-center relative z-10">
             <div className="flex gap-2">
               <button
                 onClick={getUserLocation}
                 disabled={isLoadingLocation}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
+                className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all bg-white/15 hover:bg-white/25 disabled:bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-lg"
               >
                 {isLoadingLocation ? (
                   <>
@@ -732,7 +845,7 @@ function Map() {
                     const googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${stationAddress}`;
                     window.open(googleMapsUrl, "_blank");
                   }}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-colors"
+                  className="px-4 py-2 rounded-lg flex items-center gap-2 transition-all bg-white/15 hover:bg-white/25 text-white border border-white/20 backdrop-blur-md shadow-lg"
                 >
                   <EnvironmentOutlined />
                   <span>Chỉ đường gần nhất</span>
@@ -740,23 +853,23 @@ function Map() {
               )}
             </div>
 
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-white/70">
               {filteredStations.length} trạm sạc
             </div>
           </div>
 
           {/* Thông báo lỗi */}
           {locationError && (
-            <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
+            <div className="mb-4 bg-red-500/10 border border-red-500/30 text-red-200 px-4 py-3 rounded-lg shadow-lg">
               <p className="text-sm">{locationError}</p>
             </div>
           )}
 
           {/* Thông báo loading stations */}
           {isLoadingStations && (
-            <div className="mb-4 bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded-lg shadow-lg">
+            <div className="mb-4 bg-blue-500/10 border border-blue-500/30 text-blue-200 px-4 py-3 rounded-lg shadow-lg">
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-300"></div>
                 <p className="text-sm">Đang tải danh sách trạm sạc...</p>
               </div>
             </div>
@@ -764,12 +877,12 @@ function Map() {
 
           {/* Thông báo lỗi stations */}
           {stationsError && (
-            <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg">
+            <div className="mb-4 bg-white/10 border border-white/20 text-white px-4 py-3 rounded-lg shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <p className="text-sm">{stationsError}</p>
                 <button
                   onClick={fetchStationsFromAPI}
-                  className="text-red-600 hover:text-red-800 text-sm underline"
+                  className="text-white hover:text-white/80 text-sm underline"
                 >
                   Thử lại
                 </button>
@@ -779,7 +892,15 @@ function Map() {
 
           {/* Thông báo thành công - Popup góc phải trên */}
           {showSuccessPopup && nearestStation && (
-            <div className="fixed top-20 right-4 z-[10000] bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm animate-slide-in">
+            <div
+              className="fixed top-20 right-4 z-[10000] text-white px-4 py-3 rounded-xl shadow-2xl max-w-sm animate-slide-in"
+              style={{
+                background: "rgba(0, 8, 59, 0.88)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+              }}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-green-200 rounded-full animate-pulse"></div>
                 <p className="text-sm font-semibold">
@@ -788,24 +909,30 @@ function Map() {
                 </p>
               </div>
 
-              <div className="bg-green-600 rounded-lg p-2 mt-2">
-                <p className="text-xs font-semibold text-green-100 mb-1">
+              <div
+                className="rounded-lg p-3 mt-2"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <p className="text-xs font-semibold text-white mb-1">
                   <PoweroffOutlined style={{ marginRight: "4px" }} />
                   Trạm gần nhất:
                 </p>
                 <p className="text-sm font-bold text-white">
                   {nearestStation.name}
                 </p>
-                <p className="text-xs text-green-100 mt-1">
+                <p className="text-xs text-white mt-1">
                   <EnvironmentOutlined style={{ marginRight: "4px" }} />
                   {nearestStation.address}
                 </p>
-                <p className="text-xs text-green-200 mt-1 font-semibold">
+                <p className="text-xs text-cyan-200 mt-1 font-semibold">
                   🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
                 </p>
                 <div className="mt-2">
                   <button
-                    className="bg-yellow-500 hover:bg-yellow-600 text-yellow-900 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center gap-1"
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all flex items-center gap-1 bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/40"
                     onClick={() => {
                       // Sử dụng địa chỉ văn bản thay vì tọa độ
                       const stationAddress = nearestStation.address
@@ -827,7 +954,15 @@ function Map() {
 
           {/* Popup trạm được chọn - góc phải trên */}
           {showStationPopup && selectedStation && (
-            <div className="fixed top-20 right-4 z-[10000] bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg max-w-sm animate-slide-in">
+            <div
+              className="fixed top-20 right-4 z-[10000] text-white px-4 py-3 rounded-xl shadow-2xl max-w-sm animate-slide-in"
+              style={{
+                background: "rgba(0, 8, 59, 0.9)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+              }}
+            >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-blue-200 rounded-full animate-pulse"></div>
                 <p className="text-sm font-semibold">
@@ -836,32 +971,38 @@ function Map() {
                 </p>
               </div>
 
-              <div className="bg-blue-600 rounded-lg p-2 mt-2">
-                <p className="text-xs font-semibold text-blue-100 mb-1">
+              <div
+                className="rounded-lg p-3 mt-2"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <p className="text-xs font-semibold text-white mb-1">
                   <PoweroffOutlined style={{ marginRight: "4px" }} />
                   {selectedStation.name}
                 </p>
                 <p className="text-sm font-bold text-white">
                   {selectedStation.city}
                 </p>
-                <p className="text-xs text-blue-100 mt-1">
+                <p className="text-xs text-white mt-1">
                   <EnvironmentOutlined style={{ marginRight: "4px" }} />
                   {selectedStation.address}
                 </p>
                 {selectedStation.distance && (
-                  <p className="text-xs text-blue-200 mt-1 font-semibold">
+                  <p className="text-xs text-cyan-200 mt-1 font-semibold">
                     🚗 Cách bạn: {selectedStation.distance.toFixed(1)} km
                   </p>
                 )}
                 <div className="mt-2 flex gap-2">
                   <button
-                    className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/40"
                     onClick={() => setShowStationPopup(false)}
                   >
                     Đóng
                   </button>
                   <button
-                    className="bg-yellow-500 hover:bg-yellow-600 text-yellow-900 px-3 py-1 rounded text-xs font-semibold transition-colors"
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40"
                     onClick={() => {
                       // Sử dụng địa chỉ văn bản thay vì tọa độ
                       const stationAddress = selectedStation.address
@@ -890,7 +1031,7 @@ function Map() {
           )}
 
           {/* Bản đồ */}
-          <div className="w-full h-[600px] rounded-lg overflow-hidden shadow-lg relative z-0">
+          <div className="w-full h-[700px] overflow-hidden relative z-0 bg-[#0b1448]">
             <MapContainer
               center={mapCenter}
               zoom={mapZoom}
@@ -1579,12 +1720,12 @@ function Map() {
                           </div>
                         </div>
 
-                        {/* Nút chỉ đường và đánh giá */}
+                        {/* Nút chỉ đường, đánh giá và đặt lịch */}
                         <div
                           style={{
                             display: "flex",
                             justifyContent: "center",
-                            gap: "12px",
+                            gap: "8px",
                             flexWrap: "wrap",
                           }}
                         >
@@ -1671,6 +1812,40 @@ function Map() {
                           >
                             <StarOutlined style={{ fontSize: "12px" }} />
                             <span>Đánh giá</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleOpenBookingModal(station)}
+                            style={{
+                              background:
+                                "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
+                              color: "white",
+                              padding: "12px 16px",
+                              borderRadius: "12px",
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              border: "none",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 8px rgba(24, 144, 255, 0.2)",
+                            }}
+                            onMouseOver={(e) => {
+                              e.target.style.transform = "translateY(-2px)";
+                              e.target.style.boxShadow =
+                                "0 6px 12px rgba(24, 144, 255, 0.3)";
+                            }}
+                            onMouseOut={(e) => {
+                              e.target.style.transform = "translateY(0)";
+                              e.target.style.boxShadow =
+                                "0 4px 8px rgba(24, 144, 255, 0.2)";
+                            }}
+                          >
+                            <ClockCircleOutlined style={{ fontSize: "12px" }} />
+                            <span>Đặt lịch</span>
                           </button>
                         </div>
                       </div>

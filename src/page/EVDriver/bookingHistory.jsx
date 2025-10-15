@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import Header from "../../components/layout/header.jsx";
 import {
   Card,
   Table,
@@ -19,6 +18,7 @@ import {
   Empty,
   Tooltip,
   Badge,
+  Modal,
 } from "antd";
 import {
   CalendarOutlined,
@@ -36,162 +36,25 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { batteryStations } from "../../data/stations";
+import apiService from "../../services/apiService";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// Demo data - trong thực tế sẽ lấy từ API
-const mockBookingHistory = [
-  {
-    id: "BK001",
-    bookingDate: "2024-01-15",
-    bookingTime: "09:00 - 09:10",
-    stationName: "Trạm đổi pin Ba Đình",
-    stationAddress: "123 Phố Huế, Ba Đình, Hà Nội",
-    city: "Hà Nội",
-    batterySlot: "Ổ pin #3",
-    batterySoC: 100,
-    batterySoH: 95,
-    staffName: "Nguyễn Văn A",
-    staffId: "ST001",
-    completedAt: "09:05",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-15T08:45:00Z",
-  },
-  {
-    id: "BK002",
-    bookingDate: "2024-01-14",
-    bookingTime: "14:30 - 14:40",
-    stationName: "Trạm đổi pin Quận 1",
-    stationAddress: "456 Nguyễn Huệ, Quận 1, TP.HCM",
-    city: "TP.HCM",
-    batterySlot: "Ổ pin #7",
-    batterySoC: 100,
-    batterySoH: 92,
-    staffName: "Trần Thị B",
-    staffId: "ST002",
-    completedAt: "14:35",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-14T14:15:00Z",
-  },
-  {
-    id: "BK003",
-    bookingDate: "2024-01-13",
-    bookingTime: "16:00 - 16:10",
-    stationName: "Trạm đổi pin Cầu Giấy",
-    stationAddress: "789 Cầu Giấy, Cầu Giấy, Hà Nội",
-    city: "Hà Nội",
-    batterySlot: "Ổ pin #12",
-    batterySoC: 100,
-    batterySoH: 88,
-    staffName: "Lê Văn C",
-    staffId: "ST003",
-    completedAt: "16:08",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-13T15:45:00Z",
-  },
-  {
-    id: "BK004",
-    bookingDate: "2024-01-12",
-    bookingTime: "11:00 - 11:10",
-    stationName: "Trạm đổi pin Quận 3",
-    stationAddress: "321 Võ Văn Tần, Quận 3, TP.HCM",
-    city: "TP.HCM",
-    batterySlot: "Ổ pin #5",
-    batterySoC: 100,
-    batterySoH: 90,
-    staffName: "Phạm Thị D",
-    staffId: "ST004",
-    completedAt: "11:12",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-12T10:50:00Z",
-  },
-  {
-    id: "BK005",
-    bookingDate: "2024-01-11",
-    bookingTime: "08:30 - 08:40",
-    stationName: "Trạm đổi pin Hai Bà Trưng",
-    stationAddress: "654 Bạch Mai, Hai Bà Trưng, Hà Nội",
-    city: "Hà Nội",
-    batterySlot: "Ổ pin #9",
-    batterySoC: 100,
-    batterySoH: 94,
-    staffName: "Hoàng Văn E",
-    staffId: "ST005",
-    completedAt: "08:38",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-11T08:20:00Z",
-  },
-  {
-    id: "BK006",
-    bookingDate: "2024-01-10",
-    bookingTime: "09:00 - 09:10",
-    stationName: "Trạm đổi pin Ba Đình",
-    stationAddress: "123 Phố Huế, Ba Đình, Hà Nội",
-    city: "Hà Nội",
-    batterySlot: "Ổ pin #2",
-    batterySoC: 100,
-    batterySoH: 96,
-    staffName: "Nguyễn Văn A",
-    staffId: "ST001",
-    completedAt: null,
-    cancelledAt: "09:15",
-    serviceFee: 50000,
-    status: "cancelled",
-    createdAt: "2024-01-10T08:45:00Z",
-  },
-  {
-    id: "BK007",
-    bookingDate: "2024-01-09",
-    bookingTime: "15:30 - 15:40",
-    stationName: "Trạm đổi pin Quận 1",
-    stationAddress: "456 Nguyễn Huệ, Quận 1, TP.HCM",
-    city: "TP.HCM",
-    batterySlot: "Ổ pin #8",
-    batterySoC: 100,
-    batterySoH: 89,
-    staffName: "Trần Thị B",
-    staffId: "ST002",
-    completedAt: null,
-    cancelledAt: "15:45",
-    serviceFee: 50000,
-    status: "cancelled",
-    createdAt: "2024-01-09T15:15:00Z",
-  },
-  {
-    id: "BK008",
-    bookingDate: "2024-01-08",
-    bookingTime: "11:00 - 11:10",
-    stationName: "Trạm đổi pin Cầu Giấy",
-    stationAddress: "789 Cầu Giấy, Cầu Giấy, Hà Nội",
-    city: "Hà Nội",
-    batterySlot: "Ổ pin #15",
-    batterySoC: 100,
-    batterySoH: 91,
-    staffName: "Lê Văn C",
-    staffId: "ST003",
-    completedAt: "11:05",
-    serviceFee: 50000,
-    status: "completed",
-    createdAt: "2024-01-08T10:50:00Z",
-  },
-];
+// ĐÃ BỎ mock data, sử dụng dữ liệu từ API
+const mockBookingHistory = [];
 
 export default function BookingHistory() {
   const { user } = useAuth();
+  const [modal, modalContextHolder] = Modal.useModal();
   const [loading, setLoading] = useState(false);
-  const [bookingHistory, setBookingHistory] = useState(mockBookingHistory);
-  const [filteredData, setFilteredData] = useState(mockBookingHistory);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [stationsMap, setStationsMap] = useState({});
   const [dateRange, setDateRange] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
+  const [stationFilter, setStationFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
 
   // Thống kê tổng quan
@@ -227,23 +90,22 @@ export default function BookingHistory() {
       filtered = filtered.filter((item) => item.status === statusFilter);
     }
 
-    // Lọc theo thành phố
-    if (cityFilter !== "all") {
-      filtered = filtered.filter((item) => item.city === cityFilter);
+    // Lọc theo trạm (theo stationID)
+    if (stationFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => String(item.stationId) === String(stationFilter)
+      );
     }
 
     // Lọc theo từ khóa tìm kiếm
     if (searchText) {
-      filtered = filtered.filter(
-        (item) =>
-          item.id.toLowerCase().includes(searchText.toLowerCase()) ||
-          item.stationName.toLowerCase().includes(searchText.toLowerCase()) ||
-          item.staffName.toLowerCase().includes(searchText.toLowerCase())
+      filtered = filtered.filter((item) =>
+        String(item.id).toLowerCase().includes(searchText.toLowerCase())
       );
     }
 
     setFilteredData(filtered);
-  }, [bookingHistory, dateRange, statusFilter, cityFilter, searchText]);
+  }, [bookingHistory, dateRange, statusFilter, stationFilter, searchText]);
 
   // Định nghĩa cột cho bảng
   const columns = [
@@ -390,110 +252,6 @@ export default function BookingHistory() {
       render: (slot, record) => (
         <div style={{ textAlign: "center", padding: "8px 0" }}>
           <Text style={{ fontSize: "13px", fontWeight: "500" }}>{slot}</Text>
-          <div>
-            <Text
-              style={{
-                fontSize: "11px",
-                color: "#64748b",
-                lineHeight: "1.2",
-              }}
-            >
-              SoC: {record.batterySoC}% | SoH: {record.batterySoH}%
-            </Text>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-          }}
-        >
-          <UserOutlined style={{ color: "white", fontSize: "16px" }} />
-          <Text strong style={{ color: "white", fontSize: "14px" }}>
-            Nhân viên
-          </Text>
-        </div>
-      ),
-      dataIndex: "staffName",
-      key: "staffName",
-      width: 160,
-      align: "center",
-      render: (name, record) => (
-        <div style={{ textAlign: "center", padding: "8px 0" }}>
-          <Text style={{ fontSize: "13px", fontWeight: "500" }}>{name}</Text>
-          <div>
-            <Text
-              style={{
-                fontSize: "11px",
-                color: "#64748b",
-                lineHeight: "1.2",
-              }}
-            >
-              ID: {record.staffId}
-            </Text>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-          }}
-        >
-          <CheckCircleOutlined style={{ color: "white", fontSize: "16px" }} />
-          <Text strong style={{ color: "white", fontSize: "14px" }}>
-            Hoàn thành
-          </Text>
-        </div>
-      ),
-      dataIndex: "completedAt",
-      key: "completedAt",
-      width: 140,
-      align: "center",
-      render: (time, record) => (
-        <div style={{ textAlign: "center", padding: "8px 0" }}>
-          {record.status === "completed" ? (
-            <Text
-              style={{
-                fontSize: "13px",
-                color: "#10b981",
-                fontWeight: "500",
-              }}
-            >
-              {time}
-            </Text>
-          ) : record.status === "cancelled" ? (
-            <Text
-              style={{
-                fontSize: "13px",
-                color: "#dc2626",
-                fontWeight: "500",
-              }}
-            >
-              Hủy lúc: {record.cancelledAt}
-            </Text>
-          ) : (
-            <Text
-              style={{
-                fontSize: "13px",
-                color: "#f59e0b",
-                fontWeight: "500",
-              }}
-            >
-              Chờ xử lý
-            </Text>
-          )}
         </div>
       ),
     },
@@ -549,9 +307,10 @@ export default function BookingHistory() {
       align: "center",
       render: (status) => {
         const statusConfig = {
-          completed: { color: "green", text: "Hoàn thành" },
-          cancelled: { color: "red", text: "Đã hủy" },
-          pending: { color: "orange", text: "Chờ xử lý" },
+          pending: { color: "orange", text: "Đang xử lý" },
+          completed: { color: "green", text: "Đã thanh toán" },
+          expired: { color: "gold", text: "Đã quá hạn" },
+          cancelled: { color: "red", text: "Đã hủy lịch" },
         };
         const config = statusConfig[status] || statusConfig.pending;
         return (
@@ -566,25 +325,171 @@ export default function BookingHistory() {
         );
       },
     },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Hành động
+          </Text>
+        </div>
+      ),
+      key: "action",
+      width: 140,
+      align: "center",
+      render: (_, record) => {
+        const canCancel = record.status === "pending"; // chỉ cho phép khi đang chờ
+        return (
+          <Space>
+            <Tooltip title={canCancel ? "" : "Chỉ có thể hủy khi đang chờ"}>
+              <Button
+                size="small"
+                danger
+                disabled={!canCancel}
+                onClick={() => {
+                  modal.confirm({
+                    title: "Xác nhận hủy đặt lịch",
+                    content:
+                      "Bạn có chắc chắn muốn hủy lịch này? Ổ pin sẽ được trả về trạng thái khả dụng.",
+                    okText: canCancel ? "Hủy đặt lịch" : "Không thể hủy",
+                    okButtonProps: { danger: true, disabled: !canCancel },
+                    cancelText: "Đóng",
+                    onOk: () =>
+                      new Promise(async (resolve) => {
+                        try {
+                          const [updateRes] = await Promise.all([
+                            // 3 = cancel theo quy ước mới
+                            apiService.updateTransactionStatus(record.id, 3),
+                            apiService.unreservePinSlot(
+                              record.pinId || record.batterySlot?.split("#")[1]
+                            ),
+                          ]);
+                          if (updateRes?.status === "success") {
+                            fetchHistory();
+                          }
+                        } catch (e) {
+                          console.error("Cancel transaction failed", e);
+                        } finally {
+                          resolve();
+                        }
+                      }),
+                  });
+                }}
+              >
+                Hủy
+              </Button>
+            </Tooltip>
+          </Space>
+        );
+      },
+    },
   ];
 
-  const handleRefresh = () => {
+  const mapApiStatusToText = (status) => {
+    // 0=pending, 1=completed, 2=expired, 3=cancelled
+    if (status === 1) return "completed";
+    if (status === 2) return "expired";
+    if (status === 3) return "cancelled";
+    return "pending";
+  };
+
+  const fetchHistory = async () => {
+    if (!user?.userID) return;
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await apiService.getTransactionsByUser(user.userID);
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        const mapped = res.data.map((t, idx) => ({
+          id: t.transactionID,
+          bookingDate: dayjs(t.createAt).format("YYYY-MM-DD"),
+          bookingTime: `${dayjs(t.createAt).format("HH:mm")} - ${dayjs(
+            t.expireAt
+          ).format("HH:mm")}`,
+          stationId: t.stationID,
+          stationName:
+            stationsMap[t.stationID]?.stationName || `Trạm #${t.stationID}`,
+          stationAddress:
+            stationsMap[t.stationID]?.location || `Mã trạm: ${t.stationID}`,
+          city: "-",
+          batterySlot: `Ổ pin #${t.pinID}`,
+          batterySoC: 100,
+          batterySoH: 100,
+          staffName: "-",
+          staffId: "-",
+          completedAt:
+            t.status === 1 ? dayjs(t.expireAt).format("HH:mm") : null,
+          cancelledAt:
+            t.status === 3 ? dayjs(t.expireAt).format("HH:mm") : null,
+          serviceFee: t.amount,
+          status: mapApiStatusToText(t.status),
+          createdAt: t.createAt,
+        }));
+        const sorted = mapped.sort((a, b) => a.id - b.id);
+        setBookingHistory(sorted);
+        setFilteredData(sorted);
+      } else {
+        setBookingHistory([]);
+        setFilteredData([]);
+      }
+    } catch (e) {
+      console.error("Fetch history error", e);
+      setBookingHistory([]);
+      setFilteredData([]);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  const fetchStations = async () => {
+    try {
+      const res = await apiService.getPinStations();
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        const map = {};
+        res.data.forEach((s) => {
+          map[s.stationID] = {
+            stationName: s.stationName,
+            location: s.location,
+          };
+        });
+        setStationsMap(map);
+      }
+    } catch (e) {
+      console.error("Fetch stations error", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchStations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.userID, stationsMap]);
+
+  const handleRefresh = () => {
+    fetchHistory();
   };
 
   const handleClearFilters = () => {
     setDateRange(null);
     setStatusFilter("all");
-    setCityFilter("all");
+    setStationFilter("all");
     setSearchText("");
   };
 
-  // Lấy danh sách thành phố unique cho filter
-  const uniqueCities = [...new Set(bookingHistory.map((item) => item.city))];
+  // Danh sách trạm để filter
+  const stationsOptions = Object.entries(stationsMap).map(([id, info]) => ({
+    id,
+    name: info.stationName,
+  }));
 
   return (
     <div className="min-h-screen relative bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]">
@@ -662,9 +567,8 @@ export default function BookingHistory() {
       {/* Background decorative elements */}
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,8,59,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(0,8,59,0.02)_0%,transparent_50%)]" />
 
-      <Header />
-
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+        {modalContextHolder}
         {/* Header Section */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)] mb-6 shadow-[0_8px_20px_rgba(0,8,59,0.15)]">
@@ -677,8 +581,7 @@ export default function BookingHistory() {
             Lịch Sử Đặt Lịch
           </Title>
           <Text className="text-slate-500 text-[18px] max-w-[600px] mx-auto leading-relaxed">
-            Theo dõi tất cả các giao dịch đổi pin của bạn với thông tin chi tiết
-            về nhân viên và thời gian hoàn thành
+            Theo dõi tất cả các giao dịch đổi pin của bạn.
           </Text>
         </div>
 
@@ -792,20 +695,25 @@ export default function BookingHistory() {
                 </Select>
               </Space>
             </Col>
-            <Col xs={24} sm={4}>
+            <Col xs={24} sm={6}>
               <Space direction="vertical" size={4} style={{ width: "100%" }}>
                 <Text strong style={{ color: "#00083B", fontSize: "14px" }}>
-                  Thành phố
+                  Trạm
                 </Text>
                 <Select
                   style={{ width: "100%" }}
-                  value={cityFilter}
-                  onChange={setCityFilter}
+                  value={stationFilter}
+                  onChange={setStationFilter}
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Chọn trạm"
                 >
-                  <Option value="all">Tất cả thành phố</Option>
-                  {uniqueCities.map((city) => (
-                    <Option key={city} value={city}>
-                      {city}
+                  <Option value="all" label="Tất cả trạm">
+                    Tất cả trạm
+                  </Option>
+                  {stationsOptions.map((s) => (
+                    <Option key={s.id} value={s.id} label={s.name}>
+                      {s.name}
                     </Option>
                   ))}
                 </Select>
@@ -892,42 +800,6 @@ export default function BookingHistory() {
             />
           )}
         </Card>
-
-        {/* Information Alert */}
-        <Alert
-          message="ℹ️ Thông tin quan trọng"
-          description={
-            <div>
-              <ul style={{ margin: "8px 0", paddingLeft: "20px" }}>
-                <li>
-                  <strong>Thời gian hoàn thành:</strong> Thời điểm nhân viên
-                  hoàn thành việc thay pin cho bạn
-                </li>
-                <li>
-                  <strong>Hủy lịch:</strong> Lịch sẽ bị hủy tự động nếu đến muộn
-                  sau khung giờ đã đặt. Thời gian hủy được ghi lại để minh bạch
-                </li>
-                <li>
-                  <strong>Phí dịch vụ:</strong> Chi phí cố định cho mỗi lần đổi
-                  pin
-                </li>
-                <li>
-                  <strong>SoC/SoH:</strong> Mức pin và tình trạng pin tại thời
-                  điểm đổi
-                </li>
-              </ul>
-            </div>
-          }
-          type="info"
-          showIcon
-          style={{
-            marginTop: "24px",
-            borderRadius: "16px",
-            background:
-              "linear-gradient(135deg, rgba(0, 8, 59, 0.05) 0%, rgba(0, 8, 59, 0.02) 100%)",
-            border: "1px solid rgba(0, 8, 59, 0.1)",
-          }}
-        />
       </div>
     </div>
   );

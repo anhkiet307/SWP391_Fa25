@@ -1,6 +1,5 @@
 import React from "react";
 import Map from "../components/Map";
-import ServicePack from "../components/ServicePack";
 import BookingSection from "../components/BookingSection";
 import { Typography, Space, Row, Col, Tag } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
@@ -11,7 +10,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#00083B]">
       {/* Hero Section */}
-      <section className="relative w-full overflow-hidden">
+      <section className="relative w-full overflow-hidden bg-[#00083B]">
         <div className="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center py-20 sm:py-28 lg:py-36">
             <h1 className="text-[64px] sm:text-[80px] lg:text-[112px] leading-none font-extrabold tracking-tight bg-gradient-to-r from-cyan-300 via-blue-300 to-green-300 bg-clip-text text-transparent">
@@ -58,26 +57,34 @@ export default function Home() {
         </div>
 
         {/* subtle grid background */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(56,189,248,0.12),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(34,197,94,0.12),transparent_35%),radial-gradient(circle_at_50%_80%,rgba(59,130,246,0.12),transparent_35%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(#ffffff0f_1px,transparent_1px),linear-gradient(90deg,#ffffff0f_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(125,211,252,0.12),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(34,197,94,0.12),transparent_35%),radial-gradient(circle_at_50%_80%,rgba(59,130,246,0.12),transparent_35%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(#ffffff14_1px,transparent_1px),linear-gradient(90deg,#ffffff14_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
       </section>
 
-      {/* Gói dịch vụ đổi pin */}
-      <ServicePack />
-
       {/* Đặt lịch đổi pin */}
-      <BookingSection />
+      <section id="booking-section" className="bg-[#00083B]">
+        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-16">
+          <BookingSection />
+        </div>
+      </section>
 
       {/* Bản đồ trạm đổi pin */}
-      <section id="map-section" className="py-16 bg-white">
-        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+      <section id="map-section" className="py-16 bg-[#00083B]">
+        <div
+          id="map-colored-container"
+          className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 relative z-10"
+          style={{
+            background:
+              "linear-gradient(135deg, #00083B 0%, #1a1f5c 50%, #2d1b69 100%)",
+          }}
+        >
+          <div className="text-center mx-auto" style={{ maxWidth: "980px" }}>
             <Space direction="vertical" size="large" className="w-full">
               <Space size="large" className="justify-center">
                 <EnvironmentOutlined
-                  style={{ fontSize: "48px", color: "#1890ff" }}
+                  style={{ fontSize: "48px", color: "#7dd3fc" }}
                 />
-                <Title level={1} style={{ margin: 0 }}>
+                <Title level={1} style={{ margin: 0, color: "#ffffff" }}>
                   Mạng lưới trạm đổi pin VoltSwap
                 </Title>
               </Space>
@@ -86,74 +93,51 @@ export default function Home() {
                   fontSize: "20px",
                   maxWidth: "800px",
                   margin: "0 auto",
+                  color: "rgba(255,255,255,0.85)",
                 }}
               >
                 Tìm kiếm trạm đổi pin gần nhất tại Hà Nội và TP.HCM. Hệ thống
                 trạm đổi pin thông minh, tiện lợi và nhanh chóng.
               </Paragraph>
             </Space>
-          </div>
-
-          <div className="mb-8">
-            <Row justify="center" gutter={[24, 16]}>
-              <Col>
+            <div className="mb-8 mt-8">
+              <Row justify="center" gutter={[24, 16]}>
+                <Col>
+                  <Space>
+                    <div className="w-4 h-4 bg-green-400 rounded-full"></div>
+                    <span className="text-white/80">Hà Nội (5 trạm)</span>
+                  </Space>
+                </Col>
+                <Col>
+                  <Space>
+                    <div className="w-4 h-4 bg-orange-400 rounded-full"></div>
+                    <span className="text-white/80">TP.HCM (5 trạm)</span>
+                  </Space>
+                </Col>
+                <Col>
+                  <Space>
+                    <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
+                    <span className="text-white/80">Tổng cộng 10 trạm</span>
+                  </Space>
+                </Col>
+              </Row>
+              <div className="mt-4 text-center">
                 <Space>
-                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-700">Hà Nội (5 trạm)</span>
+                  <EnvironmentOutlined style={{ color: "#9ca3af" }} />
+                  <Paragraph
+                    style={{ color: "#9ca3af", margin: 0, fontSize: "14px" }}
+                  >
+                    Chọn thành phố và quận/huyện để xem chi tiết trạm sạc
+                  </Paragraph>
                 </Space>
-              </Col>
-              <Col>
-                <Space>
-                  <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-700">TP.HCM (5 trạm)</span>
-                </Space>
-              </Col>
-              <Col>
-                <Space>
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-700">Tổng cộng 10 trạm</span>
-                </Space>
-              </Col>
-            </Row>
-            <div className="mt-4 text-center">
-              <Space>
-                <EnvironmentOutlined style={{ color: "#666" }} />
-                <Paragraph
-                  style={{ color: "#666", margin: 0, fontSize: "14px" }}
-                >
-                  Chọn thành phố và quận/huyện để xem chi tiết trạm sạc
-                </Paragraph>
-              </Space>
+              </div>
             </div>
           </div>
-
           <Map />
         </div>
       </section>
 
       {/* Nội dung khác của trang home */}
-      <main className="py-16 bg-[#00083B]">
-        <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-          <Space
-            direction="vertical"
-            size="large"
-            className="w-full text-center"
-          >
-            <Title level={2} style={{ color: "white", margin: 0 }}>
-              Chào mừng đến với VoltSwap
-            </Title>
-            <Paragraph
-              style={{
-                color: "rgba(255,255,255,0.8)",
-                fontSize: "18px",
-                margin: 0,
-              }}
-            >
-              Nội dung trang chủ sẽ được thêm vào đây...
-            </Paragraph>
-          </Space>
-        </div>
-      </main>
     </div>
   );
 }

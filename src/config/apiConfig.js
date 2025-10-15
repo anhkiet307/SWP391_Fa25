@@ -46,6 +46,12 @@ const API_CONFIG = {
 
     // PinSlot management endpoints
     PINSLOT: {
+      LIST: "/pinSlot/list",
+      DETAIL: "/pinSlot/:pinID",
+      CREATE: "/pinSlot/create",
+      UPDATE: "/pinSlot/update",
+      DELETE: "/pinSlot/delete",
+      RESERVE: "/pinSlot/reserve",
       LIST_ALL: "/pinSlot/listAll",
       LIST_BY_STATION: "/pinSlot/list",
       UPDATE_SLOT: "/pinSlot/updateSlot",
@@ -71,9 +77,21 @@ const API_CONFIG = {
       STATUS: "/batteries/:id/status",
     },
 
+    // Subscription endpoints
+    SUBSCRIPTION: {
+      GET_USER_SUBSCRIPTION: "/subscription/getUserSubscription",
+      CREATE: "/subscription/create",
+      UPDATE: "/subscription/update",
+      CANCEL: "/subscription/cancel",
+    },
+
     // Service pack endpoints
     SERVICE_PACK: {
       LIST: "/servicePack/list",
+      DETAIL: "/servicePack/:id",
+      CREATE: "/servicePack/create",
+      UPDATE: "/servicePack/:id",
+      DELETE: "/servicePack/:id",
       DETAIL: "/service-packs/:id",
       CREATE: "/service-packs",
       UPDATE: "/service-packs/:id",
@@ -89,6 +107,7 @@ const API_CONFIG = {
 
     // Transaction endpoints
     TRANSACTION: {
+      CREATE: "/transaction/create",
       LIST: "/transactions",
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",

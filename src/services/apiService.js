@@ -361,6 +361,73 @@ class ApiService {
     return this.get(url);
   }
 
+  async getStationDetail(stationId) {
+    const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
+    return this.get(url);
+  }
+
+  /**
+   * Lấy danh sách pin slots của một trạm sạc
+   * @param {number} stationId - ID của trạm sạc
+   * @returns {Promise<Object>} Response chứa danh sách pin slots
+   *
+   * Response format:
+   * {
+   *   status: "success",
+   *   message: string,
+   *   data: [
+   *     {
+   *       pinID: number,        // ID của pin slot
+   *       pinPercent: number,   // SoC (State of Charge) - % pin hiện tại (0-100)
+   *       pinStatus: number,    // Trạng thái pin: 0=chưa đầy, 1=đầy
+   *       pinHealth: number,    // SoH (State of Health) - % sức khỏe pin (0-100)
+   *       status: number,       // Trạng thái khả dụng: 1=khả dụng, 0=không khả dụng, 2=đã cho thuê
+   *       userID: number|null,  // ID người dùng đang thuê (null nếu chưa có)
+   *       stationID: number     // ID trạm sạc
+   *     }
+   *   ],
+   *   error: null,
+   *   timestamp: number
+   * }
+   */
+  async getPinSlots(stationId) {
+    const url = getApiUrl("PINSLOT", "LIST");
+    return this.get(url, { stationID: stationId });
+  }
+
+  /**
+   * Đặt giữ một pin slot
+   * API yêu cầu method PUT với query params: pinID, userID
+   */
+  async reservePinSlot(pinID, userID) {
+    const url = getApiUrl("PINSLOT", "RESERVE");
+    const queryString = new URLSearchParams({ pinID, userID }).toString();
+    const fullUrl = `${url}?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  /**
+   * Bỏ giữ một pin slot (set status=0, userID=null)
+   */
+  async unreservePinSlot(pinID) {
+    const fullUrl =
+      this.baseURL + `/pinSlot/unreserve?pinID=${encodeURIComponent(pinID)}`;
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // ===== BOOKING METHODS =====
   async createBooking(bookingData) {
     const url = getApiUrl("BOOKING", "CREATE");
@@ -442,10 +509,10 @@ class ApiService {
   async updateServicePackStatus(packId, adminUserID, status) {
     const url = getApiUrl("SERVICE_PACK", "UPDATE_STATUS");
     // API sử dụng PUT với query parameters
-    const queryString = new URLSearchParams({ 
+    const queryString = new URLSearchParams({
       packID: packId,
       adminUserID: adminUserID,
-      status: status
+      status: status,
     }).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
@@ -621,6 +688,163 @@ class ApiService {
   async deleteRating(ratingId) {
     const url = getApiUrl("RATING", "DELETE", { id: ratingId });
     return this.delete(url);
+  }
+
+  // ===== SUBSCRIPTION METHODS =====
+  /**
+   * Lấy thông tin subscription của user
+   * @param {number} userId - ID của user
+   * @returns {Promise<Object>} - Thông tin subscription
+   */
+  async getUserSubscription(userId) {
+    const url = getApiUrl("SUBSCRIPTION", "GET_USER_SUBSCRIPTION");
+    return this.get(`${url}?userID=${userId}`);
+  }
+
+  async createSubscription(subscriptionData) {
+    const url = getApiUrl("SUBSCRIPTION", "CREATE");
+    return this.post(url, subscriptionData);
+  }
+
+  async updateSubscription(subscriptionId, subscriptionData) {
+    const url = getApiUrl("SUBSCRIPTION", "UPDATE", { id: subscriptionId });
+    return this.put(url, subscriptionData);
+  }
+
+  async cancelSubscription(subscriptionId) {
+    const url = getApiUrl("SUBSCRIPTION", "CANCEL", { id: subscriptionId });
+    return this.delete(url);
+  }
+
+  // ===== SERVICE PACK METHODS =====
+  /**
+   * Lấy danh sách service pack
+   * @returns {Promise<Object>} - Danh sách service pack
+   */
+  async getServicePacks() {
+    const url = getApiUrl("SERVICE_PACK", "LIST");
+    return this.get(url);
+  }
+
+  async getServicePackDetail(packId) {
+    const url = getApiUrl("SERVICE_PACK", "DETAIL", { id: packId });
+    return this.get(url);
+  }
+
+  async createServicePack(packData) {
+    const url = getApiUrl("SERVICE_PACK", "CREATE");
+    return this.post(url, packData);
+  }
+
+  async updateServicePack(packId, packData) {
+    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
+    return this.put(url, packData);
+  }
+
+  async deleteServicePack(packId) {
+    const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
+    return this.delete(url);
+  }
+
+  // ===== TRANSACTION METHODS =====
+  /**
+   * Tạo transaction mới
+   * @param {Object} transactionData - Dữ liệu transaction
+   * @param {number} transactionData.userID - ID của user
+   * @param {number} transactionData.amount - Số tiền
+   * @param {number} transactionData.pack - ID của pack
+   * @param {number} transactionData.stationID - ID của trạm
+   * @param {number} transactionData.pinID - ID của pin
+   * @param {number} transactionData.status - Trạng thái (mặc định 0)
+   * @returns {Promise<Object>} - Kết quả tạo transaction
+   */
+  async createTransaction(transactionData) {
+    const url = getApiUrl("TRANSACTION", "CREATE");
+    const queryString = new URLSearchParams(transactionData).toString();
+    const fullUrl = `${url}?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async getTransactions(params = {}) {
+    const url = getApiUrl("TRANSACTION", "LIST");
+    return this.get(url, params);
+  }
+
+  /**
+   * Lấy lịch sử giao dịch theo user hiện tại
+   * API thật: /transaction/getByUser?userID=:userID
+   */
+  async getTransactionsByUser(userId) {
+    const base = this.baseURL + "/transaction/getByUser";
+    const fullUrl = `${base}?userID=${encodeURIComponent(userId)}`;
+    return this.get(fullUrl);
+  }
+
+  async getTransactionDetail(transactionId) {
+    const url = getApiUrl("TRANSACTION", "DETAIL", { id: transactionId });
+    return this.get(url);
+  }
+
+  async getTransactionHistory(params = {}) {
+    const url = getApiUrl("TRANSACTION", "HISTORY");
+    return this.get(url, params);
+  }
+
+  async processPayment(paymentData) {
+    const url = getApiUrl("TRANSACTION", "PAYMENT");
+    return this.post(url, paymentData);
+  }
+
+  // ===== VNPay METHODS =====
+  // Tạo URL thanh toán VNPay cho mua gói dịch vụ
+  async createVnpayUrl(data) {
+    // VNPay endpoint nằm ngoài prefix /api → gọi trực tiếp root
+    const rootBase = this.baseURL.replace(/\/_?api$/, "");
+    // Backend yêu cầu POST với query parameters
+    const queryString = new URLSearchParams({
+      userID: data.userID,
+      packID: data.packID,
+      amount: data.amount,
+      orderInfo: data.orderInfo,
+      total: data.total,
+    }).toString();
+    const fullUrl = `${rootBase}/vnpay/create-url?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  /**
+   * Cập nhật trạng thái transaction
+   * Only supports updating via query params: transactionID, status
+   */
+  async updateTransactionStatus(transactionId, status) {
+    const base = this.baseURL + "/transaction/updateStatus";
+    const queryString = new URLSearchParams({
+      transactionID: transactionId,
+      status,
+    }).toString();
+    const fullUrl = `${base}?${queryString}`;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 }
 
