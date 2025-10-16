@@ -104,6 +104,8 @@ const API_CONFIG = {
     VEHICLE: {
       BY_USER: "/vehicle/user",
       PIN_SWAP: "/vehicle/PinSwap",
+      CREATE: "/vehicle/create",
+      LIST: "/vehicle/list",
     },
 
     // Transaction endpoints

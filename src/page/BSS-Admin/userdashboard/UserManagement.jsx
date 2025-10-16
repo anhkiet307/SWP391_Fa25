@@ -22,6 +22,10 @@ const UserManagement = () => {
   const [stations, setStations] = useState([]);
   const [stationsLoading, setStationsLoading] = useState(true);
 
+  // State cho quản lý phương tiện
+  const [vehicles, setVehicles] = useState([]);
+  const [vehiclesLoading, setVehiclesLoading] = useState(true);
+
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -32,6 +36,17 @@ const UserManagement = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [userToChangeStatus, setUserToChangeStatus] = useState(null);
   const [isUserType, setIsUserType] = useState(true); // true: user, false: staff
+
+  // States cho modal thêm phương tiện
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [selectedUserForVehicle, setSelectedUserForVehicle] = useState(null);
+  const [vehicleData, setVehicleData] = useState({
+    userID: "",
+    licensePlate: "",
+    vehicleType: "",
+    pinPercent: "",
+    pinHealth: "",
+  });
   const [newUser, setNewUser] = useState({
     userId: "",
     name: "",
@@ -191,6 +206,31 @@ const UserManagement = () => {
     };
 
     fetchStations();
+  }, []);
+
+  // Fetch vehicles data from API
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        setVehiclesLoading(true);
+        const response = await apiService.getVehicles();
+        console.log("Vehicles API Response:", response); // Debug log
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          setVehicles(response.data);
+          console.log("Vehicles data:", response.data); // Debug log
+        } else {
+          setVehicles([]);
+        }
+      } catch (err) {
+        console.error("Error fetching vehicles:", err);
+        setVehicles([]);
+      } finally {
+        setVehiclesLoading(false);
+      }
+    };
+
+    fetchVehicles();
   }, []);
 
   // Fetch staff data from API
@@ -531,6 +571,83 @@ const UserManagement = () => {
     setUserToChangeStatus(null);
   };
 
+  // Hàm mở modal thêm phương tiện
+  const openVehicleModal = (user) => {
+    setSelectedUserForVehicle(user);
+    setVehicleData({
+      userID: user.id,
+      licensePlate: "",
+      vehicleType: "",
+      pinPercent: "",
+      pinHealth: "",
+    });
+    setShowVehicleModal(true);
+  };
+
+  // Hàm thêm phương tiện
+  const handleAddVehicle = async () => {
+    if (!vehicleData.licensePlate || !vehicleData.vehicleType || !vehicleData.pinPercent || !vehicleData.pinHealth) {
+      showError("Vui lòng điền đầy đủ thông tin phương tiện!");
+      return;
+    }
+
+    // Validate pinPercent and pinHealth are numbers between 0-100
+    const pinPercent = parseInt(vehicleData.pinPercent);
+    const pinHealth = parseInt(vehicleData.pinHealth);
+    
+    if (isNaN(pinPercent) || pinPercent < 0 || pinPercent > 100) {
+      showError("Phần trăm pin phải là số từ 0 đến 100!");
+      return;
+    }
+    
+    if (isNaN(pinHealth) || pinHealth < 0 || pinHealth > 100) {
+      showError("Sức khỏe pin phải là số từ 0 đến 100!");
+      return;
+    }
+
+    try {
+      await apiService.createVehicle(vehicleData);
+      showSuccess(`Đã thêm phương tiện cho ${selectedUserForVehicle.name} thành công!`);
+      
+      // Refresh vehicles list
+      const response = await apiService.getVehicles();
+      if (response && response.data && Array.isArray(response.data)) {
+        setVehicles(response.data);
+      }
+      
+      setShowVehicleModal(false);
+      setSelectedUserForVehicle(null);
+      setVehicleData({
+        userID: "",
+        licensePlate: "",
+        vehicleType: "",
+        pinPercent: "",
+        pinHealth: "",
+      });
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      showError("Không thể thêm phương tiện. Vui lòng thử lại.");
+    }
+  };
+
+  // Hàm hủy modal thêm phương tiện
+  const cancelVehicleModal = () => {
+    setShowVehicleModal(false);
+    setSelectedUserForVehicle(null);
+    setVehicleData({
+      userID: "",
+      licensePlate: "",
+      vehicleType: "",
+      pinPercent: "",
+      pinHealth: "",
+    });
+  };
+
+  // Hàm kiểm tra user có phương tiện hay không
+  const userHasVehicle = (userId) => {
+    return vehicles.some(vehicle => vehicle.userID === userId);
+  };
+
   // Hàm tạo gói thuê pin
   const createSubscriptionPlan = (userId, planType, planName, duration) => {
     setUsers(
@@ -796,6 +913,9 @@ const UserManagement = () => {
                       Số điện thoại
                     </th>
                     <th className="p-4 text-center font-semibold text-base">
+                      Thêm phương tiện
+                    </th>
+                    <th className="p-4 text-center font-semibold text-base">
                       Trạng thái
                     </th>
                     <th className="p-4 text-center font-semibold text-base">
@@ -809,7 +929,7 @@ const UserManagement = () => {
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="p-12 text-center">
+                      <td colSpan="8" className="p-12 text-center">
                         <div className="flex flex-col items-center">
                           <div className="w-16 h-16 mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -861,6 +981,35 @@ const UserManagement = () => {
                           <div className="text-sm text-gray-800 font-medium">
                             (+84) {user.phone}
                           </div>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-gray-200">
+                        <div className="flex justify-center">
+                          {userHasVehicle(user.id) ? (
+                            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                              Đã có phương tiện
+                            </span>
+                          ) : (
+                            <button
+                              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors duration-200"
+                              onClick={() => openVehicleModal(user)}
+                            >
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                />
+                              </svg>
+                             Thêm phương tiện
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">
@@ -1825,6 +1974,124 @@ const UserManagement = () => {
                     </span>
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal thêm phương tiện */}
+        {showVehicleModal && selectedUserForVehicle && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Thêm phương tiện</h3>
+                      <p className="text-sm text-gray-600">Thêm phương tiện cho {selectedUserForVehicle.name}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={cancelVehicleModal}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Form */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Biển số xe */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Biển số xe <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleData.licensePlate}
+                      onChange={(e) => setVehicleData({ ...vehicleData, licensePlate: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập biển số xe"
+                      required
+                    />
+                  </div>
+
+                  {/* Loại phương tiện */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Loại phương tiện <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={vehicleData.vehicleType}
+                      onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập loại phương tiện (VD: Xe máy, Xe đạp điện...)"
+                      required
+                    />
+                  </div>
+
+                  {/* Phần trăm pin */}
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phần trăm pin (%) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={vehicleData.pinPercent}
+                      onChange={(e) => setVehicleData({ ...vehicleData, pinPercent: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập phần trăm pin (0-100)"
+                      required
+                    />
+                  </div>
+
+                  {/* Sức khỏe pin */}
+                  <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sức khỏe pin (%) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={vehicleData.pinHealth}
+                      onChange={(e) => setVehicleData({ ...vehicleData, pinHealth: e.target.value })}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="Nhập sức khỏe pin (0-100)"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl flex justify-end space-x-3">
+                <button
+                  onClick={cancelVehicleModal}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  onClick={handleAddVehicle}
+                  disabled={!vehicleData.licensePlate || !vehicleData.vehicleType || !vehicleData.pinPercent || !vehicleData.pinHealth}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <span>Thêm phương tiện</span>
+                </button>
               </div>
             </div>
           </div>
