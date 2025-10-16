@@ -716,6 +716,25 @@ class ApiService {
     return this.delete(url);
   }
 
+  /**
+   * Giảm số lần sử dụng còn lại của subscription
+   * @param {number} userId - ID của user
+   * @returns {Promise<Object>} - Kết quả giảm subscription
+   */
+  async decrementSubscriptionTotal(userId) {
+    const url = getApiUrl("SUBSCRIPTION", "DECREMENT_TOTAL");
+    const queryString = new URLSearchParams({ userID: userId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   // ===== SERVICE PACK METHODS =====
   /**
    * Lấy danh sách service pack

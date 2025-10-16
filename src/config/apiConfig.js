@@ -83,6 +83,7 @@ const API_CONFIG = {
       CREATE: "/subscription/create",
       UPDATE: "/subscription/update",
       CANCEL: "/subscription/cancel",
+      DECREMENT_TOTAL: "/subscription/decrementTotal",
     },
 
     // Service pack endpoints
