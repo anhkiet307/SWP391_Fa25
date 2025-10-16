@@ -67,6 +67,11 @@ export default function Booking() {
   const [userSubscription, setUserSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
 
+  // States cho kiểm tra pin slot đang được user giữ
+  const [userReservedSlots, setUserReservedSlots] = useState([]);
+  const [loadingReservedSlots, setLoadingReservedSlots] = useState(false);
+  const [showBookingAlert, setShowBookingAlert] = useState(false);
+
   // States cho station detail và pinSlots từ API
   const [stationDetail, setStationDetail] = useState(null);
   const [pinSlots, setPinSlots] = useState([]);
@@ -111,12 +116,14 @@ export default function Booking() {
     fetchStationsList();
     fetchServicePacks();
     checkUserSubscription();
+    checkUserReservedSlots();
   }, []);
 
   // Re-check subscription when user info is ready (fix F5 refresh case)
   useEffect(() => {
     if (user?.userID) {
       checkUserSubscription();
+      checkUserReservedSlots();
     }
   }, [user]);
 
@@ -180,6 +187,68 @@ export default function Booking() {
       setUserSubscription(null);
     } finally {
       setLoadingSubscription(false);
+    }
+  };
+
+  // Function để kiểm tra pin slot đang được user giữ
+  const checkUserReservedSlots = async () => {
+    if (!user?.userID) {
+      console.log("Không có user ID, không thể kiểm tra pin slot đã giữ");
+      return;
+    }
+
+    console.log("Bắt đầu kiểm tra pin slot đã giữ cho user ID:", user.userID);
+    setLoadingReservedSlots(true);
+    try {
+      const response = await apiService.getPinslots();
+      console.log("All pin slots response:", response);
+
+      if (response?.status === "success") {
+        // Lọc các pin slot có status = 2 (đã cho thuê) và userID trùng với user hiện tại
+        const reservedSlots = response.data.filter(
+          (slot) => slot.status === 2 && slot.userID === user.userID
+        );
+
+        console.log("Pin slots đang được user giữ:", reservedSlots);
+        setUserReservedSlots(reservedSlots);
+
+        // Hiển thị alert nếu có pin slot đang được giữ
+        if (reservedSlots.length > 0) {
+          setShowBookingAlert(true);
+        } else {
+          setShowBookingAlert(false);
+        }
+      } else {
+        console.log("❌ Pin slots API không thành công:", response);
+        setUserReservedSlots([]);
+        setShowBookingAlert(false);
+      }
+    } catch (error) {
+      console.error("Error checking user reserved slots:", error);
+      message.error("Không thể kiểm tra pin slot đã giữ");
+      setUserReservedSlots([]);
+      setShowBookingAlert(false);
+    } finally {
+      setLoadingReservedSlots(false);
+    }
+  };
+
+  // Function để hủy lịch đổi pin
+  const handleCancelBooking = async (pinID) => {
+    try {
+      console.log("Hủy lịch cho pin ID:", pinID);
+      const response = await apiService.unreservePinSlot(pinID);
+
+      if (response?.status === "success") {
+        message.success("Hủy lịch thành công!");
+        // Refresh lại danh sách pin slot đã giữ
+        await checkUserReservedSlots();
+      } else {
+        message.error("Không thể hủy lịch. Vui lòng thử lại!");
+      }
+    } catch (error) {
+      console.error("Error canceling booking:", error);
+      message.error("Có lỗi khi hủy lịch. Vui lòng thử lại!");
     }
   };
 
@@ -436,6 +505,307 @@ export default function Booking() {
           border: "1px solid rgba(220, 38, 38, 0.2)",
         }}
       />
+    );
+  };
+
+  // Component hiển thị thông báo chặn booking khi user đã có lịch chưa xử lý
+  const BookingBlockAlert = () => {
+    if (!showBookingAlert || userReservedSlots.length === 0) return null;
+
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-6"
+        style={{
+          background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+        }}
+      >
+        <div className="w-full max-w-6xl">
+          <Row gutter={[32, 32]} align="middle">
+            {/* Left Side - Illustration/Info */}
+            <Col xs={24} lg={10}>
+              <div className="text-center lg:text-left">
+                <div className="mb-8">
+                  <div
+                    className="inline-flex items-center justify-center w-32 h-32 rounded-full mb-6"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                      boxShadow:
+                        "0 20px 40px rgba(245, 158, 11, 0.3), 0 8px 16px rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <CalendarOutlined
+                      style={{ fontSize: "60px", color: "white" }}
+                    />
+                  </div>
+                  <Title
+                    level={1}
+                    style={{
+                      color: "#00083B",
+                      margin: 0,
+                      fontSize: "36px",
+                      fontWeight: "700",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    Lịch Đổi Pin Chưa Xử Lý
+                  </Title>
+                  <Paragraph
+                    style={{
+                      color: "#64748b",
+                      fontSize: "20px",
+                      margin: 0,
+                      fontWeight: "500",
+                      lineHeight: "1.6",
+                    }}
+                  >
+                    Bạn đang có lịch đổi pin chưa hoàn thành. Vui lòng hoàn
+                    thành hoặc hủy lịch hiện tại trước khi đặt lịch mới.
+                  </Paragraph>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Link to="/">
+                    <Button
+                      type="primary"
+                      size="large"
+                      style={{
+                        height: "56px",
+                        fontSize: "18px",
+                        fontWeight: "700",
+                        borderRadius: "16px",
+                        background:
+                          "linear-gradient(135deg, #00083B 0%, #1a1f5c 100%)",
+                        border: "none",
+                        padding: "0 32px",
+                        boxShadow: "0 8px 24px rgba(0, 8, 59, 0.3)",
+                        transition: "all 0.3s ease",
+                        minWidth: "200px",
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.transform = "translateY(-2px)";
+                        e.target.style.boxShadow =
+                          "0 12px 32px rgba(0, 8, 59, 0.4)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.transform = "translateY(0)";
+                        e.target.style.boxShadow =
+                          "0 8px 24px rgba(0, 8, 59, 0.3)";
+                      }}
+                    >
+                      Về Trang Chủ
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Col>
+
+            {/* Right Side - Rules & Info */}
+            <Col xs={24} lg={14}>
+              <Card
+                style={{
+                  borderRadius: "24px",
+                  boxShadow:
+                    "0 20px 40px rgba(0, 8, 59, 0.15), 0 8px 16px rgba(0, 8, 59, 0.1)",
+                  background:
+                    "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                  border: "2px solid #f59e0b",
+                  height: "100%",
+                }}
+                bodyStyle={{ padding: "32px" }}
+              >
+                <div className="text-center mb-6">
+                  <div
+                    className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                      boxShadow:
+                        "0 8px 16px rgba(245, 158, 11, 0.3), 0 4px 8px rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <span style={{ fontSize: "32px" }}>⚠️</span>
+                  </div>
+                  <Title
+                    level={2}
+                    style={{
+                      color: "#00083B",
+                      margin: 0,
+                      fontSize: "24px",
+                      fontWeight: "700",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Lưu ý quan trọng
+                  </Title>
+                  <Paragraph
+                    style={{
+                      color: "#64748b",
+                      fontSize: "16px",
+                      margin: 0,
+                      fontWeight: "500",
+                    }}
+                  >
+                    Quy định về đặt lịch đổi pin
+                  </Paragraph>
+                </div>
+
+                <div className="space-y-4">
+                  <div
+                    className="flex items-start p-4 rounded-lg"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.05)",
+                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.1)",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>1️⃣</span>
+                    </div>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#00083B",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Mỗi tài khoản chỉ được đặt 1 lịch đổi pin tại một thời
+                        điểm
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Đảm bảo công bằng và hiệu quả cho tất cả người dùng
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex items-start p-4 rounded-lg"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.05)",
+                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.1)",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>2️⃣</span>
+                    </div>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#00083B",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Hoàn thành hoặc hủy lịch hiện tại trước khi đặt lịch mới
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Tránh tình trạng đặt nhiều lịch cùng lúc
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex items-start p-4 rounded-lg"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.05)",
+                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.1)",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>3️⃣</span>
+                    </div>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#00083B",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Hủy lịch nếu không thể đến đúng giờ để tránh bị tính phí
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Giúp người khác có cơ hội sử dụng pin slot
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="flex items-start p-4 rounded-lg"
+                    style={{
+                      background: "rgba(245, 158, 11, 0.05)",
+                      border: "1px solid rgba(245, 158, 11, 0.2)",
+                    }}
+                  >
+                    <div
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mr-3"
+                      style={{
+                        background: "rgba(245, 158, 11, 0.1)",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>4️⃣</span>
+                    </div>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "#00083B",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Hủy lịch sẽ giải phóng pin slot cho người khác sử dụng
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          color: "#64748b",
+                        }}
+                      >
+                        Tạo cơ hội cho cộng đồng sử dụng dịch vụ
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </div>
     );
   };
 
@@ -783,6 +1153,11 @@ export default function Booking() {
         </div>
       </div>
     );
+  }
+
+  // Nếu user đã có lịch chưa xử lý, hiển thị trang chặn booking
+  if (showBookingAlert && userReservedSlots.length > 0) {
+    return <BookingBlockAlert />;
   }
 
   return (

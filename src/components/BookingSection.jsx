@@ -139,12 +139,12 @@ export default function BookingSection() {
                   level={3}
                   style={{ color: "white", marginBottom: "8px" }}
                 >
-                  Chọn Ngày
+                  Đặt lịch đổi pin trong ngày
                 </Title>
                 <Paragraph
                   style={{ color: "rgba(255,255,255,0.8)", margin: 0 }}
                 >
-                  Đặt lịch từ ngày mai trở đi, linh hoạt theo lịch trình
+                  Giữ Slot Pin trong vòng 1 tiếng
                 </Paragraph>
               </Card>
             </Col>
@@ -183,12 +183,12 @@ export default function BookingSection() {
                   level={3}
                   style={{ color: "white", marginBottom: "8px" }}
                 >
-                  Chọn Giờ
+                  Giờ làm việc
                 </Title>
                 <Paragraph
                   style={{ color: "rgba(255,255,255,0.8)", margin: 0 }}
                 >
-                  Khung giờ từ 8:00-20:00, mỗi slot 10 phút
+                  Khung giờ từ 8:00 - 20:00
                 </Paragraph>
               </Card>
             </Col>
@@ -343,7 +343,7 @@ export default function BookingSection() {
                     fontSize: "14px",
                   }}
                 >
-                  Chỉ 50k/lần đổi
+                  Mua gói đổi pin với giá rẻ hơn
                 </Paragraph>
               </Card>
             </Col>
