@@ -45,6 +45,14 @@ const AdminAddCustomer = () => {
     }
   };
 
+  // Function để format số điện thoại hiển thị
+  const formatPhoneNumber = (phone) => {
+    if (phone.length === 10) {
+      return `(+84) ${phone}`;
+    }
+    return phone;
+  };
+
   const handlePreview = (e) => {
     e.preventDefault();
     setShowPreview(true);
@@ -54,20 +62,45 @@ const AdminAddCustomer = () => {
     setIsSubmitting(true);
 
     try {
+      // Validation - kiểm tra tất cả fields required
+      if (!formData.name || !formData.email || !formData.password || !formData.phone) {
+        showError("Vui lòng điền đầy đủ thông tin khách hàng!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation phone number
+      if (formData.phone.length !== 10) {
+        showError("Số điện thoại phải có đúng 10 chữ số!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        showError("Email không đúng định dạng!");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Chuẩn bị dữ liệu cho API
       const userData = {
         Name: formData.name,
         Email: formData.email,
         Password: formData.password,
-        phone: parseInt(formData.phone), // Chuyển đổi thành số
+        phone: formData.phone, // Giữ nguyên string như API yêu cầu
         roleID: 1, // EVDriver = 1
+        status: 1, // 1 = kích hoạt (active)
       };
+
+      console.log("Sending user data:", userData); // Debug log
 
       // Gọi API thật
       const response = await apiService.addUser(userData);
 
       if (response && response.status === "success") {
-        showSuccess("Thêm EV Driver mới thành công!");
+        showSuccess("Thêm khách hàng mới thành công!");
 
         // Reset form
         setFormData({
@@ -79,11 +112,32 @@ const AdminAddCustomer = () => {
         });
         setShowPreview(false);
       } else {
-        showError(response?.message || "Có lỗi xảy ra khi thêm EV Driver!");
+        showError(response?.message || "Có lỗi xảy ra khi thêm khách hàng!");
       }
     } catch (error) {
       console.error("Add user error:", error);
-      showError("Có lỗi xảy ra khi thêm EV Driver mới!");
+      
+      // Parse error message from API response
+      let errorMessage = "Có lỗi xảy ra khi thêm khách hàng mới!";
+      
+      try {
+        if (error.message) {
+          const errorData = JSON.parse(error.message.split('message: ')[1]);
+          if (errorData.message) {
+            if (errorData.message.includes("Phone number already exists")) {
+              errorMessage = "Số điện thoại này đã được sử dụng! Vui lòng chọn số khác.";
+            } else if (errorData.message.includes("Email already exists")) {
+              errorMessage = "Email này đã được sử dụng! Vui lòng chọn email khác.";
+            } else {
+              errorMessage = errorData.message;
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing error message:", parseError);
+      }
+      
+      showError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -378,7 +432,7 @@ const AdminAddCustomer = () => {
                       </span>
                     </div>
                     <div className="text-base font-semibold text-gray-900">
-                      {formData.phone || "Chưa nhập"}
+                      {formData.phone ? formatPhoneNumber(formData.phone) : "Chưa nhập"}
                     </div>
                   </div>
 
