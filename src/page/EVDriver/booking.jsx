@@ -107,7 +107,28 @@ export default function Booking() {
   useEffect(() => {
     const stationID = searchParams.get("stationID");
     if (stationID && stationsList.length > 0) {
-      fetchStationData(stationID);
+      const selectedStation = stationsList.find(
+        (station) => station.stationID === parseInt(stationID)
+      );
+
+      if (selectedStation) {
+        form.setFieldsValue({ station: selectedStation.stationName });
+        setFormValues((prev) => ({
+          ...prev,
+          station: selectedStation.stationName,
+        }));
+
+        const cityCode = selectedStation.city === "Hà Nội" ? "HN" : "HCM";
+        setSelectedCity(cityCode);
+        form.setFieldsValue({ city: cityCode });
+        setFormValues((prev) => ({
+          ...prev,
+          city: cityCode,
+        }));
+
+        // Fetch dữ liệu trạm được chọn
+        fetchStationData(selectedStation.stationID);
+      }
     }
   }, [searchParams, stationsList]);
 
@@ -425,35 +446,6 @@ export default function Booking() {
 
   // Thống kê tổng quan toàn trạm sử dụng utility functions
   // const slotStatistics = calculateSlotStatistics(pinSlots);
-
-  useEffect(() => {
-    const stationId = searchParams.get("stationId");
-    const stationName = searchParams.get("stationName");
-
-    if (stationId && stationName) {
-      const selectedStation = stationsList.find(
-        (station) => station.stationID === parseInt(stationId)
-      );
-
-      if (selectedStation) {
-        form.setFieldsValue({ station: selectedStation.stationName });
-        setFormValues((prev) => ({
-          ...prev,
-          station: selectedStation.stationName,
-        }));
-
-        const cityCode = selectedStation.city === "Hà Nội" ? "HN" : "HCM";
-        setSelectedCity(cityCode);
-        form.setFieldsValue({ city: cityCode });
-        setFormValues((prev) => ({
-          ...prev,
-          city: cityCode,
-        }));
-
-        navigate("/booking", { replace: true });
-      }
-    }
-  }, [searchParams, stationsList, form, navigate]);
 
   // Component hiển thị lỗi validation
   const ValidationErrorsAlert = () => {

@@ -571,21 +571,24 @@ function Map() {
         setUserLocation(userPos);
         setIsLoadingLocation(false);
 
-        // Tìm trạm gần nhất
+        // Tìm trạm gần nhất (chỉ tính các trạm có status = 1)
         let minDistance = Infinity;
         let nearest = null;
 
         apiStations.forEach((station) => {
-          const distance = calculateDistance(
-            userPos[0],
-            userPos[1],
-            station.position[0],
-            station.position[1]
-          );
+          // Chỉ tính các trạm có status = 1 (đang hoạt động)
+          if (station.status === "active") {
+            const distance = calculateDistance(
+              userPos[0],
+              userPos[1],
+              station.position[0],
+              station.position[1]
+            );
 
-          if (distance < minDistance) {
-            minDistance = distance;
-            nearest = { ...station, distance };
+            if (distance < minDistance) {
+              minDistance = distance;
+              nearest = { ...station, distance };
+            }
           }
         });
 
@@ -640,8 +643,12 @@ function Map() {
     }
   }, []);
 
-  // Lọc trạm theo thành phố được chọn
+  // Lọc trạm theo thành phố được chọn và chỉ hiển thị trạm có status = 1
   const filteredStations = apiStations.filter((station) => {
+    // Chỉ hiển thị trạm có status = "active" (đang hoạt động)
+    if (station.status !== "active") return false;
+
+    // Filter theo thành phố
     if (
       selectedCity &&
       selectedCity !== "Tất cả" &&
@@ -959,7 +966,7 @@ function Map() {
                 <p className="text-xs text-cyan-200 mt-1 font-semibold">
                   🚗 Cách bạn: {nearestStation.distance.toFixed(1)} km
                 </p>
-                <div className="mt-2">
+                <div className="mt-2 flex gap-2">
                   <button
                     className="px-3 py-1 rounded text-xs font-semibold transition-all flex items-center gap-1 bg-cyan-600 hover:bg-cyan-500 text-white border border-cyan-400/40"
                     onClick={() => {
@@ -974,7 +981,14 @@ function Map() {
                     }}
                   >
                     <EnvironmentOutlined />
-                    <span>Chỉ đường đến trạm gần nhất</span>
+                    <span>Chỉ đường</span>
+                  </button>
+                  <button
+                    className="px-3 py-1 rounded text-xs font-semibold transition-all flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/40"
+                    onClick={() => handleOpenBookingModal(nearestStation)}
+                  >
+                    <ClockCircleOutlined />
+                    <span>Đặt lịch</span>
                   </button>
                 </div>
               </div>
