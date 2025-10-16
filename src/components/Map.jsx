@@ -700,18 +700,47 @@ function Map() {
                 <select
                   value={selectedCity}
                   onChange={(e) => handleCityChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent text-white"
+                  className="w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:border-transparent"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)",
-                    border: "1px solid rgba(255,255,255,0.3)",
+                      "linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%)",
+                    border: "1px solid rgba(255,255,255,0.4)",
                     backdropFilter: "blur(12px)",
                     WebkitBackdropFilter: "blur(12px)",
+                    color: "#ffffff",
+                    fontWeight: "600",
                   }}
                 >
-                  <option value="Tất cả">Tất cả thành phố</option>
-                  <option value="Hà Nội">Hà Nội</option>
-                  <option value="TP.HCM">TP.HCM</option>
+                  <option
+                    value="Tất cả"
+                    style={{
+                      background: "#1a1a1a",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Tất cả thành phố
+                  </option>
+                  <option
+                    value="Hà Nội"
+                    style={{
+                      background: "#1a1a1a",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Hà Nội
+                  </option>
+                  <option
+                    value="TP.HCM"
+                    style={{
+                      background: "#1a1a1a",
+                      color: "#ffffff",
+                      fontWeight: "600",
+                    }}
+                  >
+                    TP.HCM
+                  </option>
                 </select>
               </div>
 
