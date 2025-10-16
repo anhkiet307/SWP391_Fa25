@@ -18,11 +18,11 @@ export default function Home() {
             </h1>
             <div className="h-1 w-28 rounded-full bg-cyan-300/70 mt-4 mb-8" />
             <p className="max-w-3xl text-white/80 text-lg sm:text-xl lg:text-2xl">
-              Hệ thống quản lý trạm đổi pin xe điện
+              Đặt lịch – Đổi pin – Tiếp tục hành trình
             </p>
             <p className="max-w-3xl text-white/60 mt-4 text-base sm:text-lg">
-              Giám sát, quản lý và tối ưu vận hành hệ thống đổi pin với công
-              nghệ hiện đại và phân tích thời gian thực.
+              Đặt lịch đổi pin xe điện trước — không phải chờ đợi, tận hưởng
+              chuyến đi trọn vẹn
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
