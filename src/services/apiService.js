@@ -652,6 +652,32 @@ class ApiService {
     });
   }
 
+  async createVehicle(vehicleData) {
+    const url = getApiUrl("VEHICLE", "CREATE");
+    // API sử dụng POST với query parameters
+    const queryString = new URLSearchParams({
+      userID: vehicleData.userID,
+      licensePlate: vehicleData.licensePlate,
+      vehicleType: vehicleData.vehicleType,
+      pinPercent: vehicleData.pinPercent,
+      pinHealth: vehicleData.pinHealth,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async getVehicles() {
+    const url = getApiUrl("VEHICLE", "LIST");
+    return this.get(url);
+  }
+
   async unreservePin(pinId) {
     const url = getApiUrl("PINSLOT", "UNRESERVE");
     const queryString = new URLSearchParams({ pinID: pinId }).toString();
