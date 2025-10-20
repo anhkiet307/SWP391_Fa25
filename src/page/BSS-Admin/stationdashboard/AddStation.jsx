@@ -123,12 +123,27 @@ const AdminAddStation = () => {
         />
 
         {/* Form */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <form onSubmit={handlePreview} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tên trạm */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+          {/* Form Header */}
+          <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900">Vui lòng nhập thông tin</h3>
+                <p className="text-sm text-gray-600">Điền đầy đủ các thông tin bắt buộc để tạo trạm mới</p>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handlePreview} className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Tên trạm */}
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tên trạm <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -136,15 +151,15 @@ const AdminAddStation = () => {
                   name="stationName"
                   value={formData.stationName}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   placeholder="Trạm Sạc An Liễn"
                   required
                 />
               </div>
 
               {/* Địa chỉ */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="lg:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Địa chỉ <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -152,15 +167,15 @@ const AdminAddStation = () => {
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   placeholder="120 Phổ Yên Lãng, Hà Nội"
                   required
                 />
               </div>
 
-              {/* Tọa độ */}
+              {/* Tọa độ X */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tọa độ X <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -168,15 +183,16 @@ const AdminAddStation = () => {
                   name="x"
                   value={formData.x}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   placeholder="21.005057"
                   step="any"
                   required
                 />
               </div>
 
+              {/* Tọa độ Y */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tọa độ Y <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -184,42 +200,19 @@ const AdminAddStation = () => {
                   name="y"
                   value={formData.y}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                   placeholder="105.869329"
                   step="any"
                   required
                 />
               </div>
-
-              {/* Trạng thái */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Trạng thái <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                >
-                  <option value={0}>Tạm ngừng (0)</option>
-                  <option value={1}>Hoạt động (1)</option>
-                  <option value={2}>Bảo dưỡng (2)</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 0=inactive, 1=active, 2=maintenance
-                </p>
-              </div>
-
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+            <div className="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => {
-                  // Reset form when cancel
                   setFormData({
                     stationName: "",
                     location: "",
@@ -228,13 +221,13 @@ const AdminAddStation = () => {
                     y: "",
                   });
                 }}
-                className="px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md hover:from-indigo-600 hover:to-purple-700 transition-all"
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all font-medium"
               >
                 Xem trước
               </button>
@@ -405,32 +398,6 @@ const AdminAddStation = () => {
                     </div>
                   </div>
 
-                  {/* Trạng thái */}
-                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-100">
-                    <div className="flex items-center mb-1">
-                      <svg
-                        className="w-3 h-3 text-yellow-600 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-base font-medium text-yellow-600">
-                        Trạng thái
-                      </span>
-                    </div>
-                    <div className="text-base font-semibold text-gray-900">
-                      {formData.status === 1 ? "🟢 Hoạt động (1)" : 
-                       formData.status === 2 ? "🔧 Bảo dưỡng (2)" : 
-                       "🔴 Tạm ngừng (0)"}
-                    </div>
-                  </div>
 
                 </div>
               </div>

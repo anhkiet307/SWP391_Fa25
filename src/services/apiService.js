@@ -356,11 +356,6 @@ class ApiService {
     return this.get(url, { latitude, longitude, radius });
   }
 
-  async getPinStations() {
-    const url = getApiUrl("STATION", "LIST");
-    return this.get(url);
-  }
-
   async getStationDetail(stationId) {
     const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
     return this.get(url);
@@ -497,49 +492,13 @@ class ApiService {
   }
 
   async createServicePack(packData) {
-    const url = this.baseURL + "/servicePack/create";
-    
-    // API sử dụng POST với query parameters
-    const queryString = new URLSearchParams({
-      adminUserID: packData.adminUserID || 1,
-      packName: packData.packName,
-      description: packData.description,
-      total: packData.total,
-      price: packData.price,
-      status: packData.status,
-    }).toString();
-    const fullUrl = `${url}?${queryString}`;
-
-    return this.makeRequest(fullUrl, {
-      method: "POST",
-      headers: {
-        ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const url = getApiUrl("SERVICE_PACK", "CREATE");
+    return this.post(url, packData);
   }
 
   async updateServicePack(packId, packData) {
-    const url = this.baseURL + "/servicePack/update";
-    
-    // API sử dụng PUT với query parameters theo documentation
-    const queryString = new URLSearchParams({
-      packID: packId,
-      adminUserID: packData.adminUserID || 1, // Sử dụng adminUserID từ packData hoặc default là 1
-      packName: packData.packName,
-      description: packData.description,
-      total: packData.total,
-      price: packData.price,
-    }).toString();
-    const fullUrl = `${url}?${queryString}`;
-
-    return this.makeRequest(fullUrl, {
-      method: "PUT",
-      headers: {
-        ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
+    return this.put(url, packData);
   }
 
   async updateServicePackStatus(packId, adminUserID, status) {
@@ -632,22 +591,6 @@ class ApiService {
   async getTransactionReport(params = {}) {
     const url = getApiUrl("REPORT", "TRANSACTION_REPORT");
     return this.get(url, params);
-  }
-
-  // Lấy danh sách báo cáo của user
-  async getUserReports(userID) {
-    const url = `${this.baseURL}/report/my-reports?userID=${userID}`;
-    return this.get(url);
-  }
-
-  // Tạo báo cáo mới
-  async createReport(userID, type, description) {
-    const url = `${
-      this.baseURL
-    }/report/create?userID=${userID}&type=${type}&description=${encodeURIComponent(
-      description
-    )}`;
-    return this.post(url);
   }
 
   async exportReport(reportType, params = {}) {
@@ -828,6 +771,20 @@ class ApiService {
     return this.get(url);
   }
 
+  async createServicePack(packData) {
+    const url = getApiUrl("SERVICE_PACK", "CREATE");
+    return this.post(url, packData);
+  }
+
+  async updateServicePack(packId, packData) {
+    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
+    return this.put(url, packData);
+  }
+
+  async deleteServicePack(packId) {
+    const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
+    return this.delete(url);
+  }
 
   // ===== TRANSACTION METHODS =====
   /**
@@ -909,6 +866,19 @@ class ApiService {
     });
   }
 
+  // Lấy thống kê thanh toán VNPay (danh sách các payment)
+  async getVnpayStatistic() {
+    const rootBase = this.baseURL.replace(/\/_?api$/, "");
+    const url = `${rootBase}/vnpay/statistic`;
+    return this.makeRequest(url, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   /**
    * Cập nhật trạng thái transaction
    * Only supports updating via query params: transactionID, status
@@ -923,6 +893,44 @@ class ApiService {
 
     return this.makeRequest(fullUrl, {
       method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  // ===== PINSLOT SWAP METHODS =====
+  /**
+   * Swap pin data between two pin slots
+   * POST /api/pinSlot/swap?pinSlotID1=123&pinSlotID2=456
+   */
+  async swapPinSlots(pinSlotID1, pinSlotID2) {
+    const queryString = new URLSearchParams({
+      pinSlotID1: pinSlotID1,
+      pinSlotID2: pinSlotID2,
+    }).toString();
+    const url = `${this.baseURL}/pinSlot/swap?${queryString}`;
+
+    return this.makeRequest(url, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  // ===== TRANSACTION METHODS =====
+  /**
+   * Get all transactions
+   * GET /api/transaction/list
+   */
+  async getTransactions() {
+    const url = `${this.baseURL}/transaction/list`;
+
+    return this.makeRequest(url, {
+      method: "GET",
       headers: {
         ...this.buildHeaders(),
         "ngrok-skip-browser-warning": "true",

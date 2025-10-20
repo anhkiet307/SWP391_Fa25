@@ -363,14 +363,15 @@ const PackManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          <div className="text-sm font-medium text-gray-800">
-                            {pack.total || 0} lượt
-                            {pack.packID === 1 && (
-                              <span className="ml-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
-                                Gói cơ bản
-                              </span>
-                            )}
-                          </div>
+                          {pack.packID === 1 ? (
+                            <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                              Gói cơ bản
+                            </span>
+                          ) : (
+                            <div className="text-sm font-medium text-gray-800">
+                              {pack.total || 0} lượt
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="p-4 border-b border-gray-200">

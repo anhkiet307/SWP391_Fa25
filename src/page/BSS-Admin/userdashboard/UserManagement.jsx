@@ -230,6 +230,31 @@ const UserManagement = () => {
     }
   };
 
+  // Load all vehicles to check which users have vehicles
+  useEffect(() => {
+    const loadAllVehicles = async () => {
+      try {
+        setVehiclesLoading(true);
+        const response = await apiService.getVehicles();
+        console.log("All Vehicles API Response:", response); // Debug log
+        
+        if (response && response.data && Array.isArray(response.data)) {
+          setVehicles(response.data);
+          console.log("All Vehicles data:", response.data); // Debug log
+        } else {
+          setVehicles([]);
+        }
+      } catch (err) {
+        console.error("Error fetching all vehicles:", err);
+        setVehicles([]);
+      } finally {
+        setVehiclesLoading(false);
+      }
+    };
+
+    loadAllVehicles();
+  }, []);
+
   // Fetch staff data from API
   useEffect(() => {
     const fetchStaff = async () => {
@@ -645,6 +670,11 @@ const UserManagement = () => {
     return vehicles.some(vehicle => vehicle.userID === userId);
   };
 
+  // Hàm lấy thông tin phương tiện của user
+  const getUserVehicle = (userId) => {
+    return vehicles.find(vehicle => vehicle.userID === userId);
+  };
+
   // Hàm tạo gói thuê pin
   const createSubscriptionPlan = (userId, planType, planName, duration) => {
     setUsers(
@@ -984,7 +1014,10 @@ const UserManagement = () => {
                         <div className="flex justify-center">
                           {userHasVehicle(user.id) ? (
                             <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                              Đã có phương tiện
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Đã liên kết
                             </span>
                           ) : (
                             <button
@@ -1619,21 +1652,6 @@ const UserManagement = () => {
                     />
                         </div>
 
-                  {/* Vai trò */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vai trò <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={editUser.roleID}
-                      onChange={(e) => setEditUser({ ...editUser, roleID: parseInt(e.target.value) })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value={1}>Khách hàng</option>
-                      <option value={2}>Nhân viên</option>
-                      <option value={3}>Quản trị viên</option>
-                    </select>
-                        </div>
                     </div>
                   </div>
 
@@ -1823,48 +1841,93 @@ const UserManagement = () => {
                       </>
                     )}
 
-                    {/* Thông tin phương tiện - hiển thị cho tất cả user để test */}
-                    {/* Debug: Role hiện tại: {selectedUser.role} */}
-                    {true && (
-                      <>
-                        {/* Loại phương tiện */}
-                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1m-1-1V8a1 1 0 00-1-1H9m4 8V8a1 1 0 00-1-1H9" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-blue-600 mb-1">Loại phương tiện</div>
-                            <div className="text-base text-gray-800 font-medium">
-                              {(() => {
-                                const userVehicle = vehicles.find(v => v.userID === selectedUser.userID);
-                                return userVehicle ? userVehicle.vehicleType : "Chưa có thông tin";
-                              })()}
+                    {/* Thông tin phương tiện - chỉ hiển thị cho khách hàng (role = "user") */}
+                    {selectedUser.role === "user" && (() => {
+                      const userVehicle = vehicles.find(v => v.userID === selectedUser.id);
+                      return userVehicle ? (
+                        <>
+                          {/* Loại phương tiện */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1m-1-1V8a1 1 0 00-1-1H9m4 8V8a1 1 0 00-1-1H9" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-blue-600 mb-1">Loại phương tiện</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.vehicleType}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Biển số xe */}
-                        <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
-                          <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-1 16h12l-1-16M10 8v8M14 8v8" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-cyan-600 mb-1">Biển số xe</div>
-                            <div className="text-base text-gray-800 font-medium">
-                              {(() => {
-                                const userVehicle = vehicles.find(v => v.userID === selectedUser.userID);
-                                return userVehicle ? userVehicle.licensePlate : "Chưa có thông tin";
-                              })()}
+                          {/* Biển số xe */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-1 16h12l-1-16M10 8v8M14 8v8" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-cyan-600 mb-1">Biển số xe</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.licensePlate}
+                              </div>
                             </div>
                           </div>
+
+                          {/* Phần trăm pin */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-green-600 mb-1">Phần trăm pin</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.pinPercent}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Sức khỏe pin */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-orange-600 mb-1">Sức khỏe pin</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.pinHealth}%
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Hiển thị thông báo khi khách hàng chưa có xe */
+                        <div className="flex items-center justify-center p-8 bg-gray-50 rounded-xl">
+                          <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                            </div>
+                            <p className="text-gray-500 text-lg font-medium mb-2">Chưa có phương tiện</p>
+                            <p className="text-gray-400 mb-4">Khách hàng này chưa được liên kết với phương tiện nào</p>
+                            <button
+                              onClick={() => openVehicleModal(selectedUser)}
+                              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              Thêm phương tiện
+                            </button>
+                          </div>
                         </div>
-                      </>
-                    )}
+                      );
+                    })()}
 
                           </div>
                 </div>
