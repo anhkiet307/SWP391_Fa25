@@ -652,6 +652,32 @@ class ApiService {
     });
   }
 
+  async createVehicle(vehicleData) {
+    const url = getApiUrl("VEHICLE", "CREATE");
+    // API sử dụng POST với query parameters
+    const queryString = new URLSearchParams({
+      userID: vehicleData.userID,
+      licensePlate: vehicleData.licensePlate,
+      vehicleType: vehicleData.vehicleType,
+      pinPercent: vehicleData.pinPercent,
+      pinHealth: vehicleData.pinHealth,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
+  async getVehicles() {
+    const url = getApiUrl("VEHICLE", "LIST");
+    return this.get(url);
+  }
+
   async unreservePin(pinId) {
     const url = getApiUrl("PINSLOT", "UNRESERVE");
     const queryString = new URLSearchParams({ pinID: pinId }).toString();
@@ -714,6 +740,25 @@ class ApiService {
   async cancelSubscription(subscriptionId) {
     const url = getApiUrl("SUBSCRIPTION", "CANCEL", { id: subscriptionId });
     return this.delete(url);
+  }
+
+  /**
+   * Giảm số lần sử dụng còn lại của subscription
+   * @param {number} userId - ID của user
+   * @returns {Promise<Object>} - Kết quả giảm subscription
+   */
+  async decrementSubscriptionTotal(userId) {
+    const url = getApiUrl("SUBSCRIPTION", "DECREMENT_TOTAL");
+    const queryString = new URLSearchParams({ userID: userId }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   // ===== SERVICE PACK METHODS =====

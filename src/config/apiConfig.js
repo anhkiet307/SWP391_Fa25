@@ -83,6 +83,7 @@ const API_CONFIG = {
       CREATE: "/subscription/create",
       UPDATE: "/subscription/update",
       CANCEL: "/subscription/cancel",
+      DECREMENT_TOTAL: "/subscription/decrementTotal",
     },
 
     // Service pack endpoints
@@ -103,6 +104,8 @@ const API_CONFIG = {
     VEHICLE: {
       BY_USER: "/vehicle/user",
       PIN_SWAP: "/vehicle/PinSwap",
+      CREATE: "/vehicle/create",
+      LIST: "/vehicle/list",
     },
 
     // Transaction endpoints

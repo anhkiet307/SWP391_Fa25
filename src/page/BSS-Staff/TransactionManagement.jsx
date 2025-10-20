@@ -12,6 +12,10 @@ const TransactionManagement = () => {
   const [userInfoById, setUserInfoById] = useState({});
   const [vehiclesByUserId, setVehiclesByUserId] = useState({});
   const [expandedRowIds, setExpandedRowIds] = useState(new Set());
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    transaction: null,
+  });
 
   // Format ISO time (server UTC or with TZ) to local time dd/MM/yyyy HH:mm:ss (no manual offset)
   const formatPlus7 = (isoString) => {
@@ -46,6 +50,7 @@ const TransactionManagement = () => {
             customerId: t.userID,
             customerName: `KH #${t.userID}`,
             slot: t.pinID,
+            pack: t.pack || 0, // Thêm field pack từ API response
             status:
               t.status === 0
                 ? "pending"
@@ -115,16 +120,47 @@ const TransactionManagement = () => {
   }, [user?.userID]);
 
   const canUpdateToCompleted = (t) => t.status === "pending";
-  const updateToCompleted = async (id) => {
-    const target = transactions.find((t) => t.id === id);
-    if (!target || !canUpdateToCompleted(target)) return;
+
+  const showConfirmModal = (transaction) => {
+    setConfirmModal({
+      isOpen: true,
+      transaction: transaction,
+    });
+  };
+
+  const hideConfirmModal = () => {
+    setConfirmModal({
+      isOpen: false,
+      transaction: null,
+    });
+  };
+
+  const updateToCompleted = async (transaction) => {
     try {
-      await apiService.updateTransactionStatus(id, 1);
+      // Cập nhật trạng thái transaction thành completed
+      await apiService.updateTransactionStatus(transaction.id, 1);
+
+      // Nếu pack = 1, gọi API decrement subscription total
+      if (transaction.pack === 1) {
+        try {
+          await apiService.decrementSubscriptionTotal(transaction.customerId);
+          console.log(
+            `Đã giảm subscription total cho user ${transaction.customerId}`
+          );
+        } catch (decrementError) {
+          console.error("Lỗi khi giảm subscription total:", decrementError);
+          // Không hiển thị lỗi cho user vì transaction đã được cập nhật thành công
+        }
+      }
+
       setTransactions(
         transactions.map((t) =>
-          t.id === id ? { ...t, status: "completed" } : t
+          t.id === transaction.id ? { ...t, status: "completed" } : t
         )
       );
+
+      // Đóng modal sau khi thành công
+      hideConfirmModal();
     } catch (e) {
       console.error(e);
       alert("Cập nhật trạng thái thất bại");
@@ -322,7 +358,7 @@ const TransactionManagement = () => {
                           {transaction.status === "pending" && (
                             <button
                               className="px-3 py-1.5 rounded bg-green-500 hover:bg-green-600 text-white text-xs font-medium shadow-sm"
-                              onClick={() => updateToCompleted(transaction.id)}
+                              onClick={() => showConfirmModal(transaction)}
                             >
                               ✓ Xác nhận
                             </button>
@@ -415,6 +451,114 @@ const TransactionManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal xác nhận */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Xác nhận giao dịch
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Bạn có chắc chắn muốn xác nhận giao dịch này?
+                </p>
+              </div>
+            </div>
+
+            {/* Thông tin transaction */}
+            {confirmModal.transaction && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Mã KH:</span>
+                    <span className="ml-2 font-medium">
+                      {confirmModal.transaction.customerId}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Slot:</span>
+                    <span className="ml-2 font-medium">
+                      Slot {confirmModal.transaction.slot}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Tên KH:</span>
+                    <span className="ml-2 font-medium">
+                      {userInfoById[confirmModal.transaction.customerId]
+                        ?.name || confirmModal.transaction.customerName}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Thanh toán:</span>
+                    <span className="ml-2 font-medium">
+                      {Number(
+                        confirmModal.transaction.payment || 0
+                      ).toLocaleString("vi-VN")}{" "}
+                      VNĐ
+                    </span>
+                  </div>
+                </div>
+                {confirmModal.transaction.pack === 1 && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center">
+                      <svg
+                        className="w-4 h-4 text-blue-600 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="text-sm text-blue-800 font-medium">
+                        Giao dịch này sẽ giảm số lần sử dụng còn lại của Gói
+                        thành viên
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Nút hành động */}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={hideConfirmModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={() => updateToCompleted(confirmModal.transaction)}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+              >
+                ✓ Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </StaffLayout>
   );
 };
