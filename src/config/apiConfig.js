@@ -1,9 +1,10 @@
 // Cấu hình API endpoints - có thể thay đổi dễ dàng
 const API_CONFIG = {
+  // Domain chính của API
+  DOMAIN: process.env.REACT_APP_DOMAIN || "https://24b75691bef5.ngrok-free.app",
+  
   // Base URL cho tất cả API calls
-  BASE_URL:
-    process.env.REACT_APP_API_BASE_URL ||
-    "https://24b75691bef5.ngrok-free.app/api",
+  BASE_URL: process.env.REACT_APP_API_BASE_URL || "https://24b75691bef5.ngrok-free.app/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
@@ -143,6 +144,12 @@ const API_CONFIG = {
       STATIONS: "/admin/stations",
       REPORTS: "/admin/reports",
       SETTINGS: "/admin/settings",
+    },
+
+    // VNPay endpoints (thêm dấu / ở cuối theo đúng API)
+    VNPAY: {
+      CREATE_URL: "/vnpay/create-url/",
+      STATISTIC: "/vnpay/statistic/",
     },
   },
 

@@ -1,4 +1,4 @@
-import API_CONFIG, { getApiUrl } from "../config/apiConfig";
+import API_CONFIG, { getApiUrl, getEndpoint } from "../config/apiConfig";
 
 // API Service class để quản lý tất cả API calls
 class ApiService {
@@ -15,15 +15,18 @@ class ApiService {
 
   // Helper method để build headers
   buildHeaders(customHeaders = {}) {
-    const headers = { ...this.defaultHeaders, ...customHeaders };
+    const headers = { 
+      ...this.defaultHeaders,
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true",
+      ...customHeaders 
+    };
 
     const token = this.getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-
-    // Thêm header cho ngrok
-    headers["ngrok-skip-browser-warning"] = "true";
 
     return headers;
   }
@@ -32,25 +35,43 @@ class ApiService {
   async makeRequest(url, options = {}) {
     const config = {
       method: "GET",
-      mode: "cors", // Explicitly enable CORS
+      mode: "cors",
+      credentials: "omit", // Default to omit
       headers: this.buildHeaders(),
       ...options,
     };
 
     try {
-      const response = await fetch(url, config);
+      console.log("🚀 Calling API:", url, config);
+      
+      // Thêm timeout để tránh request treo
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), this.timeout);
+      
+      const response = await fetch(url, {
+        ...config,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
-        );
+        console.error("❌ API Error:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log("✅ API Success:", data);
       return data;
     } catch (error) {
-      console.error("API request failed:", error);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout');
+      }
+      console.error("❌ API request failed:", error);
       throw error;
     }
   }
@@ -761,29 +782,10 @@ class ApiService {
    * Lấy danh sách service pack
    * @returns {Promise<Object>} - Danh sách service pack
    */
-  async getServicePacks() {
-    const url = getApiUrl("SERVICE_PACK", "LIST");
-    return this.get(url);
-  }
 
   async getServicePackDetail(packId) {
     const url = getApiUrl("SERVICE_PACK", "DETAIL", { id: packId });
     return this.get(url);
-  }
-
-  async createServicePack(packData) {
-    const url = getApiUrl("SERVICE_PACK", "CREATE");
-    return this.post(url, packData);
-  }
-
-  async updateServicePack(packId, packData) {
-    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
-    return this.put(url, packData);
-  }
-
-  async deleteServicePack(packId) {
-    const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
-    return this.delete(url);
   }
 
   // ===== TRANSACTION METHODS =====
@@ -845,9 +847,7 @@ class ApiService {
   // ===== VNPay METHODS =====
   // Tạo URL thanh toán VNPay cho mua gói dịch vụ
   async createVnpayUrl(data) {
-    // VNPay endpoint nằm ngoài prefix /api → gọi trực tiếp root
-    const rootBase = this.baseURL.replace(/\/_?api$/, "");
-    // Backend yêu cầu POST với query parameters
+    const endpoint = getEndpoint("VNPAY", "CREATE_URL");
     const queryString = new URLSearchParams({
       userID: data.userID,
       packID: data.packID,
@@ -855,26 +855,31 @@ class ApiService {
       orderInfo: data.orderInfo,
       total: data.total,
     }).toString();
-    const fullUrl = `${rootBase}/vnpay/create-url?${queryString}`;
+    const url = `${API_CONFIG.DOMAIN}${endpoint}?${queryString}`;
+    console.log("🔄 Creating VNPay URL:", url);
 
-    return this.makeRequest(fullUrl, {
+    return this.makeRequest(url, {
       method: "POST",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
       },
     });
   }
 
   // Lấy thống kê thanh toán VNPay (danh sách các payment)
   async getVnpayStatistic() {
-    const rootBase = this.baseURL.replace(/\/_?api$/, "");
-    const url = `${rootBase}/vnpay/statistic`;
+    const endpoint = getEndpoint("VNPAY", "STATISTIC");
+    const url = `${API_CONFIG.DOMAIN}${endpoint}`;
+    console.log("🔄 Calling VNPay API:", url);
+    
     return this.makeRequest(url, {
       method: "GET",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
       },
     });
   }

@@ -50,7 +50,7 @@ const StatisticManagement = () => {
   const [packChartData, setPackChartData] = useState([]);
   // Pagination for pack purchases table
   const [packPage, setPackPage] = useState(1);
-  const [packItemsPerPage] = useState(10);
+  const [packItemsPerPage] = useState(5);
   
   // Pagination state for pin swaps table
   const [currentPage, setCurrentPage] = useState(1);
@@ -164,14 +164,27 @@ const StatisticManagement = () => {
   // Fetch VNPay statistics (list of pack purchases)
   const fetchVnpayStatistic = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      console.log("🔄 Fetching VNPay statistics...");
+      
       const res = await apiService.getVnpayStatistic();
+      console.log("📊 VNPay response:", res);
+      
       if (res && res.status === "success" && Array.isArray(res.data)) {
-        // sort newest -> oldest
-        const sorted = [...res.data].sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        const sorted = [...res.data].sort((a,b) => 
+          new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
         setVnpayStats(sorted);
+        console.log("✅ VNPay stats updated:", sorted);
+      } else {
+        throw new Error("Invalid data format");
       }
     } catch (e) {
       console.error("❌ Error fetching VNPay statistic:", e);
+      setError("Không thể tải dữ liệu VNPay. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -298,18 +311,28 @@ const StatisticManagement = () => {
 
   // Build pack chart data when dependencies change (from VNPay statistic if available)
   useEffect(() => {
-    // Group VNPay stats by day (updatedAt) and sum amountVND
-    if (normalizedVnpay && normalizedVnpay.length > 0) {
+    // Prefer VNPay statistic when available
+    if (Array.isArray(vnpayStats) && vnpayStats.length > 0) {
       const byDay = {};
-      normalizedVnpay.forEach(p => {
-        const d = new Date(p.updatedAt);
-        const key = d.toISOString().split('T')[0];
-        const displayDate = `${d.getDate()}/${d.getMonth() + 1}`;
-        if (!byDay[key]) byDay[key] = { date: key, displayDate, total: 0 };
-        // Chỉ dùng amountVND theo yêu cầu
-        byDay[key].total += Number(p.amountVND || 0);
-      });
-      const data = Object.values(byDay).sort((a,b) => new Date(a.date) - new Date(b.date));
+      vnpayStats
+        // normalize minimal fields and keep only successful payments
+        .map(p => ({
+          amountVND: Number(p.amountVND ?? 0),
+          status: Number(p.status ?? 0),
+          updatedAt: p.updatedAt ?? p.updateAt ?? p.createdAt,
+        }))
+        .filter(p => p.updatedAt) // Bỏ điều kiện status vì có thể khác với yêu cầu
+        .forEach(p => {
+          const d = new Date(p.updatedAt);
+          const key = d.toISOString().split('T')[0];
+          const displayDate = `${d.getDate()}/${d.getMonth() + 1}`;
+          if (!byDay[key]) byDay[key] = { date: key, displayDate, total: 0 };
+          byDay[key].total += p.amountVND;
+          console.log(`📊 Added ${p.amountVND} to ${displayDate}, total: ${byDay[key].total}`);
+        });
+
+      const data = Object.values(byDay).sort((a, b) => new Date(a.date) - new Date(b.date));
+      console.log("📊 Final chart data:", data);
       setPackChartData(data);
       return;
     }
@@ -319,17 +342,21 @@ const StatisticManagement = () => {
       setPackChartData([]);
       return;
     }
+
     const byDayTx = {};
-    transactions.filter(t => t.pack === 1).forEach(t => {
-      const d = new Date(t.createAt);
-      const key = d.toISOString().split('T')[0];
-      const displayDate = `${d.getDate()}/${d.getMonth() + 1}`;
-      if (!byDayTx[key]) byDayTx[key] = { date: key, displayDate, total: 0 };
-      byDayTx[key].total += Number(t.amountVND ?? t.amount ?? 0);
-    });
-    const dataTx = Object.values(byDayTx).sort((a,b) => new Date(a.date) - new Date(b.date));
+    transactions
+      .filter(t => t.pack === 1)
+      .forEach(t => {
+        const d = new Date(t.createAt);
+        const key = d.toISOString().split('T')[0];
+        const displayDate = `${d.getDate()}/${d.getMonth() + 1}`;
+        if (!byDayTx[key]) byDayTx[key] = { date: key, displayDate, total: 0 };
+        byDayTx[key].total += Number(t.amountVND ?? t.amount ?? 0);
+      });
+
+    const dataTx = Object.values(byDayTx).sort((a, b) => new Date(a.date) - new Date(b.date));
     setPackChartData(dataTx);
-  }, [transactions, servicePacks, vnpayStats]);
+  }, [transactions, vnpayStats]);
 
   // Debug useEffect để theo dõi state changes
   useEffect(() => {
@@ -467,7 +494,7 @@ const StatisticManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="p-5 bg-gray-50 min-h-screen font-sans">
+      <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: '2rem' }}>
         <AdminHeader
           title="Tổng quan Thống kê"
           subtitle="Phân tích dữ liệu và xu hướng sử dụng hệ thống"
@@ -567,8 +594,32 @@ const StatisticManagement = () => {
                   <span className="text-sm text-gray-600">VNĐ</span>
                 </div>
               </div>
+              
+              {/* Loading state */}
+              {loading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Error state */}
+              {error && (
+                <div className="text-center py-4 text-red-600">
+                  <p>{error}</p>
+                  <button 
+                    onClick={fetchVnpayStatistic}
+                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    Thử lại
+                  </button>
+                </div>
+              )}
+              
               <div className="relative h-80">
-                {packChartData.length > 0 ? (
+                {!loading && !error && packChartData.length > 0 ? (
                   <Bar
                     data={{
                       labels: packChartData.map(p => p.displayDate),
@@ -608,9 +659,11 @@ const StatisticManagement = () => {
                       scales: {
                         y: {
                           beginAtZero: true,
+                          max: 5000, // Tăng max value lên 6000K (6 triệu)
                           grid: { color: 'rgba(0,0,0,0.1)' },
                           ticks: {
                             color: '#6b7280',
+                            stepSize: 500, // Mỗi bước là 1000K để dễ đọc hơn
                             callback: (value) => `${value}K`,
                           },
                         },
@@ -630,8 +683,8 @@ const StatisticManagement = () => {
             </div>
 
             {/* Table giao dịch gói */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
+              <div className="overflow-x-auto flex-grow">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
@@ -665,14 +718,19 @@ const StatisticManagement = () => {
                         <td colSpan="5" className="p-8 text-center text-gray-500">Không có giao dịch gói</td>
                       </tr>
                     )}
+                    {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
+                    {Array.from({ length: Math.max(0, 5 - packPurchases.slice((packPage - 1) * packItemsPerPage, packPage * packItemsPerPage).length) }, (_, i) => (
+                      <tr key={`empty-${i}`}>
+                        <td colSpan="5" className="p-4">&nbsp;</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Pagination for pack purchases */}
-              {packPurchases.length > packItemsPerPage && (
-                <div className="px-6 py-4 border-t border-gray-100">
-                  <div className="flex items-center justify-center space-x-2">
+              {/* Pagination for pack purchases - luôn ở dưới cùng */}
+              <div className="px-6 py-4 border-t border-gray-100 mt-auto">
+                <div className="flex items-center justify-center space-x-2">
                     <button
                       onClick={() => setPackPage(Math.max(1, packPage - 1))}
                       disabled={packPage === 1}
@@ -698,7 +756,7 @@ const StatisticManagement = () => {
                     </button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -824,12 +882,13 @@ const StatisticManagement = () => {
                       scales: {
                         y: {
                           beginAtZero: true,
-                          max: 200,
+                          max: 600, // Giảm max value xuống 1000K (1 triệu)
                           grid: {
                             color: 'rgba(0, 0, 0, 0.1)',
                           },
                           ticks: {
                             color: '#6b7280',
+                            stepSize: 100, // Mỗi bước là 200K để dễ đọc hơn
                             callback: function(value) {
                               return value + 'K';
                             }
@@ -858,8 +917,8 @@ const StatisticManagement = () => {
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-2">📊</div>
                       <div>Không có dữ liệu</div>
-                          </div>
-                        </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -964,164 +1023,166 @@ const StatisticManagement = () => {
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-2">📊</div>
                       <div>Không có dữ liệu</div>
-                          </div>
-                        </div>
+                    </div>
+                  </div>
                 )}
-                        </div>
-                        </div>
-                      </div>
-
-
-          {/* Detailed Tables */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Table 1: Thống kê tại quầy (pack = 0) */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                      <th className="p-4 text-left font-semibold">Tên khách hàng</th>
-                      <th className="p-4 text-left font-semibold">Tên trạm</th>
-                      <th className="p-4 text-left font-semibold">Mã Pin</th>
-                      <th className="p-4 text-right font-semibold">Số tiền</th>
-                      <th className="p-4 text-center font-semibold">Trạng thái</th>
-                      <th className="p-4 text-center font-semibold">Ngày tạo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.filter(t => t.pack === 0).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).map((transaction, index) => (
-                      <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
-                        <td className="p-4 text-sm font-medium text-gray-900">
-                          {getUserName(transaction.userID)}
-                        </td>
-                        <td className="p-4 text-sm text-gray-500">
-                          {getStationName(transaction.stationID)}
-                        </td>
-                        <td className="p-4 text-sm text-gray-900 font-mono">
-                          {transaction.pinID}
-                        </td>
-                        <td className="p-4 text-sm text-gray-900 font-semibold text-right">
-                          {formatCurrency(transaction.amount)}
-                        </td>
-                        <td className="p-4 text-center">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                            transaction.status === 2 
-                              ? 'bg-green-100 text-green-800' 
-                              : transaction.status === 1 
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                          }`}>
-                            {getStatusText(transaction.status)}
-                          </span>
-                        </td>
-                        <td className="p-4 text-sm text-gray-500 text-center">
-                          {formatDate(transaction.createAt)}
-                        </td>
-                      </tr>
-                    ))}
-                    {transactions.filter(t => t.pack === 0).length === 0 && (
-                      <tr>
-                        <td colSpan="6" className="p-8 text-center text-gray-500">
-                          Không có dữ liệu giao dịch tại quầy
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-                </div>
               </div>
-
-            {/* Table 2: Số lượt đổi pin (pack = 0 và 1) */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                      <th className="p-4 text-left font-semibold">Tên khách hàng</th>
-                      <th className="p-4 text-left font-semibold">Tên trạm</th>
-                      <th className="p-4 text-left font-semibold">Mã Pin</th>
-                      <th className="p-4 text-center font-semibold">Thanh toán</th>
-                      <th className="p-4 text-center font-semibold">Ngày tạo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentPinSwapData.sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).map((transaction, index) => (
-                      <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
-                        <td className="p-4 text-sm font-medium text-gray-900">
-                          {getUserName(transaction.userID)}
-                        </td>
-                        <td className="p-4 text-sm text-gray-500">
-                          {getStationName(transaction.stationID)}
-                        </td>
-                        <td className="p-4 text-sm text-gray-900 font-mono">
-                          {transaction.pinID}
-                        </td>
-                        <td className="p-4 text-center">
-                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                            transaction.pack === 0 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {getPaymentMethod(transaction.pack)}
-                          </span>
-                        </td>
-                        <td className="p-4 text-sm text-gray-500 text-center">
-                          {formatDate(transaction.createAt)}
-                        </td>
-                      </tr>
-                    ))}
-                    {currentPinSwapData.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="p-8 text-center text-gray-500">
-                          Không có dữ liệu đổi pin
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-          </div>
-
-              {/* Pagination */}
-              {pinSwapTransactions.length > itemsPerPage && (
-                <div className="px-6 py-4 border-t border-gray-100">
-                  <div className="flex items-center justify-center">
-                <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Trước
-                      </button>
-                      
-                      <div className="flex space-x-1">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-1 text-sm font-medium rounded-md ${
-                              currentPage === page
-                                ? 'bg-green-600 text-white'
-                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ))}
-          </div>
-
-                      <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Sau
-                      </button>
-                </div>
-                </div>
-              </div>
-              )}
             </div>
+          </div>
+        </div>
+
+        {/* Detailed Tables */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Chi tiết giao dịch</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Table 1: Thống kê tại quầy (pack = 0) */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
+            <div className="overflow-x-auto flex-grow">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                    <th className="p-4 text-left font-semibold">Tên khách hàng</th>
+                    <th className="p-4 text-left font-semibold">Tên trạm</th>
+                    <th className="p-4 text-left font-semibold">Mã Pin</th>
+                    <th className="p-4 text-right font-semibold">Số tiền</th>
+                    <th className="p-4 text-center font-semibold">Trạng thái</th>
+                    <th className="p-4 text-center font-semibold">Ngày tạo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.filter(t => t.pack === 0).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
+                    <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
+                      <td className="p-4 text-sm font-medium text-gray-900">
+                        {getUserName(transaction.userID)}
+                      </td>
+                      <td className="p-4 text-sm text-gray-500">
+                        {getStationName(transaction.stationID)}
+                      </td>
+                      <td className="p-4 text-sm text-gray-900 font-mono">
+                        {transaction.pinID}
+                      </td>
+                      <td className="p-4 text-sm text-gray-900 font-semibold text-right">
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                          transaction.status === 2 
+                            ? 'bg-green-100 text-green-800' 
+                            : transaction.status === 1 
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }`}>
+                          {getStatusText(transaction.status)}
+                        </span>
+                      </td>
+                      <td className="p-4 text-sm text-gray-500 text-center">
+                        {formatDate(transaction.createAt)}
+                      </td>
+                    </tr>
+                  ))}
+                  {transactions.filter(t => t.pack === 0).length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-gray-500">
+                        Không có dữ liệu giao dịch tại quầy
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Table 2: Số lượt đổi pin (pack = 0 và 1) */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
+            <div className="overflow-x-auto flex-grow">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                    <th className="p-4 text-left font-semibold">Tên khách hàng</th>
+                    <th className="p-4 text-left font-semibold">Tên trạm</th>
+                    <th className="p-4 text-left font-semibold">Mã Pin</th>
+                    <th className="p-4 text-center font-semibold">Thanh toán</th>
+                    <th className="p-4 text-center font-semibold">Ngày tạo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentPinSwapData.sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).map((transaction, index) => (
+                    <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
+                      <td className="p-4 text-sm font-medium text-gray-900">
+                        {getUserName(transaction.userID)}
+                      </td>
+                      <td className="p-4 text-sm text-gray-500">
+                        {getStationName(transaction.stationID)}
+                      </td>
+                      <td className="p-4 text-sm text-gray-900 font-mono">
+                        {transaction.pinID}
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                          transaction.pack === 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {getPaymentMethod(transaction.pack)}
+                        </span>
+                      </td>
+                      <td className="p-4 text-sm text-gray-500 text-center">
+                        {formatDate(transaction.createAt)}
+                      </td>
+                    </tr>
+                  ))}
+                  {currentPinSwapData.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-gray-500">
+                        Không có dữ liệu đổi pin
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination - luôn ở dưới cùng */}
+            {pinSwapTransactions.length > itemsPerPage && (
+              <div className="px-6 py-4 border-t border-gray-100 mt-auto">
+                <div className="flex items-center justify-center">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Trước
+                    </button>
+                    
+                    <div className="flex space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-1 text-sm font-medium rounded-md ${
+                            currentPage === page
+                              ? 'bg-green-600 text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           </div>
         </div>
 
@@ -1234,9 +1295,8 @@ const StatisticManagement = () => {
                       </td>
                     </tr>
                   ))}
-                  </tbody>
-                </table>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

@@ -320,29 +320,23 @@ const AdminReportManagement = () => {
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
                       Loại báo cáo
-                  </th>
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
                       Mô tả
-                      </th>
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
                       Người báo cáo
-                  </th>
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
-                      Người xử lý
-                  </th>
+                      Trạng thái
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
-                      Xác thực
-                  </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
-                    Trạng thái
-                      </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
-                    Ngày tạo
-                      </th>
+                      Ngày tạo
+                    </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">
-                    Hành động
-                      </th>
-                    </tr>
+                      Hành động
+                    </th>
+                  </tr>
                   </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                 {reports.map((report, index) => (
@@ -354,31 +348,16 @@ const AdminReportManagement = () => {
                     >
                       {/* ID */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {report.id}
-                          </div>
-                          <div>
-                            <div className="text-sm font-semibold text-gray-900">
-                              #{report.id}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {report.type || 'N/A'}
-                            </div>
-                          </div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {report.id}
                         </div>
                       </td>
                       
                       {/* Loại báo cáo */}
                       <td className="px-6 py-4">
-                        <div>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getReportTypeColor(report.reportType)}`}>
-                            {report.typeName || report.type || 'Khác'}
-                          </span>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Type: {report.type}
-                          </div>
-                        </div>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getReportTypeColor(report.reportType)}`}>
+                          {report.typeName || report.type || 'Khác'}
+                        </span>
                       </td>
                       
                       {/* Mô tả */}
@@ -386,69 +365,23 @@ const AdminReportManagement = () => {
                         <div className="text-sm font-medium text-gray-900 max-w-xs">
                           <div className="truncate" title={report.description}>
                             {report.description || 'Không có mô tả'}
-                        </div>
                           </div>
-                        </td>
+                        </div>
+                      </td>
                       
                       {/* Người báo cáo */}
                       <td className="px-6 py-4">
-                      <div>
-                          <div className="text-sm font-semibold text-gray-900">
-                            Reporter #{report.reporterID || 'N/A'}
-                          </div>
+                        <div className="text-sm font-semibold text-gray-900">
+                          {report.reporterID || 'N/A'}
                         </div>
                       </td>
-                      
-                      {/* Người xử lý */}
-                      <td className="px-6 py-4">
-                        <div>
-                          {report.handlerID ? (
-                            <div className="text-sm font-semibold text-gray-900">
-                              Handler #{report.handlerID}
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-500 italic">
-                              Chưa phân công
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      
-                      {/* Xác thực */}
-                      <td className="px-6 py-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-600">Reporter:</span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${report.validReporter ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {report.validReporter ? '✓' : '✗'}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-600">Type:</span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${report.validType ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {report.validType ? '✓' : '✗'}
-                      </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-600">Desc:</span>
-                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${report.validDescription ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {report.validDescription ? '✓' : '✗'}
-                      </span>
-                          </div>
-                        </div>
-                    </td>
                       
                       {/* Trạng thái */}
                       <td className="px-6 py-4">
-                        <div>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(report.displayStatus)}`}>
-                            {report.statusName || getStatusLabel(report.displayStatus)}
-                      </span>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Status: {report.status}
-                          </div>
-                        </div>
-                    </td>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(report.displayStatus)}`}>
+                          {report.statusName || getStatusLabel(report.displayStatus)}
+                        </span>
+                      </td>
                       
                       {/* Ngày tạo */}
                       <td className="px-6 py-4 text-sm text-gray-600 font-medium">
