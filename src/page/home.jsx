@@ -28,10 +28,10 @@ export default function Home() {
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <a
                 href="#map-section"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-6 py-3 font-semibold text-white hover:bg-white/20 transition-colors backdrop-blur"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-8 py-4 font-bold text-white hover:from-cyan-300 hover:to-blue-400 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/25 text-lg"
               >
-                <span className="inline-block">▢</span>
-                <span>Xem trạm</span>
+                <EnvironmentOutlined className="text-xl" />
+                <span>Tìm Kiếm Trạm Gần Nhất</span>
               </a>
             </div>
 
