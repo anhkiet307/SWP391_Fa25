@@ -399,7 +399,7 @@ export default function BookingSuccess() {
             {/* Action Buttons */}
             <div style={{ marginTop: "32px", textAlign: "center" }}>
               <Space size="large">
-                <Link to="/booking">
+                <Link to="/booking-history">
                   <Button
                     type="primary"
                     size="large"
@@ -414,7 +414,7 @@ export default function BookingSuccess() {
                       border: "none",
                     }}
                   >
-                    Đặt Lịch Mới
+                    Xem lịch sử giao dịch
                   </Button>
                 </Link>
                 <Link to="/">

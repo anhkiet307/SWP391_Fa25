@@ -202,7 +202,7 @@ export default function BookingSuccessLite() {
 
         <div style={{ textAlign: "center", marginTop: 24 }}>
           <Link
-            to="/booking"
+            to="/booking-history"
             style={{
               display: "inline-block",
               padding: "10px 16px",
@@ -214,7 +214,7 @@ export default function BookingSuccessLite() {
               marginRight: 12,
             }}
           >
-            Đặt lịch mới
+            Xem lịch sử giao dịch
           </Link>
           <Link
             to="/"
