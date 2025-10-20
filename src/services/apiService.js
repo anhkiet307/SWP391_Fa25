@@ -598,6 +598,22 @@ class ApiService {
     return this.get(url, params);
   }
 
+  // Lấy danh sách báo cáo của user
+  async getUserReports(userID) {
+    const url = `${this.baseURL}/report/my-reports?userID=${userID}`;
+    return this.get(url);
+  }
+
+  // Tạo báo cáo mới
+  async createReport(userID, type, description) {
+    const url = `${
+      this.baseURL
+    }/report/create?userID=${userID}&type=${type}&description=${encodeURIComponent(
+      description
+    )}`;
+    return this.post(url);
+  }
+
   async exportReport(reportType, params = {}) {
     const url = getApiUrl("REPORT", "EXPORT");
     return this.get(url, { ...params, type: reportType });

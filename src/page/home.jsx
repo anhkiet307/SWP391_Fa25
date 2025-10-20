@@ -34,25 +34,6 @@ export default function Home() {
                 <span>Tìm Kiếm Trạm Gần Nhất</span>
               </a>
             </div>
-
-            <div className="mt-16 grid w-full max-w-5xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-2xl border border-cyan-400/20 bg-gradient-to-b from-white/10 to-white/[0.03] p-6 text-left hover:from-cyan-500/10 hover:border-cyan-400/40 transition-colors">
-                <div className="text-3xl font-extrabold text-white">247</div>
-                <div className="text-white/60 mt-1">Trạm đang hoạt động</div>
-              </div>
-              <div className="rounded-2xl border border-cyan-400/20 bg-gradient-to-b from-white/10 to-white/[0.03] p-6 text-left hover:from-cyan-500/10 hover:border-cyan-400/40 transition-colors">
-                <div className="text-3xl font-extrabold text-white">1,834</div>
-                <div className="text-white/60 mt-1">Pin sẵn sàng</div>
-              </div>
-              <div className="rounded-2xl border border-cyan-400/20 bg-gradient-to-b from-white/10 to-white/[0.03] p-6 text-left hover:from-cyan-500/10 hover:border-cyan-400/40 transition-colors">
-                <div className="text-3xl font-extrabold text-white">5,672</div>
-                <div className="text-white/60 mt-1">Lượt đổi mỗi ngày</div>
-              </div>
-              <div className="rounded-2xl border border-cyan-400/20 bg-gradient-to-b from-white/10 to-white/[0.03] p-6 text-left hover:from-cyan-500/10 hover:border-cyan-400/40 transition-colors">
-                <div className="text-3xl font-extrabold text-white">98.7%</div>
-                <div className="text-white/60 mt-1">Hiệu suất</div>
-              </div>
-            </div>
           </div>
         </div>
 

@@ -2,8 +2,8 @@ import "./App.css";
 import "antd/dist/reset.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Header from "./components/layout/header.jsx";
 import Footer from "./components/layout/footer.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -24,6 +24,7 @@ import BookingSuccess from "./page/EVDriver/bookingsuccess.jsx";
 import BookingHistory from "./page/EVDriver/bookingHistory.jsx";
 import Profile from "./page/profile.jsx";
 import Upgrade from "./page/upgrade.jsx";
+import Reports from "./page/reports.jsx";
 
 // Admin pages
 import AdminDashboard from "./page/BSS-Admin/homedashboard/Dashboard.jsx";
@@ -97,6 +98,14 @@ function App() {
             element={
               <MainLayout>
                 <Upgrade />
+              </MainLayout>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <MainLayout>
+                <Reports />
               </MainLayout>
             }
           />
