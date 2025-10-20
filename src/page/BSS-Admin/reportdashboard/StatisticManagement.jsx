@@ -494,7 +494,7 @@ const StatisticManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="bg-gray-50 min-h-screen font-sans" style={{ padding: '2rem' }}>
+      <div className="bg-gray-50 min-h-screen font-sans px-8 py-5 pb-12">
         <AdminHeader
           title="Tổng quan Thống kê"
           subtitle="Phân tích dữ liệu và xu hướng sử dụng hệ thống"
@@ -587,7 +587,7 @@ const StatisticManagement = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Chart Thống kê gói - theo ngày từ VNPay statistic */}
             <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-              <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-800">Thống kê gói</h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -609,13 +609,13 @@ const StatisticManagement = () => {
               {error && (
                 <div className="text-center py-4 text-red-600">
                   <p>{error}</p>
-                  <button 
+              <button
                     onClick={fetchVnpayStatistic}
                     className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     Thử lại
-                  </button>
-                </div>
+              </button>
+            </div>
               )}
               
               <div className="relative h-80">
@@ -676,11 +676,11 @@ const StatisticManagement = () => {
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-2">📊</div>
                       <div>Không có dữ liệu</div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
+          )}
+                  </div>
+                </div>
 
             {/* Table giao dịch gói */}
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
@@ -726,7 +726,7 @@ const StatisticManagement = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
 
               {/* Pagination for pack purchases - luôn ở dưới cùng */}
               <div className="px-6 py-4 border-t border-gray-100 mt-auto">
@@ -754,84 +754,37 @@ const StatisticManagement = () => {
                     >
                       Sau
                     </button>
-                  </div>
-                </div>
               </div>
-            </div>
-          </div>
-        </div>
+                          </div>
+                        </div>
+                        </div>
+                        </div>
+                      </div>
 
-        {/* Doanh thu và số lượt đổi pin */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Doanh thu tại quầy và số lượt đổi pin</h2>
-            <div className="flex items-center space-x-4">
-              {/* Date Range Picker - sẽ được kích hoạt khi có API */}
-              <div className="hidden">
-                <input
-                  type="month"
-                  value={dateRange.startDate}
-                  onChange={(e) => handleDateRangeChange(e.target.value, dateRange.endDate)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-                <span className="mx-2 text-gray-500">đến</span>
-                <input
-                  type="month"
-                  value={dateRange.endDate}
-                  onChange={(e) => handleDateRangeChange(dateRange.startDate, e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              
-              {/* Refresh Button */}
-              <button
-                onClick={refreshData}
-                disabled={revenueLoading}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                <svg 
-                  className={`w-4 h-4 ${revenueLoading ? 'animate-spin' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{revenueLoading ? 'Đang tải...' : 'Tải lại'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-red-700 text-sm">{error}</span>
-              </div>
-            </div>
-          )}
+        {/* Doanh thu tại quầy */}
+        <div className="mb-8 ml-8 mr-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Doanh thu tại quầy</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Biểu đồ Doanh thu theo ngày */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 relative">
-              {/* Loading Overlay */}
+            {/* Chart Thống kê tại quầy */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-800">Thống kê tại quầy</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">VNĐ</span>
+              </div>
+            </div>
+
+              {/* Loading state */}
               {revenueLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl z-10">
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
                   <div className="flex flex-col items-center space-y-3">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                     <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
                   </div>
                 </div>
               )}
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-800">Thống kê tại quầy</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">VNĐ</span>
-                </div>
-              </div>
+              
               <div className="relative h-80">
                 {revenueData.length > 0 ? (
                   <Bar
@@ -853,63 +806,36 @@ const StatisticManagement = () => {
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: {
-                          display: false,
-                        },
-                        tooltip: {
-                          enabled: false
-                        },
+                        legend: { display: false },
+                        tooltip: { enabled: false },
                         datalabels: {
                           display: true,
                           color: '#10b981',
-                          font: {
-                            weight: 'bold',
-                            size: 12
-                          },
-                          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                          font: { weight: 'bold', size: 12 },
+                          backgroundColor: 'rgba(16,185,129,0.1)',
                           borderColor: '#10b981',
                           borderWidth: 1,
                           borderRadius: 12,
                           padding: 6,
-                          formatter: (value) => {
-                            return value > 0 ? `${value}K` : '';
-                          },
+                          formatter: (value) => (value > 0 ? `${value}K` : ''),
                           anchor: 'end',
                           align: 'top',
-                          offset: 15
-                        }
+                          offset: 15,
+                        },
                       },
                       scales: {
                         y: {
                           beginAtZero: true,
-                          max: 600, // Giảm max value xuống 1000K (1 triệu)
-                          grid: {
-                            color: 'rgba(0, 0, 0, 0.1)',
-                          },
+                          max: 600,
+                          grid: { color: 'rgba(0,0,0,0.1)' },
                           ticks: {
                             color: '#6b7280',
-                            stepSize: 100, // Mỗi bước là 200K để dễ đọc hơn
-                            callback: function(value) {
-                              return value + 'K';
-                            }
-                          }
+                            stepSize: 100,
+                            callback: (value) => `${value}K`,
+                          },
                         },
-                        x: {
-                          grid: {
-                            display: false,
-                          },
-                          ticks: {
-                            color: '#6b7280',
-                            font: {
-                              weight: 'bold'
-                            }
-                          }
-                        }
+                        x: { grid: { display: false }, ticks: { color: '#6b7280', font: { weight: 'bold' } } },
                       },
-                      animation: {
-                        duration: 2000,
-                        easing: 'easeInOutQuart'
-                      }
                     }}
                   />
                 ) : (
@@ -917,30 +843,101 @@ const StatisticManagement = () => {
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-2">📊</div>
                       <div>Không có dữ liệu</div>
-                    </div>
-                  </div>
+                </div>
+              </div>
                 )}
+                          </div>
+                        </div>
+
+            {/* Table giao dịch tại quầy */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
+              <div className="overflow-x-auto flex-grow">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                      <th className="p-4 text-left font-semibold">Tên khách hàng</th>
+                      <th className="p-4 text-left font-semibold">Tên trạm</th>
+                      <th className="p-4 text-left font-semibold">Mã Pin</th>
+                      <th className="p-4 text-right font-semibold">Số tiền</th>
+                      <th className="p-4 text-center font-semibold">Trạng thái</th>
+                      <th className="p-4 text-center font-semibold">Ngày tạo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.filter(t => t.pack === 0).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
+                      <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
+                        <td className="p-4 text-sm font-medium text-gray-900">
+                          {getUserName(transaction.userID)}
+                        </td>
+                        <td className="p-4 text-sm text-gray-500">
+                          {getStationName(transaction.stationID)}
+                        </td>
+                        <td className="p-4 text-sm text-gray-900 font-mono">
+                          {transaction.pinID}
+                        </td>
+                        <td className="p-4 text-sm text-gray-900 font-semibold text-right">
+                          {formatCurrency(transaction.amount)}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                            transaction.status === 2 
+                              ? 'bg-green-100 text-green-800' 
+                              : transaction.status === 1 
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}>
+                            {getStatusText(transaction.status)}
+                          </span>
+                        </td>
+                        <td className="p-4 text-sm text-gray-500 text-center">
+                          {formatDate(transaction.createAt)}
+                        </td>
+                      </tr>
+                    ))}
+                    {transactions.filter(t => t.pack === 0).length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="p-8 text-center text-gray-500">
+                          Không có dữ liệu giao dịch tại quầy
+                        </td>
+                      </tr>
+                    )}
+                    {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
+                    {Array.from({ length: Math.max(0, 10 - transactions.filter(t => t.pack === 0).slice(0, 10).length) }, (_, i) => (
+                      <tr key={`empty-${i}`}>
+                        <td colSpan="6" className="p-4">&nbsp;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                        </div>
               </div>
             </div>
+          </div>
 
-            {/* Biểu đồ Số lượt đổi pin theo ngày */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100 relative">
-              {/* Loading Overlay */}
-              {revenueLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl z-10">
-                  <div className="flex flex-col items-center space-y-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                    <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center justify-between mb-6">
+        {/* Số lượt đổi pin */}
+        <div className="mb-8 ml-8 mr-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Số lượt đổi pin</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Chart Số lượt đổi pin theo ngày */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-800">Số lượt đổi pin theo ngày</h3>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm text-gray-600">Lượt</span>
                 </div>
+                </div>
+              
+              {/* Loading state */}
+              {revenueLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                    <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
               </div>
+            </div>
+              )}
+              
               <div className="relative h-80">
                 {revenueData.length > 0 ? (
                   <Bar
@@ -962,60 +959,35 @@ const StatisticManagement = () => {
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: {
-                          display: false,
-                        },
-                        tooltip: {
-                          enabled: false
-                        },
+                        legend: { display: false },
+                        tooltip: { enabled: false },
                         datalabels: {
                           display: true,
                           color: '#10b981',
-                          font: {
-                            weight: 'bold',
-                            size: 12
-                          },
-                          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                          font: { weight: 'bold', size: 12 },
+                          backgroundColor: 'rgba(16,185,129,0.1)',
                           borderColor: '#10b981',
                           borderWidth: 1,
                           borderRadius: 12,
                           padding: 6,
-                          formatter: (value) => {
-                            return value > 0 ? value.toString() : '';
-                          },
+                          formatter: (value) => (value > 0 ? value.toString() : ''),
                           anchor: 'end',
                           align: 'top',
-                          offset: 15
-                        }
+                          offset: 15,
+                        },
                       },
                       scales: {
                         y: {
                           beginAtZero: true,
                           max: 35,
-                          grid: {
-                            color: 'rgba(0, 0, 0, 0.1)',
-                          },
+                          grid: { color: 'rgba(0,0,0,0.1)' },
                           ticks: {
                             color: '#6b7280',
                             stepSize: 5
                           }
                         },
-                        x: {
-                          grid: {
-                            display: false,
-                          },
-                          ticks: {
-                            color: '#6b7280',
-                            font: {
-                              weight: 'bold'
-                            }
-                          }
-                        }
+                        x: { grid: { display: false }, ticks: { color: '#6b7280', font: { weight: 'bold' } } },
                       },
-                      animation: {
-                        duration: 2000,
-                        easing: 'easeInOutQuart'
-                      }
                     }}
                   />
                 ) : (
@@ -1023,171 +995,114 @@ const StatisticManagement = () => {
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-2">📊</div>
                       <div>Không có dữ liệu</div>
-                    </div>
-                  </div>
+            </div>
+          </div>
                 )}
+                </div>
+                </div>
+
+            {/* Table giao dịch đổi pin */}
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
+              <div className="overflow-x-auto flex-grow">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                      <th className="p-4 text-left font-semibold">Tên khách hàng</th>
+                      <th className="p-4 text-left font-semibold">Tên trạm</th>
+                      <th className="p-4 text-left font-semibold">Mã Pin</th>
+                      <th className="p-4 text-center font-semibold">Thanh toán</th>
+                      <th className="p-4 text-center font-semibold">Ngày tạo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentPinSwapData.sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).map((transaction, index) => (
+                      <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
+                        <td className="p-4 text-sm font-medium text-gray-900">
+                          {getUserName(transaction.userID)}
+                        </td>
+                        <td className="p-4 text-sm text-gray-500">
+                          {getStationName(transaction.stationID)}
+                        </td>
+                        <td className="p-4 text-sm text-gray-900 font-mono">
+                          {transaction.pinID}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                            transaction.pack === 0 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {getPaymentMethod(transaction.pack)}
+                          </span>
+                        </td>
+                        <td className="p-4 text-sm text-gray-500 text-center">
+                          {formatDate(transaction.createAt)}
+                        </td>
+                      </tr>
+                    ))}
+                    {currentPinSwapData.length === 0 && (
+                      <tr>
+                        <td colSpan="5" className="p-8 text-center text-gray-500">
+                          Không có dữ liệu đổi pin
+                        </td>
+                      </tr>
+                    )}
+                    {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
+                    {Array.from({ length: Math.max(0, 5 - currentPinSwapData.length) }, (_, i) => (
+                      <tr key={`empty-${i}`}>
+                        <td colSpan="5" className="p-4">&nbsp;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Detailed Tables */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Chi tiết giao dịch</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Table 1: Thống kê tại quầy (pack = 0) */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
-            <div className="overflow-x-auto flex-grow">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                    <th className="p-4 text-left font-semibold">Tên khách hàng</th>
-                    <th className="p-4 text-left font-semibold">Tên trạm</th>
-                    <th className="p-4 text-left font-semibold">Mã Pin</th>
-                    <th className="p-4 text-right font-semibold">Số tiền</th>
-                    <th className="p-4 text-center font-semibold">Trạng thái</th>
-                    <th className="p-4 text-center font-semibold">Ngày tạo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.filter(t => t.pack === 0).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
-                    <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
-                      <td className="p-4 text-sm font-medium text-gray-900">
-                        {getUserName(transaction.userID)}
-                      </td>
-                      <td className="p-4 text-sm text-gray-500">
-                        {getStationName(transaction.stationID)}
-                      </td>
-                      <td className="p-4 text-sm text-gray-900 font-mono">
-                        {transaction.pinID}
-                      </td>
-                      <td className="p-4 text-sm text-gray-900 font-semibold text-right">
-                        {formatCurrency(transaction.amount)}
-                      </td>
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          transaction.status === 2 
-                            ? 'bg-green-100 text-green-800' 
-                            : transaction.status === 1 
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                        }`}>
-                          {getStatusText(transaction.status)}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm text-gray-500 text-center">
-                        {formatDate(transaction.createAt)}
-                      </td>
-                    </tr>
-                  ))}
-                  {transactions.filter(t => t.pack === 0).length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="p-8 text-center text-gray-500">
-                        Không có dữ liệu giao dịch tại quầy
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Table 2: Số lượt đổi pin (pack = 0 và 1) */}
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col" style={{ minHeight: '500px' }}>
-            <div className="overflow-x-auto flex-grow">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                    <th className="p-4 text-left font-semibold">Tên khách hàng</th>
-                    <th className="p-4 text-left font-semibold">Tên trạm</th>
-                    <th className="p-4 text-left font-semibold">Mã Pin</th>
-                    <th className="p-4 text-center font-semibold">Thanh toán</th>
-                    <th className="p-4 text-center font-semibold">Ngày tạo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentPinSwapData.sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).map((transaction, index) => (
-                    <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
-                      <td className="p-4 text-sm font-medium text-gray-900">
-                        {getUserName(transaction.userID)}
-                      </td>
-                      <td className="p-4 text-sm text-gray-500">
-                        {getStationName(transaction.stationID)}
-                      </td>
-                      <td className="p-4 text-sm text-gray-900 font-mono">
-                        {transaction.pinID}
-                      </td>
-                      <td className="p-4 text-center">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          transaction.pack === 0 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {getPaymentMethod(transaction.pack)}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm text-gray-500 text-center">
-                        {formatDate(transaction.createAt)}
-                      </td>
-                    </tr>
-                  ))}
-                  {currentPinSwapData.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="p-8 text-center text-gray-500">
-                        Không có dữ liệu đổi pin
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {/* Pagination - luôn ở dưới cùng */}
+              {pinSwapTransactions.length > itemsPerPage && (
+                <div className="px-6 py-4 border-t border-gray-100 mt-auto">
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Trước
+                      </button>
+                      
+                      <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`px-3 py-1 text-sm font-medium rounded-md ${
+                              currentPage === page
+                                ? 'bg-green-600 text-white'
+                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
             </div>
 
-            {/* Pagination - luôn ở dưới cùng */}
-            {pinSwapTransactions.length > itemsPerPage && (
-              <div className="px-6 py-4 border-t border-gray-100 mt-auto">
-                <div className="flex items-center justify-center">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Trước
-                    </button>
-                    
-                    <div className="flex space-x-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`px-3 py-1 text-sm font-medium rounded-md ${
-                            currentPage === page
-                              ? 'bg-green-600 text-white'
-                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Sau
-                    </button>
-                  </div>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Sau
+                      </button>
+                </div>
                 </div>
               </div>
-            )}
-          </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Tần suất đổi pin và giờ cao điểm */}
-        <div className="mb-8">
+        <div className="mb-8 ml-8 mr-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Tần suất đổi pin và giờ cao điểm</h2>
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
@@ -1195,8 +1110,8 @@ const StatisticManagement = () => {
                 <thead>
                   <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <th className="p-4 text-left font-semibold">Khung giờ</th>
-                    <th className="p-4 text-right font-semibold">Tần suất</th>
-                    <th className="p-4 text-right font-semibold">Tỷ lệ (%)</th>
+                    <th className="p-4 text-center font-semibold">Tần suất</th>
+                    <th className="p-4 text-center font-semibold">Tỷ lệ (%)</th>
                     <th className="p-4 text-center font-semibold">Mức độ</th>
                   </tr>
                 </thead>
@@ -1204,8 +1119,8 @@ const StatisticManagement = () => {
                   {peakHoursData.map((item, index) => (
                     <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.hour}</td>
-                      <td className="p-4 text-right font-semibold text-green-600">{item.frequency}</td>
-                      <td className="p-4 text-right font-semibold text-emerald-600">{item.percentage}%</td>
+                      <td className="p-4 text-center font-semibold text-green-600">{item.frequency}</td>
+                      <td className="p-4 text-center font-semibold text-emerald-600">{item.percentage}%</td>
                       <td className="p-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           item.percentage >= 20 
@@ -1226,9 +1141,9 @@ const StatisticManagement = () => {
         </div>
 
         {/* AI dự báo nhu cầu sử dụng trạm đổi pin */}
-        <div className="mb-8">
+        <div className="mt-2 ml-8 mr-8 mb-4">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">AI dự báo nhu cầu sử dụng trạm đổi pin</h2>
-          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 mb-8">
             <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center">
                 <svg className="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1240,21 +1155,21 @@ const StatisticManagement = () => {
             <div className="overflow-hidden rounded-xl border border-gray-100">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                      <th className="p-4 text-left font-semibold">Tên trạm</th>
-                      <th className="p-4 text-right font-semibold">Sử dụng hiện tại (%)</th>
-                      <th className="p-4 text-right font-semibold">Dự báo (%)</th>
-                      <th className="p-4 text-center font-semibold">Xu hướng</th>
-                      <th className="p-4 text-center font-semibold">Khuyến nghị</th>
-                    </tr>
-                  </thead>
+                <thead>
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                    <th className="p-4 text-left font-semibold">Tên trạm</th>
+                    <th className="p-4 text-center font-semibold">Sử dụng hiện tại (%)</th>
+                    <th className="p-4 text-center font-semibold">Dự báo (%)</th>
+                    <th className="p-4 text-center font-semibold">Xu hướng</th>
+                    <th className="p-4 text-center font-semibold">Khuyến nghị</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {aiPredictionData.map((item, index) => (
                     <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.station}</td>
-                      <td className="p-4 text-right font-semibold text-green-600">{item.currentUsage}%</td>
-                      <td className="p-4 text-right font-semibold text-emerald-600">{item.predictedUsage}%</td>
+                      <td className="p-4 text-center font-semibold text-green-600">{item.currentUsage}%</td>
+                      <td className="p-4 text-center font-semibold text-emerald-600">{item.predictedUsage}%</td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           item.trend === "increase" 
@@ -1295,12 +1210,16 @@ const StatisticManagement = () => {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Div trống để tạo khoảng cách */}
+        <div className="h-12"></div>
+
     </AdminLayout>
   );
 };
