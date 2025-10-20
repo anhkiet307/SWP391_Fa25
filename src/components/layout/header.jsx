@@ -241,6 +241,13 @@ export default function Header() {
                     </Link>
                   )}
 
+                  <Link
+                    to="/reports"
+                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
+                  >
+                    Báo cáo của tôi
+                  </Link>
+
                   <a
                     href="#"
                     className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
