@@ -156,7 +156,7 @@ const AdminDashboard = () => {
           title="Dashboard Quản trị Hệ thống"
           subtitle="Tổng quan và quản lý toàn bộ hệ thống trạm đổi pin"
           stats={[
-            { label: "Tổng trạm", value: systemStats.totalStations, color: "bg-blue-400" }
+            { label: "Tổng trạm", value: systemStats.totalStations, color: "bg-green-400" }
           ]}
         />
 
@@ -170,7 +170,7 @@ const AdminDashboard = () => {
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng Trạm
               </h3>
-              <div className="text-4xl font-bold m-0 text-blue-500">
+              <div className="text-4xl font-bold m-0 text-green-500">
                 {systemStats.totalStations}
               </div>
             </div>
@@ -194,7 +194,7 @@ const AdminDashboard = () => {
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng Nhân Viên
               </h3>
-              <div className="text-4xl font-bold m-0 text-purple-500">
+              <div className="text-4xl font-bold m-0 text-green-600">
                 {systemStats.totalStaff}
               </div>
             </div>
@@ -240,7 +240,7 @@ const AdminDashboard = () => {
                   <div className="flex items-start space-x-4">
                     {/* Station Icon */}
                     <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
                         <svg
                           className="w-6 h-6 text-white"
                           fill="none"
@@ -316,7 +316,7 @@ const AdminDashboard = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => navigate("/admin-station-management")}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
                 Xem tất cả trạm
               </button>
@@ -465,7 +465,7 @@ const AdminDashboard = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => navigate("/admin-report-management")}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
                 Xem tất cả report
               </button>

@@ -254,7 +254,7 @@ const StatisticManagement = () => {
           }
           stats={[
             { label: "Tổng doanh thu", value: formatCurrency(overviewStats.totalRevenue), color: "bg-green-400" },
-            { label: "Lượt đổi pin", value: overviewStats.totalSwaps, color: "bg-blue-400" }
+            { label: "Lượt đổi pin", value: overviewStats.totalSwaps, color: "bg-emerald-400" }
           ]}
         />
 
@@ -280,10 +280,10 @@ const StatisticManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Tổng lượt đổi pin</p>
-                  <p className="text-2xl font-bold text-blue-600">{overviewStats.totalSwaps.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-green-600">{overviewStats.totalSwaps.toLocaleString()}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
@@ -294,10 +294,10 @@ const StatisticManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Trạm hoạt động</p>
-                  <p className="text-2xl font-bold text-purple-600">{overviewStats.activeStations}</p>
+                  <p className="text-2xl font-bold text-emerald-600">{overviewStats.activeStations}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
@@ -308,10 +308,10 @@ const StatisticManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Người dùng hoạt động</p>
-                  <p className="text-2xl font-bold text-orange-600">{overviewStats.activeUsers}</p>
+                  <p className="text-2xl font-bold text-teal-600">{overviewStats.activeUsers}</p>
                 </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                 </div>
@@ -346,7 +346,7 @@ const StatisticManagement = () => {
               <button
                 onClick={refreshData}
                 disabled={revenueLoading}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <svg 
                   className={`w-4 h-4 ${revenueLoading ? 'animate-spin' : ''}`} 
@@ -379,7 +379,7 @@ const StatisticManagement = () => {
               {revenueLoading && (
                 <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl z-10">
                   <div className="flex flex-col items-center space-y-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                     <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
                   </div>
                 </div>
@@ -429,7 +429,7 @@ const StatisticManagement = () => {
               {revenueLoading && (
                 <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-xl z-10">
                   <div className="flex flex-col items-center space-y-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                     <span className="text-sm text-gray-600">Đang tải dữ liệu...</span>
                   </div>
                 </div>
@@ -648,7 +648,7 @@ const StatisticManagement = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <th className="p-4 text-left font-semibold">Khung giờ</th>
                     <th className="p-4 text-right font-semibold">Tần suất</th>
                     <th className="p-4 text-right font-semibold">Tỷ lệ (%)</th>
@@ -657,10 +657,10 @@ const StatisticManagement = () => {
                 </thead>
                 <tbody>
                   {peakHoursData.map((item, index) => (
-                    <tr key={index} className={`hover:bg-indigo-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
+                    <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.hour}</td>
-                      <td className="p-4 text-right font-semibold text-blue-600">{item.frequency}</td>
-                      <td className="p-4 text-right font-semibold text-purple-600">{item.percentage}%</td>
+                      <td className="p-4 text-right font-semibold text-green-600">{item.frequency}</td>
+                      <td className="p-4 text-right font-semibold text-emerald-600">{item.percentage}%</td>
                       <td className="p-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           item.percentage >= 20 
@@ -696,7 +696,7 @@ const StatisticManagement = () => {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                       <th className="p-4 text-left font-semibold">Tên trạm</th>
                       <th className="p-4 text-right font-semibold">Sử dụng hiện tại (%)</th>
                       <th className="p-4 text-right font-semibold">Dự báo (%)</th>
@@ -706,10 +706,10 @@ const StatisticManagement = () => {
                   </thead>
                 <tbody>
                   {aiPredictionData.map((item, index) => (
-                    <tr key={index} className={`hover:bg-indigo-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
+                    <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.station}</td>
-                      <td className="p-4 text-right font-semibold text-blue-600">{item.currentUsage}%</td>
-                      <td className="p-4 text-right font-semibold text-purple-600">{item.predictedUsage}%</td>
+                      <td className="p-4 text-right font-semibold text-green-600">{item.currentUsage}%</td>
+                      <td className="p-4 text-right font-semibold text-emerald-600">{item.predictedUsage}%</td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           item.trend === "increase" 

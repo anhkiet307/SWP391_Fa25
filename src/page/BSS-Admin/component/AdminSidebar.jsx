@@ -186,9 +186,9 @@ const AdminSidebar = () => {
   return (
     <div className="w-64 bg-white shadow-xl h-screen flex flex-col fixed left-0 top-0 z-50 border-r border-gray-100 overflow-hidden">
       {/* Logo/Header */}
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
             <svg
               className="w-7 h-7 text-white"
               fill="none"
@@ -205,7 +205,7 @@ const AdminSidebar = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800">VoltSwap</h2>
-            <p className="text-sm text-indigo-600 font-medium">Admin Portal</p>
+            <p className="text-sm text-green-600 font-medium">Admin Portal</p>
           </div>
         </div>
       </div>
@@ -215,11 +215,11 @@ const AdminSidebar = () => {
         className="mt-6 flex-1 px-3 pb-6 overflow-y-auto custom-scrollbar"
         style={{
           scrollbarWidth: "thin",
-          scrollbarColor: "#a5b4fc #f1f5f9",
+          scrollbarColor: "#10b981 #f1f5f9",
         }}
       >
         <div className="mb-6">
-          <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4 px-3">
+          <p className="text-xs font-bold text-green-500 uppercase tracking-wider mb-4 px-3">
             Quản trị hệ thống
           </p>
         </div>
@@ -252,8 +252,8 @@ const AdminSidebar = () => {
                       }}
                       className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                         isActive || hasActiveSubmenu
-                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                          : "text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700"
+                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg"
+                          : "text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-700"
                       }`}
                     >
                       <div className="flex items-center">
@@ -298,7 +298,7 @@ const AdminSidebar = () => {
                         isUserMenuOpen) ||
                       (item.path === "/admin-statistic-management" &&
                         isReportMenuOpen)) && (
-                      <div className="ml-4 mt-2 space-y-1 border-l-2 border-indigo-200 pl-4">
+                      <div className="ml-4 mt-2 space-y-1 border-l-2 border-green-200 pl-4">
                         {item.submenu.map((subItem) => {
                           const isSubActive =
                             location.pathname === subItem.path;
@@ -308,8 +308,8 @@ const AdminSidebar = () => {
                               to={subItem.path}
                               className={`block px-4 py-2.5 text-sm transition-all duration-200 rounded-lg ${
                                 isSubActive
-                                  ? "bg-indigo-100 text-indigo-700 font-medium shadow-sm border-l-2 border-indigo-500"
-                                  : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:font-medium"
+                                  ? "bg-green-100 text-green-700 font-medium shadow-sm border-l-2 border-green-500"
+                                  : "text-gray-600 hover:bg-green-50 hover:text-green-700 hover:font-medium"
                               }`}
                             >
                               {subItem.label}
@@ -324,8 +324,8 @@ const AdminSidebar = () => {
                     to={item.path}
                     className={`flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                       isActive
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg"
-                        : "text-gray-600 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 hover:text-indigo-700"
+                        ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg"
+                        : "text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:text-green-700"
                     }`}
                   >
                     <span

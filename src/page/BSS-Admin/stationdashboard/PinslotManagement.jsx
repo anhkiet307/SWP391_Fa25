@@ -331,10 +331,10 @@ const PinslotManagement = () => {
             </svg>
           }
           stats={[
-            { label: "Tổng pin slot", value: getCurrentPinslots().length, color: "bg-blue-400" },
+            { label: "Tổng pin slot", value: getCurrentPinslots().length, color: "bg-green-400" },
             { label: "Đang hoạt động", value: getCurrentPinslots().filter(p => p.status === 1).length, color: "bg-green-400" },
             { label: "Đang sạc", value: getCurrentPinslots().filter(p => p.pinStatus === "charging").length, color: "bg-yellow-400" },
-            { label: "Sẵn sàng", value: getCurrentPinslots().filter(p => p.pinStatus === "available").length, color: "bg-purple-400" }
+            { label: "Sẵn sàng", value: getCurrentPinslots().filter(p => p.pinStatus === "available").length, color: "bg-emerald-400" }
           ]}
         />
 
@@ -351,7 +351,7 @@ const PinslotManagement = () => {
                     : "Danh sách Pin Slot"
                 }
               </h2>
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                 {getCurrentPinslots().length} pin slot
               </span>
               {isStationFiltered && (
@@ -390,7 +390,7 @@ const PinslotManagement = () => {
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Tìm kiếm theo tên trạm..."
-                  className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-base text-gray-700 placeholder-gray-400 bg-white shadow-sm"
+                  className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-base text-gray-700 placeholder-gray-400 bg-white shadow-sm"
                 />
                 {searchQuery && (
                   <button
@@ -409,7 +409,7 @@ const PinslotManagement = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg group"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg group"
                 >
                   <svg className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -431,12 +431,12 @@ const PinslotManagement = () => {
                     <div className="py-2">
                       <button
                         onClick={() => handleSortChange("newest")}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors duration-200 ${
-                          sortOrder === "newest" ? "bg-blue-50 text-blue-700 border-r-4 border-blue-500" : "text-gray-700"
+                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-green-50 transition-colors duration-200 ${
+                          sortOrder === "newest" ? "bg-green-50 text-green-700 border-r-4 border-green-500" : "text-gray-700"
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          sortOrder === "newest" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"
+                          sortOrder === "newest" ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
                         }`}>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -447,7 +447,7 @@ const PinslotManagement = () => {
                         </div>
                         {sortOrder === "newest" && (
                           <div className="ml-auto">
-                            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
@@ -456,12 +456,12 @@ const PinslotManagement = () => {
                       
                       <button
                         onClick={() => handleSortChange("oldest")}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-blue-50 transition-colors duration-200 ${
-                          sortOrder === "oldest" ? "bg-blue-50 text-blue-700 border-r-4 border-blue-500" : "text-gray-700"
+                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-green-50 transition-colors duration-200 ${
+                          sortOrder === "oldest" ? "bg-green-50 text-green-700 border-r-4 border-green-500" : "text-gray-700"
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          sortOrder === "oldest" ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"
+                          sortOrder === "oldest" ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
                         }`}>
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -472,7 +472,7 @@ const PinslotManagement = () => {
                         </div>
                         {sortOrder === "oldest" && (
                           <div className="ml-auto">
-                            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
@@ -494,7 +494,7 @@ const PinslotManagement = () => {
               {/* Refresh Button */}
               <button
                 onClick={refreshPinslots}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
               >
                 <svg
                   className="w-4 h-4"
@@ -516,11 +516,11 @@ const PinslotManagement = () => {
 
           {/* Search Results Info */}
           {isSearching && (
-            <div className="mb-4 flex items-center space-x-2 text-sm bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 flex items-center space-x-2 text-sm bg-green-50 px-4 py-2 rounded-lg border border-green-200">
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-blue-700 font-medium">
+              <span className="text-green-700 font-medium">
                 Tìm thấy {filteredPinslots.length} pin slot cho "{searchQuery}"
               </span>
               {filteredPinslots.length === 0 && (
@@ -532,7 +532,7 @@ const PinslotManagement = () => {
           {/* Loading State */}
           {loading && (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
               <span className="ml-3 text-gray-600">Đang tải dữ liệu...</span>
             </div>
           )}
@@ -571,7 +571,7 @@ const PinslotManagement = () => {
                   <div className="p-6 border-b border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
                           <svg
                             className="w-5 h-5 text-white"
                             fill="none"
