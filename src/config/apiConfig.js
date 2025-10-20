@@ -95,7 +95,7 @@ const API_CONFIG = {
       DELETE: "/servicePack/:id",
       DETAIL: "/service-packs/:id",
       CREATE: "/service-packs",
-      UPDATE: "/service-packs/:id",
+      UPDATE: "/service-packs/update/:id",
       UPDATE_STATUS: "/servicePack/updateStatus",
       DELETE: "/service-packs/:id",
     },

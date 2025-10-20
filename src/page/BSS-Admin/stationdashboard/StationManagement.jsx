@@ -458,7 +458,7 @@ const AdminStationManagement = () => {
             </svg>
           }
           stats={[
-            { label: "Tổng số trạm", value: totalStats.totalStations, color: "bg-blue-400" }
+            { label: "Tổng số trạm", value: totalStats.totalStations, color: "bg-green-400" }
           ]}
         />
 
@@ -472,7 +472,7 @@ const AdminStationManagement = () => {
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Tổng trạm
               </h3>
-              <div className="text-4xl font-bold m-0 text-blue-500">
+              <div className="text-4xl font-bold m-0 text-green-500">
                 {totalStats.totalStations}
               </div>
             </div>
@@ -522,13 +522,13 @@ const AdminStationManagement = () => {
             </button>
             <button
               onClick={handleAddStation}
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm trạm mới
             </button>
             <button
               onClick={handleBatteryDispatch}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               Điều phối pin
             </button>
@@ -539,7 +539,7 @@ const AdminStationManagement = () => {
         {loading && (
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <div className="flex items-center justify-center space-x-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
               <span className="text-lg font-medium text-gray-600">Đang tải danh sách trạm...</span>
             </div>
           </div>
@@ -569,7 +569,7 @@ const AdminStationManagement = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
               <thead>
-                <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                   <th className="p-4 text-center font-semibold text-base">
                     Mã trạm
                   </th>
@@ -597,13 +597,13 @@ const AdminStationManagement = () => {
                 {updatedStations.map((station, index) => (
                   <tr 
                     key={station.id} 
-                    className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                    className={`hover:bg-green-50 transition-colors duration-200 ${
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                   >
                     <td className="p-4 border-b border-gray-200">
                       <div className="flex justify-center">
-                        <div className="font-bold text-base text-indigo-600">
+                        <div className="font-bold text-base text-green-600">
                           {station.stationId}
                         </div>
                       </div>
@@ -621,7 +621,7 @@ const AdminStationManagement = () => {
                     <td className="p-4 border-b border-gray-200">
                       <div className="flex justify-center">
                         {station.userID ? (
-                          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                             {getStaffName(station.userID)}
                           </span>
                         ) : (
@@ -668,7 +668,7 @@ const AdminStationManagement = () => {
                       <div className="flex justify-center items-center gap-2">
                         {/* Chi tiết */}
                         <button
-                          className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                          className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => setSelectedStation(station)}
                           title="Chi tiết"
                         >
@@ -698,7 +698,7 @@ const AdminStationManagement = () => {
 
                         {/* Xem Pin Slot */}
                         <button
-                          className="group relative bg-purple-500 hover:bg-purple-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                          className="group relative bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                           onClick={() => navigate(`/admin-pinslot-management?stationId=${station.id}&stationName=${encodeURIComponent(station.name)}`)}
                           title="Xem pin slot"
                         >
@@ -806,7 +806,7 @@ const AdminStationManagement = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-8">
+              <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-500 text-white p-8">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 bg-black bg-opacity-10"></div>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
@@ -852,8 +852,8 @@ const AdminStationManagement = () => {
               <div className="p-8 bg-gray-50">
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                   <div className="flex items-center mb-6">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-3">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
@@ -863,14 +863,14 @@ const AdminStationManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Địa chỉ */}
                     <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-blue-600 mb-1">Địa chỉ</div>
+                        <div className="text-sm font-semibold text-green-600 mb-1">Địa chỉ</div>
                         <div className="text-base text-gray-800 font-medium">{selectedStation.address}</div>
                       </div>
                     </div>
@@ -1072,7 +1072,7 @@ const AdminStationManagement = () => {
                             {stationToDelete.name}
                           </h4>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               {stationToDelete.stationId}
                             </span>
                           <span
@@ -1176,9 +1176,9 @@ const AdminStationManagement = () => {
               <div className="p-6">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-indigo-600"
+                          className="w-6 h-6 text-green-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1196,7 +1196,7 @@ const AdminStationManagement = () => {
                         {stationToChangeStatus.name}
                       </h4>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {stationToChangeStatus.stationId}
                         </span>
                         <span
@@ -1440,17 +1440,17 @@ const AdminStationManagement = () => {
                 </div>
 
                 {/* Staff Statistics */}
-                <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                <div className="bg-green-50 rounded-lg p-4 mb-6 border border-green-200">
                   <div className="flex items-center justify-center">
                     <div className="text-sm text-gray-700 flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="font-medium">Tổng số nhân viên: <span className="text-blue-600 font-bold">{staff.filter(s => s.status === "active").length}</span></span>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="font-medium">Tổng số nhân viên: <span className="text-green-600 font-bold">{staff.filter(s => s.status === "active").length}</span></span>
                       </div>
                       <div className="w-px h-4 bg-gray-300"></div>
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="font-medium">Có thể phân công: <span className="text-green-600 font-bold">{getAvailableStaff().length}</span></span>
+                        <span className="font-medium">Có thể phân công: <span className="text-emerald-600 font-bold">{getAvailableStaff().length}</span></span>
                       </div>
                       <div className="w-px h-4 bg-gray-300"></div>
                       <div className="flex items-center space-x-2">
@@ -1465,7 +1465,7 @@ const AdminStationManagement = () => {
                 <div>
                   {staffLoading ? (
                     <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                       <span className="ml-3 text-gray-600">Đang tải danh sách nhân viên...</span>
                     </div>
                   ) : getAvailableStaff().length === 0 ? (
@@ -1491,7 +1491,7 @@ const AdminStationManagement = () => {
                             onClick={canAssign ? () => handleAssignStaff(staffMember.id) : undefined}
                             className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
                               canAssign 
-                                ? 'bg-white border-blue-200 hover:border-blue-400 hover:shadow-lg cursor-pointer transform hover:-translate-y-1' 
+                                ? 'bg-white border-green-200 hover:border-green-400 hover:shadow-lg cursor-pointer transform hover:-translate-y-1' 
                                 : 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-75'
                             }`}
                           >
@@ -1499,10 +1499,10 @@ const AdminStationManagement = () => {
                             <div className="flex items-start space-x-3">
                               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                                 canAssign 
-                                  ? 'bg-gradient-to-br from-blue-100 to-indigo-100' 
+                                ? 'bg-gradient-to-br from-green-100 to-emerald-100' 
                                   : 'bg-gradient-to-br from-gray-100 to-gray-200'
                               }`}>
-                                <svg className={`w-6 h-6 ${canAssign ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className={`w-6 h-6 ${canAssign ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                               </div>
@@ -1587,8 +1587,8 @@ const AdminStationManagement = () => {
                     <div className="flex items-center justify-center space-x-4 mb-4">
                       {/* Staff Info */}
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                         </div>
@@ -1605,8 +1605,8 @@ const AdminStationManagement = () => {
 
                       {/* Station Info */}
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                         </div>
@@ -1617,8 +1617,8 @@ const AdminStationManagement = () => {
 
                     <div className="text-center">
                       <p className="text-sm text-gray-700">
-                        <span className="font-semibold text-blue-600">{staffToAssign.name}</span> sẽ được phân công cho{" "}
-                        <span className="font-semibold text-indigo-600">{stationToAssign.name}</span>
+                        <span className="font-semibold text-green-600">{staffToAssign.name}</span> sẽ được phân công cho{" "}
+                        <span className="font-semibold text-emerald-600">{stationToAssign.name}</span>
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         Địa chỉ: {stationToAssign.address}
@@ -1656,7 +1656,7 @@ const AdminStationManagement = () => {
                   </button>
                   <button
                     onClick={confirmAssignStaff}
-                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

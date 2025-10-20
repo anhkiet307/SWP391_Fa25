@@ -237,10 +237,10 @@ const AdminReportManagement = () => {
             </svg>
           }
           stats={[
-            { label: "Tổng báo cáo", value: reports.length, color: "bg-blue-400" },
+            { label: "Tổng báo cáo", value: reports.length, color: "bg-green-400" },
             { label: "Chờ xử lý", value: reports.filter(r => r.displayStatus === "pending").length, color: "bg-yellow-400" },
-            { label: "Đang xử lý", value: reports.filter(r => r.displayStatus === "in_progress").length, color: "bg-blue-400" },
-            { label: "Đã giải quyết", value: reports.filter(r => r.displayStatus === "resolved").length, color: "bg-green-400" }
+            { label: "Đang xử lý", value: reports.filter(r => r.displayStatus === "in_progress").length, color: "bg-emerald-400" },
+            { label: "Đã giải quyết", value: reports.filter(r => r.displayStatus === "resolved").length, color: "bg-teal-400" }
           ]}
         />
 
@@ -248,7 +248,7 @@ const AdminReportManagement = () => {
         {/* Reports Table */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Danh sách Report</h2>
@@ -257,7 +257,7 @@ const AdminReportManagement = () => {
               <div className="flex items-center space-x-4">
                 <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm font-medium text-gray-700">
                       Tổng: {reports.length} báo cáo
                     </span>
@@ -266,7 +266,7 @@ const AdminReportManagement = () => {
                 <button
                   onClick={loadReports}
                   disabled={loading}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -281,7 +281,7 @@ const AdminReportManagement = () => {
           {loading && (
             <div className="flex items-center justify-center py-12">
               <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                 <span className="text-gray-600">Đang tải danh sách báo cáo...</span>
               </div>
             </div>
@@ -300,7 +300,7 @@ const AdminReportManagement = () => {
               <div className="mt-6">
                 <button
                   onClick={loadReports}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                 >
                   Thử lại
                 </button>
@@ -314,7 +314,7 @@ const AdminReportManagement = () => {
               <div className="overflow-x-auto">
             <table className="w-full">
                 <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
                       ID
                     </th>
@@ -348,14 +348,14 @@ const AdminReportManagement = () => {
                 {reports.map((report, index) => (
                     <tr 
                       key={report.id} 
-                      className={`hover:bg-indigo-50 transition-all duration-200 ${
+                      className={`hover:bg-green-50 transition-all duration-200 ${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
                     >
                       {/* ID */}
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                             {report.id}
                           </div>
                           <div>
@@ -460,7 +460,7 @@ const AdminReportManagement = () => {
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             onClick={() => handleViewDetail(report)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-all duration-200"
+                            className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-all duration-200"
                             title="Xem chi tiết"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,7 +471,7 @@ const AdminReportManagement = () => {
                           {report.displayStatus === "pending" && (
                             <button
                               onClick={() => handleAssignReport(report)}
-                              className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-all duration-200"
+                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg transition-all duration-200"
                               title="Phân công"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -482,7 +482,7 @@ const AdminReportManagement = () => {
                           {report.displayStatus === "in_progress" && (
                           <button
                             onClick={() => handleResolveReport(report)}
-                              className="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-100 rounded-lg transition-all duration-200"
+                              className="p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-all duration-200"
                               title="Giải quyết"
                           >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

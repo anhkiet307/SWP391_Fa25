@@ -13,7 +13,7 @@ const AdminHeader = ({
   return (
     <div className="mb-8">
       {/* Main Header Card */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white rounded-2xl shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-500 text-white rounded-2xl shadow-2xl">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white bg-opacity-5 rounded-full -translate-y-32 translate-x-32"></div>
@@ -77,7 +77,7 @@ const AdminHeader = ({
                 {stats.map((stat, index) => (
                   <div key={index} className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white border-opacity-30">
                     <div className="flex items-center space-x-2">
-                      <div className={`w-1.5 h-1.5 ${stat.color || 'bg-blue-400'} rounded-full`}></div>
+                      <div className={`w-1.5 h-1.5 ${stat.color || 'bg-green-400'} rounded-full`}></div>
                       <span className="text-xs font-medium">
                         {stat.label}: {stat.value}
                       </span>
