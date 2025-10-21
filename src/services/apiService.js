@@ -942,6 +942,24 @@ class ApiService {
       },
     });
   }
+
+  // ===== REPORT STATUS UPDATE =====
+  /**
+   * Update report status
+   * PUT /api/report/{reportId}/status
+   * Status: 0=Pending, 1=InProgress, 2=Resolved
+   */
+  async updateReportStatus(reportId, status, adminID) {
+    const url = `${this.baseURL}/report/${reportId}/status?status=${status}&adminID=${adminID}`;
+    
+    return this.makeRequest(url, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
 }
 
 // Create and export singleton instance

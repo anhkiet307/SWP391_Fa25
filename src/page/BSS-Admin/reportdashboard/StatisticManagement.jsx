@@ -34,9 +34,9 @@ const StatisticManagement = () => {
   // Real data from API
   const [overviewStats, setOverviewStats] = useState({
     totalRevenue: 0,
-    totalSwaps: 0,
-    activeStations: 0,
-    activeUsers: 0
+    counterRevenue: 0,  // Doanh thu tại quầy (pack = 0)
+    packageRevenue: 0,  // Doanh thu gói (từ VNPay)
+    totalSwaps: 0
   });
 
   // Real data from transaction API
@@ -50,11 +50,11 @@ const StatisticManagement = () => {
   const [packChartData, setPackChartData] = useState([]);
   // Pagination for pack purchases table
   const [packPage, setPackPage] = useState(1);
-  const [packItemsPerPage] = useState(5);
+  const [packItemsPerPage] = useState(6);
   
   // Pagination state for pin swaps table
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
+  const [itemsPerPage] = useState(6);
 
   // State cho date range picker (sẽ dùng khi có API)
   const [dateRange, setDateRange] = useState({
@@ -62,22 +62,8 @@ const StatisticManagement = () => {
     endDate: "2024-06"
   });
 
-  const [peakHoursData, setPeakHoursData] = useState([
-    { hour: "06:00-08:00", frequency: 85, percentage: 15.2 },
-    { hour: "08:00-10:00", frequency: 120, percentage: 21.4 },
-    { hour: "12:00-14:00", frequency: 95, percentage: 17.0 },
-    { hour: "17:00-19:00", frequency: 140, percentage: 25.0 },
-    { hour: "19:00-21:00", frequency: 110, percentage: 19.6 },
-    { hour: "21:00-23:00", frequency: 10, percentage: 1.8 }
-  ]);
-
-  const [aiPredictionData, setAiPredictionData] = useState([
-    { station: "Trạm sạc quận 1", currentUsage: 85, predictedUsage: 92, trend: "increase" },
-    { station: "Trạm sạc quận 2", currentUsage: 78, predictedUsage: 75, trend: "decrease" },
-    { station: "Trạm sạc bến tre", currentUsage: 65, predictedUsage: 70, trend: "increase" },
-    { station: "Trạm Sạc An Liên", currentUsage: 90, predictedUsage: 88, trend: "decrease" },
-    { station: "Trạm Sạc quần 6", currentUsage: 72, predictedUsage: 80, trend: "increase" }
-  ]);
+  const [peakHoursData, setPeakHoursData] = useState([]);
+  const [aiPredictionData, setAiPredictionData] = useState([]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -233,7 +219,7 @@ const StatisticManagement = () => {
       }
     });
     
-    console.log("📊 Final totals - Revenue:", totalRevenue, "Swaps:", totalSwaps);
+    console.log("📊 Final totals - Counter Revenue:", totalRevenue, "Swaps:", totalSwaps);
     console.log("📊 Daily data:", dailyData);
     
     // Chuyển đổi thành array và sắp xếp theo ngày
@@ -241,48 +227,109 @@ const StatisticManagement = () => {
     
     console.log("📊 Chart data:", chartData);
     
-    // Cập nhật chart và tổng quan
+    // Cập nhật chart và tổng quan (chỉ cập nhật counterRevenue, totalRevenue sẽ tính sau)
     setRevenueData(chartData);
     setOverviewStats(prev => ({
       ...prev,
-      totalRevenue: totalRevenue,
+      counterRevenue: totalRevenue,  // Doanh thu tại quầy
       totalSwaps: totalSwaps
     }));
   };
 
-  // Function để fetch overview statistics (stations và users)
-  const fetchOverviewStats = async () => {
-    try {
-      setLoading(true);
+  // Function để tính toán peak hours từ transactions
+  const processPeakHoursData = (transactions) => {
+    // Chỉ hiển thị giờ hoạt động của trạm (08:00 - 22:00)
+    const hourRanges = [
+      { hour: "08:00-10:00", start: 8, end: 10 },
+      { hour: "10:00-12:00", start: 10, end: 12 },
+      { hour: "12:00-14:00", start: 12, end: 14 },
+      { hour: "14:00-16:00", start: 14, end: 16 },
+      { hour: "16:00-18:00", start: 16, end: 18 },
+      { hour: "18:00-20:00", start: 18, end: 20 },
+      { hour: "20:00-22:00", start: 20, end: 22 }
+    ];
+
+    // Đếm số lượt đổi trong mỗi khung giờ
+    const hourCounts = hourRanges.map(range => {
+      const count = transactions.filter(t => {
+        if (!t.createAt) return false;
+        const date = new Date(t.createAt);
+        const hour = date.getHours();
+        return hour >= range.start && hour < range.end;
+      }).length;
       
-      // Fetch stations và users data
-      const [stationsResponse, usersResponse] = await Promise.all([
-        apiService.getStations(),
-        apiService.listDrivers() // hoặc API khác để lấy users
-      ]);
-      
-      const activeStations = stationsResponse.data?.filter(station => station.status === 1).length || 0;
-      const activeUsers = usersResponse.data?.filter(user => user.status === 1).length || 0;
-      
-      setOverviewStats(prev => ({
-        ...prev,
-        activeStations: activeStations,
-        activeUsers: activeUsers
-      }));
-      
-    } catch (err) {
-      console.error("❌ Error fetching overview stats:", err);
-      setError("Không thể tải dữ liệu tổng quan.");
-    } finally {
-      setLoading(false);
-    }
+      return {
+        hour: range.hour,
+        frequency: count
+      };
+    });
+
+    // Tính tổng để tính phần trăm
+    const total = hourCounts.reduce((sum, item) => sum + item.frequency, 0);
+    
+    // Thêm percentage
+    const peakData = hourCounts.map(item => ({
+      ...item,
+      percentage: total > 0 ? parseFloat(((item.frequency / total) * 100).toFixed(1)) : 0
+    }));
+
+    setPeakHoursData(peakData);
+    console.log("⏰ Peak hours data:", peakData);
+    console.log("⏰ Total transactions counted:", total);
+    console.log("⏰ Input transactions length:", transactions.length);
+  };
+
+  // Function để tính toán AI prediction từ transactions và stations
+  const processAIPredictionData = (transactions, stations) => {
+    if (!stations || stations.length === 0) return;
+
+    // Nhóm transactions theo stationID
+    const stationSwaps = {};
+    transactions.forEach(t => {
+      if (t.stationID) {
+        if (!stationSwaps[t.stationID]) {
+          stationSwaps[t.stationID] = 0;
+        }
+        stationSwaps[t.stationID]++;
+      }
+    });
+
+    // Tìm max swaps để tính percentage
+    const maxSwaps = Math.max(...Object.values(stationSwaps), 1);
+
+    // Tạo data cho từng trạm
+    const predictionData = stations
+      .filter(station => stationSwaps[station.stationID] > 0)
+      .map(station => {
+        const swaps = stationSwaps[station.stationID] || 0;
+        const currentUsage = Math.round((swaps / maxSwaps) * 100);
+        
+        // Dự báo: random tăng/giảm 5-15%
+        const change = Math.floor(Math.random() * 10) + 5;
+        const trend = Math.random() > 0.5 ? "increase" : "decrease";
+        const predictedUsage = trend === "increase" 
+          ? Math.min(currentUsage + change, 100)
+          : Math.max(currentUsage - change, 0);
+
+        return {
+          station: station.stationName || `Trạm ${station.stationID}`,
+          currentUsage,
+          predictedUsage,
+          trend
+        };
+      })
+      .sort((a, b) => b.currentUsage - a.currentUsage)
+      .slice(0, 5); // Lấy top 5 trạm
+
+    setAiPredictionData(predictionData);
+    console.log("🤖 AI Prediction data:", predictionData);
   };
 
   // Function để refresh data
   const refreshData = async () => {
     await Promise.all([
-      fetchOverviewStats(),
-      fetchTransactions()
+      fetchTransactions(),
+      fetchVnpayStatistic()
     ]);
   };
 
@@ -301,7 +348,6 @@ const StatisticManagement = () => {
   // useEffect để load data khi component mount
   useEffect(() => {
     console.log("🚀 Component mounted, fetching data...");
-    fetchOverviewStats();
     fetchTransactions();
     fetchUsers();
     fetchStations();
@@ -357,6 +403,27 @@ const StatisticManagement = () => {
     const dataTx = Object.values(byDayTx).sort((a, b) => new Date(a.date) - new Date(b.date));
     setPackChartData(dataTx);
   }, [transactions, vnpayStats]);
+
+  // Calculate package revenue from VNPay stats and update total revenue
+  useEffect(() => {
+    if (Array.isArray(vnpayStats) && vnpayStats.length > 0) {
+      const packageTotal = vnpayStats.reduce((sum, p) => {
+        return sum + (Number(p.amountVND) || 0);
+      }, 0);
+      
+      setOverviewStats(prev => {
+        const newTotalRevenue = prev.counterRevenue + packageTotal;
+        console.log("📦 Package Revenue:", packageTotal);
+        console.log("💰 Total Revenue:", newTotalRevenue);
+        
+        return {
+          ...prev,
+          packageRevenue: packageTotal,
+          totalRevenue: newTotalRevenue
+        };
+      });
+    }
+  }, [vnpayStats, overviewStats.counterRevenue]);
 
   // Debug useEffect để theo dõi state changes
   useEffect(() => {
@@ -443,6 +510,19 @@ const StatisticManagement = () => {
   useEffect(() => {
     console.log("📈 Overview stats changed:", overviewStats);
   }, [overviewStats]);
+
+  // Process peak hours và AI prediction khi có đủ dữ liệu
+  useEffect(() => {
+    if (transactions.length > 0) {
+      processPeakHoursData(transactions);
+    }
+  }, [transactions]);
+
+  useEffect(() => {
+    if (transactions.length > 0 && stations.length > 0) {
+      processAIPredictionData(transactions, stations);
+    }
+  }, [transactions, stations]);
 
   // ===== END API INTEGRATION FUNCTIONS =====
 
@@ -540,26 +620,12 @@ const StatisticManagement = () => {
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Tổng lượt đổi pin</p>
-                  <p className="text-2xl font-bold text-green-600">{overviewStats.totalSwaps.toLocaleString()}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Trạm hoạt động</p>
-                  <p className="text-2xl font-bold text-emerald-600">{overviewStats.activeStations}</p>
+                  <p className="text-sm font-medium text-gray-600">Tổng thống kê gói</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(overviewStats.packageRevenue)}</p>
                 </div>
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
               </div>
@@ -568,12 +634,26 @@ const StatisticManagement = () => {
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Người dùng hoạt động</p>
-                  <p className="text-2xl font-bold text-teal-600">{overviewStats.activeUsers}</p>
+                  <p className="text-sm font-medium text-gray-600">Tổng thống kê quầy</p>
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(overviewStats.counterRevenue)}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Tổng lượt đổi pin</p>
+                  <p className="text-2xl font-bold text-teal-600">{overviewStats.totalSwaps.toLocaleString()}</p>
                 </div>
                 <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
               </div>
@@ -719,7 +799,7 @@ const StatisticManagement = () => {
                       </tr>
                     )}
                     {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
-                    {Array.from({ length: Math.max(0, 5 - packPurchases.slice((packPage - 1) * packItemsPerPage, packPage * packItemsPerPage).length) }, (_, i) => (
+                    {Array.from({ length: Math.max(0, 6 - packPurchases.slice((packPage - 1) * packItemsPerPage, packPage * packItemsPerPage).length) }, (_, i) => (
                       <tr key={`empty-${i}`}>
                         <td colSpan="5" className="p-4">&nbsp;</td>
                       </tr>
@@ -1048,7 +1128,7 @@ const StatisticManagement = () => {
                       </tr>
                     )}
                     {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
-                    {Array.from({ length: Math.max(0, 5 - currentPinSwapData.length) }, (_, i) => (
+                    {Array.from({ length: Math.max(0, 6 - currentPinSwapData.length) }, (_, i) => (
                       <tr key={`empty-${i}`}>
                         <td colSpan="5" className="p-4">&nbsp;</td>
                       </tr>
@@ -1116,11 +1196,12 @@ const StatisticManagement = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {peakHoursData.map((item, index) => (
+                  {peakHoursData.length > 0 ? (
+                    peakHoursData.map((item, index) => (
                     <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.hour}</td>
-                      <td className="p-4 text-center font-semibold text-green-600">{item.frequency}</td>
-                      <td className="p-4 text-center font-semibold text-emerald-600">{item.percentage}%</td>
+                        <td className="p-4 text-center font-semibold text-green-600">{item.frequency}</td>
+                        <td className="p-4 text-center font-semibold text-emerald-600">{item.percentage}%</td>
                       <td className="p-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           item.percentage >= 20 
@@ -1133,7 +1214,14 @@ const StatisticManagement = () => {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="p-8 text-center text-gray-500">
+                        Đang tải dữ liệu tần suất...
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1155,21 +1243,22 @@ const StatisticManagement = () => {
             <div className="overflow-hidden rounded-xl border border-gray-100">
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                    <th className="p-4 text-left font-semibold">Tên trạm</th>
+                  <thead>
+                    <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                      <th className="p-4 text-left font-semibold">Tên trạm</th>
                     <th className="p-4 text-center font-semibold">Sử dụng hiện tại (%)</th>
                     <th className="p-4 text-center font-semibold">Dự báo (%)</th>
-                    <th className="p-4 text-center font-semibold">Xu hướng</th>
-                    <th className="p-4 text-center font-semibold">Khuyến nghị</th>
-                  </tr>
-                </thead>
+                      <th className="p-4 text-center font-semibold">Xu hướng</th>
+                      <th className="p-4 text-center font-semibold">Khuyến nghị</th>
+                    </tr>
+                  </thead>
                 <tbody>
-                  {aiPredictionData.map((item, index) => (
+                  {aiPredictionData.length > 0 ? (
+                    aiPredictionData.map((item, index) => (
                     <tr key={index} className={`hover:bg-green-50 transition-colors duration-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}>
                       <td className="p-4 font-medium text-gray-800">{item.station}</td>
-                      <td className="p-4 text-center font-semibold text-green-600">{item.currentUsage}%</td>
-                      <td className="p-4 text-center font-semibold text-emerald-600">{item.predictedUsage}%</td>
+                        <td className="p-4 text-center font-semibold text-green-600">{item.currentUsage}%</td>
+                        <td className="p-4 text-center font-semibold text-emerald-600">{item.predictedUsage}%</td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           item.trend === "increase" 
@@ -1209,7 +1298,14 @@ const StatisticManagement = () => {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-gray-500">
+                        Đang tải dữ liệu dự báo...
+                      </td>
+                    </tr>
+                  )}
                   </tbody>
                 </table>
               </div>

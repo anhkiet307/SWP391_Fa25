@@ -19,9 +19,11 @@ const AdminReportManagement = () => {
   const [resolution, setResolution] = useState("");
 
   const [staffMembers, setStaffMembers] = useState([]);
+  const [users, setUsers] = useState([]);
 
   // Load reports from API
   useEffect(() => {
+    loadUsers();
     loadReports();
     loadStaff();
   }, []);
@@ -38,8 +40,8 @@ const AdminReportManagement = () => {
           id: report.id,
           type: report.type,
           description: report.description,
-          reporterID: report.reporterID,
-          handlerID: report.handlerID,
+          reporterID: report.reporterId || report.reporterID, // API trả về reporterId (chữ thường)
+          handlerID: report.handlerId || report.handlerID, // API trả về handlerId (chữ thường)
           createdAt: formatDateTime(report.createdAt),
           status: report.status,
           // Validation fields
@@ -52,11 +54,20 @@ const AdminReportManagement = () => {
           statusName: report.statusName,
           // Derived fields for UI
           reportType: report.typeName || report.type || "Khác",
-          assignedTo: report.handlerID ? `Handler #${report.handlerID}` : null,
+          assignedTo: report.handlerId || report.handlerID ? `Handler #${report.handlerId || report.handlerID}` : null,
           displayStatus: getDisplayStatus(report.status, report.statusName, report.validStatus)
         }));
         
-        setReports(mappedReports);
+        // Sắp xếp từ mới nhất đến cũ nhất (dựa vào createdAt)
+        const sortedReports = mappedReports.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB - dateA; // Mới nhất trước
+        });
+        
+        console.log("📋 Sorted reports:", sortedReports);
+        console.log("📋 First report status:", sortedReports[0]?.status, "displayStatus:", sortedReports[0]?.displayStatus);
+        setReports(sortedReports);
       } else {
         setError("Không thể tải danh sách báo cáo");
       }
@@ -66,6 +77,19 @@ const AdminReportManagement = () => {
       showError("Không thể tải danh sách báo cáo");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const response = await apiService.listDrivers();
+      console.log("📋 Users API response:", response);
+      if (response.status === "success" && response.data) {
+        console.log("📋 Users data:", response.data);
+        setUsers(response.data);
+      }
+    } catch (err) {
+      console.error("Error loading users:", err);
     }
   };
 
@@ -82,6 +106,13 @@ const AdminReportManagement = () => {
   };
 
   // Helper functions
+  const getUserName = (userID) => {
+    console.log("🔍 Looking for userID:", userID);
+    console.log("🔍 Available users:", users);
+    const user = users.find(u => u.userID === userID);
+    console.log("🔍 Found user:", user);
+    return user ? user.name : `User #${userID}`;
+  };
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A";
     try {
@@ -93,16 +124,29 @@ const AdminReportManagement = () => {
   };
 
   const getDisplayStatus = (status, statusName, validStatus) => {
-    // Use statusName if available, otherwise use status
+    // Map status number to display status string
+    // Status: 0 = Pending, 1 = InProgress, 2 = Resolved
+    if (typeof status === 'number') {
+      switch (status) {
+        case 0: return "pending";
+        case 1: return "in_progress";
+        case 2: return "resolved";
+        default: return "pending";
+      }
+    }
+    
+    // Fallback: Use statusName if available
     if (statusName) {
       switch (statusName.toLowerCase()) {
         case "pending": return "pending";
         case "reading": return "in_progress";
+        case "inprogress": return "in_progress";
         case "resolved": return "resolved";
-        default: return status || "pending";
+        default: return "pending";
       }
     }
-    return status || "pending";
+    
+    return "pending";
   };
 
   const getPriorityColor = (priority) => {
@@ -127,10 +171,10 @@ const AdminReportManagement = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "resolved": return "bg-green-100 text-green-800";
-      case "in_progress": return "bg-blue-100 text-blue-800";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-yellow-100 text-yellow-800";
+      case "resolved": return "bg-blue-100 text-blue-800"; // Status 2 - Đã giải quyết (xanh dương)
+      case "in_progress": return "bg-yellow-100 text-yellow-800"; // Status 1 - Đang xử lý (vàng)
+      case "pending": return "bg-red-100 text-red-800"; // Status 0 - Chờ xử lý (đỏ)
+      default: return "bg-red-100 text-red-800";
     }
   };
 
@@ -155,6 +199,27 @@ const AdminReportManagement = () => {
   const handleViewDetail = (report) => {
     setSelectedReport(report);
     setShowDetailModal(true);
+  };
+
+  // Update report status: 0 (Pending) -> 1 (InProgress) -> 2 (Resolved)
+  const handleUpdateStatus = async (report, newStatus) => {
+    const statusText = newStatus === 1 ? "xác nhận" : "hoàn thành";
+    
+    try {
+      // Call API to update status
+      const response = await apiService.updateReportStatus(report.id, newStatus, 1); // adminID = 1
+      
+      if (response.status === "success") {
+        showSuccess(`Đã ${statusText} báo cáo thành công!`);
+        // Reload reports to get updated data
+        await loadReports();
+      } else {
+        showError(`Không thể ${statusText} báo cáo`);
+      }
+    } catch (err) {
+      console.error("Error updating report status:", err);
+      showError(`Lỗi khi ${statusText} báo cáo`);
+    }
   };
 
   const handleAssignReport = (report) => {
@@ -315,8 +380,8 @@ const AdminReportManagement = () => {
             <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                    <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
-                      ID
+                    <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">
+                      STT
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">
                       Loại báo cáo
@@ -346,10 +411,10 @@ const AdminReportManagement = () => {
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
                     >
-                      {/* ID */}
+                      {/* STT */}
                       <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {report.id}
+                        <div className="text-sm font-semibold text-gray-900 text-center">
+                          {index + 1}
                         </div>
                       </td>
                       
@@ -372,7 +437,7 @@ const AdminReportManagement = () => {
                       {/* Người báo cáo */}
                       <td className="px-6 py-4">
                         <div className="text-sm font-semibold text-gray-900">
-                          {report.reporterID || 'N/A'}
+                          {report.reporterID ? getUserName(report.reporterID) : 'N/A'}
                         </div>
                       </td>
                       
@@ -391,40 +456,47 @@ const AdminReportManagement = () => {
                       {/* Hành động */}
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center space-x-2">
+                          {/* Nút xem chi tiết - hiển thị với mọi trạng thái */}
                           <button
                             onClick={() => handleViewDetail(report)}
-                            className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-lg transition-all duration-200"
+                            className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all duration-200 shadow-sm"
                             title="Xem chi tiết"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                           </button>
+                          
+                          {/* Status 0 (Pending) - Nút Xác nhận (chuyển sang status 1) */}
                           {report.displayStatus === "pending" && (
                             <button
-                              onClick={() => handleAssignReport(report)}
-                              className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg transition-all duration-200"
-                              title="Phân công"
+                              onClick={() => handleUpdateStatus(report, 1)}
+                              className="p-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-all duration-200 shadow-sm"
+                              title="Xác nhận báo cáo"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
-                          </button>
-                        )}
+                            </button>
+                          )}
+                          
+                          {/* Status 1 (InProgress) - Nút Đã xử lý (chuyển sang status 2) */}
                           {report.displayStatus === "in_progress" && (
-                          <button
-                            onClick={() => handleResolveReport(report)}
-                              className="p-2 text-teal-600 hover:text-teal-800 hover:bg-teal-100 rounded-lg transition-all duration-200"
-                              title="Giải quyết"
-                          >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <button
+                              onClick={() => handleUpdateStatus(report, 2)}
+                              className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 shadow-sm"
+                              title="Đánh dấu đã xử lý"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
-                          </button>
-                        )}
-                          </div>
-                        </td>
+                            </button>
+                          )}
+                          
+                          {/* Status 2 (Resolved) - Không có nút thêm, chỉ xem chi tiết */}
+                        </div>
+                      </td>
                       </tr>
                     ))}
                   </tbody>
@@ -476,7 +548,7 @@ const AdminReportManagement = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">Report ID:</span>
-                          <span className="text-gray-900 font-semibold">#{selectedReport.id}</span>
+                          <span className="text-gray-900 font-semibold">{selectedReport.id}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium">Type:</span>
@@ -489,13 +561,9 @@ const AdminReportManagement = () => {
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Reporter ID:</span>
-                          <span className="text-gray-700">#{selectedReport.reporterID || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Handler ID:</span>
+                          <span className="font-medium">Người báo cáo:</span>
                           <span className="text-gray-700">
-                            {selectedReport.handlerID ? `#${selectedReport.handlerID}` : 'Chưa phân công'}
+                            {selectedReport.reporterID ? getUserName(selectedReport.reporterID) : 'N/A'}
                           </span>
                         </div>
                       </div>
@@ -508,19 +576,21 @@ const AdminReportManagement = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Status:</span>
-                          <span className="text-gray-700">{selectedReport.status}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Status Name:</span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(selectedReport.displayStatus)}`}>
-                            {selectedReport.statusName || 'N/A'}
+                          <span className="font-medium">Handler:</span>
+                          <span className="text-gray-700">
+                            {selectedReport.handlerID ? 'Admin' : 'Chưa phân công'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium">Valid Status:</span>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${selectedReport.validStatus ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                             {selectedReport.validStatus ? 'Có' : 'Không'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Status Name:</span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(selectedReport.displayStatus)}`}>
+                            {selectedReport.statusName || 'N/A'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">

@@ -27,6 +27,9 @@ const AdminDashboard = () => {
   const [recentReports, setRecentReports] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [reportsError, setReportsError] = useState(null);
+  
+  // State cho danh sách users (drivers)
+  const [users, setUsers] = useState([]);
 
   // Load system stats from APIs
   useEffect(() => {
@@ -80,6 +83,31 @@ const AdminDashboard = () => {
     loadSystemStats();
   }, [user?.userID]);
 
+  // Load users for mapping reporter names
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const response = await apiService.listDrivers();
+        if (response && response.data && Array.isArray(response.data)) {
+          setUsers(response.data);
+        }
+      } catch (err) {
+        console.error("Error loading users:", err);
+      }
+    };
+    
+    loadUsers();
+  }, []);
+  
+  // Helper function to get user name by ID
+  const getUserName = (userId) => {
+    if (!userId) return "N/A";
+    console.log("Looking for userId:", userId, "in users:", users);
+    const foundUser = users.find(u => u.userID === userId);
+    console.log("Found user:", foundUser);
+    return foundUser ? foundUser.name : `User ${userId}`;
+  };
+
   // Load reports from API
   useEffect(() => {
     const loadReports = async () => {
@@ -99,14 +127,17 @@ const AdminDashboard = () => {
         }
         
         console.log("Number of reports:", response.data.length);
+        console.log("Users loaded:", users.length);
         
         // Transform API data to match UI format
         const transformedReports = response.data.map((report) => {
           console.log("Processing report:", report);
+          const reporterId = report.reporterId || report.reporterID;
           return {
             id: report.id || 0,
             reportId: (report.id || 0).toString(),
-            customerName: `User ${report.reporterId || "Unknown"}`,
+            reporterId: reporterId,
+            customerName: getUserName(reporterId),
             stationId: "N/A", // API không có stationID field
             reportType: report.typeName || "Báo cáo",
             description: report.description || "Không có mô tả",
@@ -120,7 +151,7 @@ const AdminDashboard = () => {
         
         // Sort by creation date and take only the 3 newest
         const sortedReports = transformedReports
-          .filter(report => report.id && report.customerName) // Filter out invalid reports
+          .filter(report => report.id) // Chỉ filter theo ID
           .sort((a, b) => {
             try {
               return new Date(b.timestamp) - new Date(a.timestamp);
@@ -146,7 +177,7 @@ const AdminDashboard = () => {
     if (user?.userID) {
       loadReports();
     }
-  }, [user?.userID]);
+  }, [user?.userID, users]);
 
   return (
     <AdminLayout>
@@ -231,13 +262,13 @@ const AdminDashboard = () => {
                 stations.map((station, index) => (
                 <div
                   key={station.id}
-                  className={`p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                  className={`p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] min-h-[140px] flex ${
                     station.status === "active"
                       ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
                       : "border-red-400 bg-gradient-to-r from-red-50 to-white hover:from-red-100"
                   }`}
                 >
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start space-x-4 w-full">
                     {/* Station Icon */}
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
@@ -352,15 +383,15 @@ const AdminDashboard = () => {
                 recentReports.map((report, index) => (
                 <div
                   key={report.id}
-                    className={`p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+                    className={`p-5 rounded-xl border-l-4 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] min-h-[140px] flex ${
                     report.status === "resolved"
-                      ? "border-green-400 bg-gradient-to-r from-green-50 to-white hover:from-green-100"
-                      : report.status === "in_progress"
                       ? "border-blue-400 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100"
-                      : "border-yellow-400 bg-gradient-to-r from-yellow-50 to-white hover:from-yellow-100"
+                      : report.status === "in_progress"
+                      ? "border-yellow-400 bg-gradient-to-r from-yellow-50 to-white hover:from-yellow-100"
+                      : "border-red-400 bg-gradient-to-r from-red-50 to-white hover:from-red-100"
                   }`}
                 >
-                    <div className="flex items-start space-x-4">
+                    <div className="flex items-start space-x-4 w-full">
                       {/* Report Icon */}
                       <div className="flex-shrink-0">
                         <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
@@ -382,79 +413,60 @@ const AdminDashboard = () => {
 
                       {/* Report Info */}
                       <div className="flex-1 min-w-0">
-                        {/* Customer Name */}
-                        <div className="mb-3">
+                        {/* Customer Name as Title */}
+                        <div className="mb-2">
                           <h3 className="text-lg font-bold text-gray-900 mb-1">
                             {report.customerName}
                           </h3>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <svg
-                              className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                                d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-9 0a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2M9 4a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                          </svg>
-                            <span className="truncate">{report.reportType}</span>
-                          </div>
                         </div>
 
                         {/* Description */}
-                        <div className="mb-3">
-                          <p className="text-sm text-gray-700 line-clamp-2">
-                            {report.description.length > 60
-                              ? report.description.substring(0, 60) + "..."
-                              : report.description}
+                        <div className="mb-2">
+                          <p className="text-sm text-gray-700 line-clamp-1">
+                            {report.description}
                           </p>
                         </div>
 
-                        {/* Status */}
-                        <div className="flex items-center justify-start">
+                        {/* Status and Timestamp in same row */}
+                        <div className="flex items-center justify-between">
                           <span
                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
                               report.status === "resolved"
-                                ? "bg-green-100 text-green-800"
-                                : report.status === "in_progress"
                                 ? "bg-blue-100 text-blue-800"
-                                : "bg-yellow-100 text-yellow-800"
+                                : report.status === "in_progress"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
                             <div
                               className={`w-2 h-2 rounded-full mr-2 ${
                                 report.status === "resolved"
-                                  ? "bg-green-500"
-                                  : report.status === "in_progress"
                                   ? "bg-blue-500"
-                                  : "bg-yellow-500"
+                                  : report.status === "in_progress"
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                               }`}
                             ></div>
                             {report.status === "resolved" ? "Đã giải quyết" : 
                              report.status === "in_progress" ? "Đang xử lý" : "Chờ xử lý"}
                           </span>
-                        </div>
-
-                        {/* Timestamp */}
-                        <div className="mt-2 text-xs text-gray-500 flex items-center">
-                          <svg
-                            className="w-3 h-3 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                          {report.timestamp}
+                          
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <svg
+                              className="w-3 h-3 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            {report.timestamp}
+                          </div>
                         </div>
                       </div>
                     </div>
