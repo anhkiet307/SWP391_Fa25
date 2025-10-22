@@ -723,11 +723,29 @@ export default function Reports() {
             <Empty
               description={
                 reports.length === 0
-                  ? "Chưa có báo cáo nào"
-                  : "Không tìm thấy báo cáo phù hợp với bộ lọc"
+                  ? "Bạn chưa có báo cáo nào. Hãy tạo báo cáo đầu tiên của bạn!"
+                  : "Không tìm thấy báo cáo phù hợp với bộ lọc hiện tại"
               }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            >
+              {reports.length === 0 && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreateReport}
+                  className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  style={{
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    padding: "8px 24px",
+                    height: "auto",
+                  }}
+                >
+                  Tạo báo cáo đầu tiên
+                </Button>
+              )}
+            </Empty>
           ) : (
             <Table
               columns={columns}

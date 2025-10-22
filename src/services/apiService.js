@@ -614,6 +614,12 @@ class ApiService {
     return this.post(url);
   }
 
+  // Lấy lịch sử thanh toán gói dịch vụ
+  async getPaymentHistory(userID) {
+    const url = `https://456e58d25f66.ngrok-free.app/vnpay/payment-history/${userID}`;
+    return this.get(url);
+  }
+
   async exportReport(reportType, params = {}) {
     const url = getApiUrl("REPORT", "EXPORT");
     return this.get(url, { ...params, type: reportType });
