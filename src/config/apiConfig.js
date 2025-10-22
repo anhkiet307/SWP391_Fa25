@@ -1,5 +1,10 @@
 // Cấu hình API endpoints - có thể thay đổi dễ dàng
 const API_CONFIG = {
+  // Domain chính của API
+  DOMAIN:
+    process.env.REACT_APP_DOMAIN ||
+    "https://hal-proteiform-erna.ngrok-free.dev",
+
   // Base URL cho tất cả API calls
   BASE_URL:
     process.env.REACT_APP_API_BASE_URL ||
@@ -95,7 +100,7 @@ const API_CONFIG = {
       DELETE: "/servicePack/:id",
       DETAIL: "/service-packs/:id",
       CREATE: "/service-packs",
-      UPDATE: "/service-packs/:id",
+      UPDATE: "/service-packs/update/:id",
       UPDATE_STATUS: "/servicePack/updateStatus",
       DELETE: "/service-packs/:id",
     },
@@ -130,6 +135,7 @@ const API_CONFIG = {
     // Report endpoints
     REPORT: {
       ALL: "/report/all",
+      UPDATE_STATUS: "/report/:reportId/status",
       DASHBOARD: "/reports/dashboard",
       STATION_REPORT: "/reports/stations",
       USER_REPORT: "/reports/users",
@@ -143,6 +149,12 @@ const API_CONFIG = {
       STATIONS: "/admin/stations",
       REPORTS: "/admin/reports",
       SETTINGS: "/admin/settings",
+    },
+
+    // VNPay endpoints (thêm dấu / ở cuối theo đúng API)
+    VNPAY: {
+      CREATE_URL: "/vnpay/create-url/",
+      STATISTIC: "/vnpay/statistic/",
     },
   },
 

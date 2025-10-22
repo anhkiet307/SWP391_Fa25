@@ -897,15 +897,10 @@ class ApiService {
    * Cập nhật trạng thái transaction
    * Only supports updating via query params: transactionID, status
    */
-  async updateTransactionStatus(transactionId, status) {
-    const base = this.baseURL + "/transaction/updateStatus";
-    const queryString = new URLSearchParams({
-      transactionID: transactionId,
-      status,
-    }).toString();
-    const fullUrl = `${base}?${queryString}`;
+  async updateReportStatus(reportId, status, adminID) {
+    const url = `${this.baseURL}/report/${reportId}/status?status=${status}&adminID=${adminID}`;
 
-    return this.makeRequest(fullUrl, {
+    return this.makeRequest(url, {
       method: "PUT",
       headers: {
         ...this.buildHeaders(),

@@ -209,28 +209,50 @@ const UserManagement = () => {
   }, []);
 
   // Fetch vehicles data from API
+  // Load vehicles khi mở modal detail
+  const loadUserVehicles = async (userId) => {
+    try {
+      setVehiclesLoading(true);
+      const response = await apiService.getVehiclesByUser(userId);
+      console.log("User Vehicles API Response:", response); // Debug log
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        setVehicles(response.data);
+        console.log("User Vehicles data:", response.data); // Debug log
+      } else {
+        setVehicles([]);
+      }
+    } catch (err) {
+      console.error("Error fetching user vehicles:", err);
+      setVehicles([]);
+    } finally {
+      setVehiclesLoading(false);
+    }
+  };
+
+  // Load all vehicles to check which users have vehicles
   useEffect(() => {
-    const fetchVehicles = async () => {
+    const loadAllVehicles = async () => {
       try {
         setVehiclesLoading(true);
         const response = await apiService.getVehicles();
-        console.log("Vehicles API Response:", response); // Debug log
+        console.log("All Vehicles API Response:", response); // Debug log
         
         if (response && response.data && Array.isArray(response.data)) {
           setVehicles(response.data);
-          console.log("Vehicles data:", response.data); // Debug log
+          console.log("All Vehicles data:", response.data); // Debug log
         } else {
           setVehicles([]);
         }
       } catch (err) {
-        console.error("Error fetching vehicles:", err);
+        console.error("Error fetching all vehicles:", err);
         setVehicles([]);
       } finally {
         setVehiclesLoading(false);
       }
     };
 
-    fetchVehicles();
+    loadAllVehicles();
   }, []);
 
   // Fetch staff data from API
@@ -648,6 +670,11 @@ const UserManagement = () => {
     return vehicles.some(vehicle => vehicle.userID === userId);
   };
 
+  // Hàm lấy thông tin phương tiện của user
+  const getUserVehicle = (userId) => {
+    return vehicles.find(vehicle => vehicle.userID === userId);
+  };
+
   // Hàm tạo gói thuê pin
   const createSubscriptionPlan = (userId, planType, planName, duration) => {
     setUsers(
@@ -695,7 +722,7 @@ const UserManagement = () => {
                       </svg>
           }
           stats={[
-            { label: "Tổng người dùng", value: userStats.totalUsers, color: "bg-blue-400" }
+            { label: "Tổng người dùng", value: userStats.totalUsers, color: "bg-green-400" }
           ]}
         />
 
@@ -736,7 +763,7 @@ const UserManagement = () => {
                 <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                   Tổng khách hàng
                 </h3>
-                <div className="text-4xl font-bold m-0 text-blue-500">
+                <div className="text-4xl font-bold m-0 text-green-500">
                   {userStats.totalUsers}
                 </div>
               </div>
@@ -787,7 +814,7 @@ const UserManagement = () => {
                 <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                   Tổng nhân viên
                 </h3>
-                <div className="text-4xl font-bold m-0 text-blue-500">
+                <div className="text-4xl font-bold m-0 text-green-500">
                   {staffStats.totalStaff}
                 </div>
               </div>
@@ -843,14 +870,14 @@ const UserManagement = () => {
                   navigate('/admin-add-staff');
                 }
               }}
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
             >
               + Thêm {activeTab === "users" ? "khách hàng" : "nhân viên"}
             </button>
             {activeTab === "users" && (
               <button 
                 onClick={() => navigate('/admin-battery-packages')}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
+                className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white border-0 py-3 px-6 rounded-md cursor-pointer text-sm font-medium transition-transform hover:transform hover:-translate-y-0.5 hover:shadow-lg"
               >
                 Tạo gói thuê pin
               </button>
@@ -863,7 +890,7 @@ const UserManagement = () => {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-center py-12">
               <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                 <span className="text-gray-600 text-lg">Đang tải danh sách khách hàng...</span>
               </div>
             </div>
@@ -884,7 +911,7 @@ const UserManagement = () => {
                 <p className="text-gray-600 mb-4">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                 >
                   Thử lại
                 </button>
@@ -899,7 +926,7 @@ const UserManagement = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                 <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <th className="p-4 text-center font-semibold text-base">
                       STT
                     </th>
@@ -940,7 +967,7 @@ const UserManagement = () => {
                           <p className="text-gray-400 mb-4">Danh sách khách hàng sẽ hiển thị tại đây</p>
                           <button
                             onClick={() => navigate('/admin-add-customer')}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                           >
                             Thêm khách hàng đầu tiên
                           </button>
@@ -951,13 +978,13 @@ const UserManagement = () => {
                     users.map((user, index) => (
                     <tr 
                       key={user.id} 
-                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                      className={`hover:bg-green-50 transition-colors duration-200 ${
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                        <div className="font-bold text-base text-indigo-600">
+                        <div className="font-bold text-base text-green-600">
                             {user.stt}
                           </div>
                         </div>
@@ -986,8 +1013,11 @@ const UserManagement = () => {
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
                           {userHasVehicle(user.id) ? (
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                              Đã có phương tiện
+                            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Đã liên kết
                             </span>
                           ) : (
                             <button
@@ -1034,7 +1064,7 @@ const UserManagement = () => {
                               user.role === "admin"
                                 ? "bg-purple-100 text-purple-800"
                                 : user.role === "staff"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-green-100 text-green-800"
                                 : "bg-green-100 text-green-800"
                             }`}
                           >
@@ -1050,7 +1080,7 @@ const UserManagement = () => {
                         <div className="flex justify-center items-center gap-2">
                           {/* Chi tiết */}
                           <button
-                            className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => setSelectedUser(user)}
                             title="Chi tiết"
                           >
@@ -1173,7 +1203,7 @@ const UserManagement = () => {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-center py-12">
               <div className="flex items-center space-x-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                 <span className="text-gray-600 text-lg">Đang tải danh sách nhân viên...</span>
               </div>
             </div>
@@ -1194,7 +1224,7 @@ const UserManagement = () => {
                 <p className="text-gray-600 mb-4">{staffError}</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                 >
                   Thử lại
                 </button>
@@ -1209,7 +1239,7 @@ const UserManagement = () => {
             <div className="overflow-x-auto">
               <table className="w-full border-collapse bg-white rounded-lg overflow-hidden">
                 <thead>
-                  <tr className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                  <tr className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
                     <th className="p-4 text-center font-semibold text-base">
                       STT
                     </th>
@@ -1247,7 +1277,7 @@ const UserManagement = () => {
                           <p className="text-gray-400 mb-4">Danh sách nhân viên sẽ hiển thị tại đây</p>
                           <button
                             onClick={() => navigate('/admin-add-staff')}
-                            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                           >
                             Thêm nhân viên đầu tiên
                           </button>
@@ -1258,13 +1288,13 @@ const UserManagement = () => {
                     staff.map((staffMember, index) => (
                     <tr 
                       key={staffMember.id} 
-                      className={`hover:bg-indigo-50 transition-colors duration-200 ${
+                      className={`hover:bg-green-50 transition-colors duration-200 ${
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                        <div className="font-bold text-base text-indigo-600">
+                        <div className="font-bold text-base text-green-600">
                             {staffMember.stt}
                           </div>
                         </div>
@@ -1312,7 +1342,7 @@ const UserManagement = () => {
                               staffMember.role === "admin"
                                 ? "bg-purple-100 text-purple-800"
                                 : staffMember.role === "staff"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-green-100 text-green-800"
                                 : "bg-green-100 text-green-800"
                             }`}
                           >
@@ -1328,7 +1358,7 @@ const UserManagement = () => {
                         <div className="flex justify-center items-center gap-2">
                           {/* Chi tiết */}
                           <button
-                            className="group relative bg-blue-500 hover:bg-blue-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            className="group relative bg-green-500 hover:bg-green-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                             onClick={() => setSelectedUser(staffMember)}
                             title="Chi tiết"
                           >
@@ -1524,7 +1554,7 @@ const UserManagement = () => {
               <div className="flex gap-2 mt-6">
                 <button
                   onClick={handleAddUser}
-                  className="flex-1 bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600"
+                  className="flex-1 bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
                 >
                   Thêm
                 </button>
@@ -1622,21 +1652,6 @@ const UserManagement = () => {
                     />
                         </div>
 
-                  {/* Vai trò */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vai trò <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={editUser.roleID}
-                      onChange={(e) => setEditUser({ ...editUser, roleID: parseInt(e.target.value) })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    >
-                      <option value={1}>Khách hàng</option>
-                      <option value={2}>Nhân viên</option>
-                      <option value={3}>Quản trị viên</option>
-                    </select>
-                        </div>
                     </div>
                   </div>
 
@@ -1673,7 +1688,7 @@ const UserManagement = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white p-8">
+              <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-500 text-white p-8">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 bg-black bg-opacity-10"></div>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
@@ -1719,8 +1734,8 @@ const UserManagement = () => {
               <div className="p-8 bg-gray-50">
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                   <div className="flex items-center mb-6">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                             </div>
@@ -1736,13 +1751,13 @@ const UserManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Họ tên */}
                     <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                           </div>
                       <div className="flex-1">
-                        <div className="text-sm font-semibold text-blue-600 mb-1">Họ tên</div>
+                        <div className="text-sm font-semibold text-green-600 mb-1">Họ tên</div>
                         <div className="text-base text-gray-800 font-medium">{selectedUser.name}</div>
                       </div>
                     </div>
@@ -1826,6 +1841,94 @@ const UserManagement = () => {
                       </>
                     )}
 
+                    {/* Thông tin phương tiện - chỉ hiển thị cho khách hàng (role = "user") */}
+                    {selectedUser.role === "user" && (() => {
+                      const userVehicle = vehicles.find(v => v.userID === selectedUser.id);
+                      return userVehicle ? (
+                        <>
+                          {/* Loại phương tiện */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1m-1-1V8a1 1 0 00-1-1H9m4 8V8a1 1 0 00-1-1H9" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-blue-600 mb-1">Loại phương tiện</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.vehicleType}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Biển số xe */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4l-1 16h12l-1-16M10 8v8M14 8v8" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-cyan-600 mb-1">Biển số xe</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.licensePlate}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Phần trăm pin */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-green-600 mb-1">Phần trăm pin</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.pinPercent}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Sức khỏe pin */}
+                          <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl h-24">
+                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-orange-600 mb-1">Sức khỏe pin</div>
+                              <div className="text-base text-gray-800 font-medium">
+                                {userVehicle.pinHealth}%
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Hiển thị thông báo khi khách hàng chưa có xe */
+                        <div className="flex items-center justify-center p-8 bg-gray-50 rounded-xl">
+                          <div className="text-center">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                            </div>
+                            <p className="text-gray-500 text-lg font-medium mb-2">Chưa có phương tiện</p>
+                            <p className="text-gray-400 mb-4">Khách hàng này chưa được liên kết với phương tiện nào</p>
+                            <button
+                              onClick={() => openVehicleModal(selectedUser)}
+                              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              Thêm phương tiện
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                           </div>
                 </div>
               </div>
@@ -1872,9 +1975,9 @@ const UserManagement = () => {
               <div className="p-6">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-indigo-600"
+                        className="w-6 h-6 text-green-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1892,7 +1995,7 @@ const UserManagement = () => {
                         {userToChangeStatus.name}
                       </h4>
                       <div className="flex items-center space-x-2 mt-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           ID: {userToChangeStatus.id}
                         </span>
                         <span
@@ -1912,10 +2015,10 @@ const UserManagement = () => {
                 </div>
                 
                 {/* Thông báo */}
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-start">
                     <svg
-                      className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0"
+                      className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -1928,7 +2031,7 @@ const UserManagement = () => {
                       />
                     </svg>
                     <div>
-                      <p className="text-sm font-semibold text-blue-800">
+                      <p className="text-sm font-semibold text-green-800">
                         {userToChangeStatus.status === "active"
                           ? "Tài khoản sẽ bị khóa và không thể đăng nhập."
                           : "Tài khoản sẽ được kích hoạt và có thể đăng nhập bình thường."}

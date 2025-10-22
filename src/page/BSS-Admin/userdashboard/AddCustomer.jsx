@@ -170,7 +170,7 @@ const AdminAddCustomer = () => {
                       </svg>
           }
           stats={[
-            { label: "Thêm EV Driver", value: "", color: "bg-blue-400" }
+            { label: "Thêm EV Driver", value: "", color: "bg-green-400" }
           ]}
         />
 
@@ -188,7 +188,7 @@ const AdminAddCustomer = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   placeholder="Nguyễn Văn A"
                   required
                 />
@@ -204,7 +204,7 @@ const AdminAddCustomer = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   placeholder="user@email.com"
                   required
                 />
@@ -220,7 +220,7 @@ const AdminAddCustomer = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   placeholder="Nhập mật khẩu"
                   required
                 />
@@ -236,7 +236,7 @@ const AdminAddCustomer = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   placeholder="0901234567"
                   maxLength={10}
                   pattern="[0-9]{10}"
@@ -271,7 +271,7 @@ const AdminAddCustomer = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-md hover:from-indigo-600 hover:to-purple-700 transition-all"
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-md hover:from-green-600 hover:to-emerald-700 transition-all"
               >
                 Xem trước
               </button>
@@ -314,9 +314,9 @@ const AdminAddCustomer = () => {
               <div className="p-6">
                 {/* Customer Icon & Status */}
                 <div className="text-center mb-4">
-                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
                     <svg
-                      className="w-8 h-8 text-indigo-600"
+                      className="w-8 h-8 text-green-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
