@@ -20,6 +20,19 @@ const AdminReportManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [stations, setStations] = useState([]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  // Sort state
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  
+  // Filter state
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showReportFilterDropdown, setShowReportFilterDropdown] = useState(false);
+  const [reportStatusFilter, setReportStatusFilter] = useState("all");
+
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -49,6 +62,31 @@ const AdminReportManagement = () => {
       loadTransactions();
     }
   }, [activeTab]);
+
+  // Reset pagination when status filter or sort order changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, sortOrder, reportStatusFilter]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSortDropdown && !event.target.closest('.sort-dropdown')) {
+        setShowSortDropdown(false);
+      }
+      if (showFilterDropdown && !event.target.closest('.filter-dropdown')) {
+        setShowFilterDropdown(false);
+      }
+      if (showReportFilterDropdown && !event.target.closest('.report-filter-dropdown')) {
+        setShowReportFilterDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSortDropdown, showFilterDropdown, showReportFilterDropdown]);
 
   const loadReports = async () => {
     try {
@@ -289,6 +327,59 @@ const AdminReportManagement = () => {
     return transactions.filter(t => t.status === parseInt(statusFilter));
   };
 
+  // Filter reports based on status
+  const getFilteredReports = () => {
+    if (reportStatusFilter === "all") {
+      return reports;
+    }
+    return reports.filter(r => r.displayStatus === reportStatusFilter);
+  };
+
+  // Get sorted and paginated transactions
+  const getPaginatedTransactions = () => {
+    const filtered = getFilteredTransactions();
+    
+    // Sort transactions based on sortOrder
+    const sorted = [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createAt);
+      const dateB = new Date(b.createAt);
+      
+      if (sortOrder === "newest") {
+        return dateB - dateA; // Mới nhất trước
+      } else {
+        return dateA - dateB; // Cũ nhất trước
+      }
+    });
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sorted.slice(startIndex, endIndex);
+  };
+
+  // Calculate total pages
+  const getTotalPages = () => {
+    const filtered = getFilteredTransactions();
+    return Math.ceil(filtered.length / itemsPerPage);
+  };
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Get page numbers for pagination
+  const getPageNumbers = () => {
+    const totalPages = getTotalPages();
+    const pages = [];
+    
+    // Hiển thị tất cả các trang
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  };
+
   const handleViewDetail = (report) => {
     setSelectedReport(report);
     setShowDetailModal(true);
@@ -423,75 +514,370 @@ const AdminReportManagement = () => {
           ]}
         />
 
+        {/* Tab Navigation with Action Buttons */}
+        <div className="flex items-center justify-between mb-6">
         {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mb-6">
-          <div className="flex border-b border-gray-200">
+          <div className="bg-gray-100 rounded-lg p-1 inline-block">
+            <div className="flex">
             <button
               onClick={() => setActiveTab("reports")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "reports"
-                  ? "bg-white text-green-600 border-b-2 border-green-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Báo cáo ({reports.length})</span>
-              </div>
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                Báo cáo ({reports.length})
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
-              className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 ${
+                className={`px-6 py-3 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === "transactions"
-                  ? "bg-white text-green-600 border-b-2 border-green-600 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span>Giao dịch ({transactions.length})</span>
-              </div>
-            </button>
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                Giao dịch ({transactions.length})
+              </button>
+            </div>
           </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-4">
+            {/* Report Status Filter Dropdown - Only show for reports tab */}
+            {activeTab === "reports" && (
+              <div className="relative report-filter-dropdown">
+                <button
+                  onClick={() => setShowReportFilterDropdown(!showReportFilterDropdown)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    {reportStatusFilter === "all" ? "Tất cả trạng thái" : 
+                     reportStatusFilter === "pending" ? "Chờ xử lý" :
+                     reportStatusFilter === "in_progress" ? "Đang xử lý" : "Đã giải quyết"}
+                  </span>
+                  <svg className={`w-4 h-4 transition-transform ${showReportFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Report Filter Dropdown Menu */}
+                {showReportFilterDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setReportStatusFilter("all");
+                          setShowReportFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          reportStatusFilter === "all" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Tất cả trạng thái</span>
+                        </div>
+                        {reportStatusFilter === "all" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReportStatusFilter("pending");
+                          setShowReportFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          reportStatusFilter === "pending" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                          <span>Chờ xử lý</span>
+                        </div>
+                        {reportStatusFilter === "pending" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReportStatusFilter("in_progress");
+                          setShowReportFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          reportStatusFilter === "in_progress" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                          <span>Đang xử lý</span>
+                        </div>
+                        {reportStatusFilter === "in_progress" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setReportStatusFilter("resolved");
+                          setShowReportFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          reportStatusFilter === "resolved" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                          <span>Đã giải quyết</span>
+                        </div>
+                        {reportStatusFilter === "resolved" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Status Filter Dropdown - Only show for transactions tab */}
+            {activeTab === "transactions" && (
+              <div className="relative filter-dropdown">
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                  <span className="text-sm font-medium">
+                    {statusFilter === "all" ? "Tất cả trạng thái" : 
+                     statusFilter === "0" ? "Chờ xử lý" :
+                     statusFilter === "1" ? "Hoàn thành" :
+                     statusFilter === "2" ? "Hết hạn" : "Đã hủy"}
+                  </span>
+                  <svg className={`w-4 h-4 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Filter Dropdown Menu */}
+                {showFilterDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setStatusFilter("all");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          statusFilter === "all" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Tất cả trạng thái</span>
+              </div>
+                        {statusFilter === "all" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+            </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("0");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          statusFilter === "0" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                          <span>Chờ xử lý</span>
+          </div>
+                        {statusFilter === "0" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("1");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          statusFilter === "1" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                          <span>Hoàn thành</span>
         </div>
+                        {statusFilter === "1" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("2");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          statusFilter === "2" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                          <span>Hết hạn</span>
+                        </div>
+                        {statusFilter === "2" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStatusFilter("3");
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          statusFilter === "3" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                          <span>Đã hủy</span>
+                        </div>
+                        {statusFilter === "3" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sort Dropdown - Only show for transactions tab */}
+            {activeTab === "transactions" && (
+              <div className="relative sort-dropdown">
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
+                  <span className="text-sm font-medium">
+                    {sortOrder === "newest" ? "Mới nhất" : "Cũ nhất"}
+                  </span>
+                  <svg className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showSortDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setSortOrder("newest");
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          sortOrder === "newest" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span>Mới nhất</span>
+              </div>
+                        {sortOrder === "newest" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOrder("oldest");
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm font-medium flex items-center justify-between hover:bg-green-50 transition-colors ${
+                          sortOrder === "oldest" ? "bg-green-50 text-green-700" : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                          <span>Cũ nhất</span>
+                        </div>
+                        {sortOrder === "oldest" && (
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Total Count */}
+                <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium text-gray-700">
+                  Tổng: {activeTab === "reports" ? getFilteredReports().length : transactions.length} {activeTab === "reports" ? "báo cáo" : "giao dịch"}
+                </span>
+                  </div>
+                </div>
+            
+            {/* Refresh Button */}
+                <button
+              onClick={activeTab === "reports" ? loadReports : loadTransactions}
+              disabled={activeTab === "reports" ? loading : transactionLoading}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+              <svg className={`w-4 h-4 ${(activeTab === "reports" ? loading : transactionLoading) ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+              <span>{(activeTab === "reports" ? loading : transactionLoading) ? 'Đang tải...' : 'Làm mới'}</span>
+                </button>
+            </div>
+          </div>
 
         {/* Content based on active tab */}
         {activeTab === "reports" ? (
           /* Reports Table */
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Danh sách Report</h2>
-                <p className="text-gray-600">Quản lý và xử lý các báo cáo từ khách hàng</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Tổng: {reports.length} báo cáo
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={loadReports}
-                  disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span>{loading ? 'Đang tải...' : 'Làm mới'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
 
           {/* Loading State */}
           {loading && (
@@ -555,7 +941,7 @@ const AdminReportManagement = () => {
                   </tr>
                   </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                {reports.map((report, index) => (
+                {getFilteredReports().map((report, index) => (
                     <tr 
                       key={report.id} 
                       className={`hover:bg-green-50 transition-all duration-200 ${
@@ -657,7 +1043,7 @@ const AdminReportManagement = () => {
           )}
 
           {/* Empty State */}
-          {!loading && !error && reports.length === 0 && (
+          {!loading && !error && getFilteredReports().length === 0 && (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -670,49 +1056,6 @@ const AdminReportManagement = () => {
         ) : (
           /* Transactions Table */
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-8 py-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Danh sách Giao dịch</h2>
-                  <p className="text-gray-600">Quản lý và theo dõi các giao dịch trong hệ thống</p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {/* Status Filter */}
-                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="text-sm font-medium text-gray-700 border-none outline-none"
-                    >
-                      <option value="all">Tất cả trạng thái</option>
-                      <option value="0">Chờ xử lý</option>
-                      <option value="1">Hoàn thành</option>
-                      <option value="2">Hết hạn</option>
-                      <option value="3">Đã hủy</option>
-                    </select>
-                  </div>
-                  <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-gray-700">
-                        Tổng: {getFilteredTransactions().length} giao dịch
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={loadTransactions}
-                    disabled={transactionLoading}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  >
-                    <svg className={`w-4 h-4 ${transactionLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>{transactionLoading ? 'Đang tải...' : 'Làm mới'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
 
             {/* Loading State */}
             {transactionLoading && (
@@ -779,7 +1122,7 @@ const AdminReportManagement = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
-                      {getFilteredTransactions().map((transaction, index) => (
+                      {getPaginatedTransactions().map((transaction, index) => (
                         <tr 
                           key={transaction.transactionID} 
                           className={`hover:bg-green-50 transition-all duration-200 ${
@@ -789,7 +1132,7 @@ const AdminReportManagement = () => {
                           {/* STT */}
                           <td className="px-6 py-4">
                             <div className="text-sm font-semibold text-gray-900 text-center">
-                              {index + 1}
+                              {(currentPage - 1) * itemsPerPage + index + 1}
                             </div>
                           </td>
                           
@@ -859,6 +1202,58 @@ const AdminReportManagement = () => {
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">Không có giao dịch</h3>
                 <p className="mt-1 text-sm text-gray-500">Chưa có giao dịch nào trong hệ thống.</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {!transactionLoading && !transactionError && getFilteredTransactions().length > 0 && (
+              <div className="bg-white px-6 py-4 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  {/* Pagination Info */}
+                  <div className="flex items-center text-sm text-gray-700">
+                    <span>
+                      Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, getFilteredTransactions().length)} - {Math.min(currentPage * itemsPerPage, getFilteredTransactions().length)} trong tổng số {getFilteredTransactions().length} giao dịch
+                    </span>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  <div className="flex items-center space-x-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Trước
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex space-x-1">
+                      {getPageNumbers().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            currentPage === page
+                              ? 'bg-green-600 text-white'
+                              : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === getTotalPages()}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
