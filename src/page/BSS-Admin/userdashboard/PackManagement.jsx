@@ -434,53 +434,55 @@ const PackManagement = () => {
                             </div>
                           </button>
 
-                          {/* Toggle Status */}
-                          <button
-                            className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
-                              pack.status === 1
-                                ? "bg-red-500 hover:bg-red-600"
-                                : "bg-green-500 hover:bg-green-600"
-                            }`}
-                            onClick={() => handleStatusToggle(pack)}
-                            title={
-                              pack.status === 1
-                                ? "Tạm ngưng hoạt động"
-                                : "Kích hoạt gói"
-                            }
-                          >
-                            {pack.status === 1 ? (
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                            ) : (
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
-                              </svg>
-                            )}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                              {pack.status === 1 ? "Tạm ngưng" : "Kích hoạt"}
-                            </div>
-                          </button>
+                          {/* Toggle Status - Ẩn nút này cho gói cơ bản (packID = 1) */}
+                          {pack.packID !== 1 && (
+                            <button
+                              className={`group relative p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg text-white ${
+                                pack.status === 1
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : "bg-green-500 hover:bg-green-600"
+                              }`}
+                              onClick={() => handleStatusToggle(pack)}
+                              title={
+                                pack.status === 1
+                                  ? "Tạm ngưng hoạt động"
+                                  : "Kích hoạt gói"
+                              }
+                            >
+                              {pack.status === 1 ? (
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              ) : (
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                  />
+                                </svg>
+                              )}
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                {pack.status === 1 ? "Tạm ngưng" : "Kích hoạt"}
+                              </div>
+                            </button>
+                          )}
 
                         </div>
                       </td>

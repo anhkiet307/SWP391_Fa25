@@ -513,13 +513,47 @@ class ApiService {
   }
 
   async createServicePack(packData) {
-    const url = getApiUrl("SERVICE_PACK", "CREATE");
-    return this.post(url, packData);
+    const url = this.baseURL + "/servicePack/create";
+    // API sử dụng POST với query parameters
+    const queryString = new URLSearchParams({
+      adminUserID: packData.adminUserID,
+      packName: packData.packName,
+      description: packData.description,
+      total: packData.total,
+      price: packData.price,
+      status: packData.status,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async updateServicePack(packId, packData) {
-    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
-    return this.put(url, packData);
+    const url = this.baseURL + "/servicePack/update";
+    // API sử dụng PUT với query parameters
+    const queryString = new URLSearchParams({
+      packID: packId,
+      adminUserID: packData.adminUserID,
+      packName: packData.packName,
+      description: packData.description,
+      total: packData.total,
+      price: packData.price,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async updateServicePackStatus(packId, adminUserID, status) {
@@ -855,7 +889,9 @@ class ApiService {
       orderInfo: data.orderInfo,
       total: data.total,
     }).toString();
-    const url = `${API_CONFIG.DOMAIN}${endpoint}?${queryString}`;
+    // VNPay endpoints không có prefix /api
+    const baseUrl = API_CONFIG.DOMAIN;
+    const url = `${baseUrl}${endpoint}?${queryString}`;
     console.log("🔄 Creating VNPay URL:", url);
 
     return this.makeRequest(url, {
@@ -871,10 +907,20 @@ class ApiService {
   // Lấy thống kê thanh toán VNPay (danh sách các payment)
   async getVnpayStatistic() {
     const endpoint = getEndpoint("VNPAY", "STATISTIC");
-    const url = `${API_CONFIG.DOMAIN}${endpoint}`;
+    // VNPay endpoints không có prefix /api
+    const baseUrl = API_CONFIG.DOMAIN;
+    const url = `${baseUrl}${endpoint}`;
     console.log("🔄 Calling VNPay API:", url);
+    console.log("🔄 Base URL:", baseUrl);
+    console.log("🔄 Endpoint:", endpoint);
     
-    return this.makeRequest(url, {
+    // Thử với query parameters nếu cần
+    const token = this.getAuthToken();
+    const queryParams = token ? `?token=${token}` : '';
+    const fullUrl = `${url}${queryParams}`;
+    console.log("🔄 Full URL with params:", fullUrl);
+    
+    return this.makeRequest(fullUrl, {
       method: "GET",
       headers: {
         ...this.buildHeaders(),
