@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import apiService from "../services/apiService";
 import {
@@ -36,6 +37,7 @@ const { TextArea } = Input;
 
 export default function Reports() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,8 +58,14 @@ export default function Reports() {
   ).length;
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
     const fetchReports = async () => {
-      if (!isAuthenticated || !user) return;
+      if (!user) return;
 
       try {
         setLoading(true);
@@ -80,7 +88,7 @@ export default function Reports() {
     };
 
     fetchReports();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, navigate]);
 
   // Filter reports based on type and status
   useEffect(() => {
@@ -331,7 +339,7 @@ export default function Reports() {
   };
 
   const fetchReports = async () => {
-    if (!isAuthenticated || !user) return;
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -351,19 +359,6 @@ export default function Reports() {
       setLoading(false);
     }
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-        <Alert
-          message="Cần đăng nhập"
-          description="Bạn cần đăng nhập để xem báo cáo của mình."
-          type="warning"
-          showIcon
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen relative bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]">
