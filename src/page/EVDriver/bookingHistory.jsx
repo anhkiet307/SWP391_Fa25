@@ -34,6 +34,9 @@ import {
   ThunderboltOutlined,
   StarOutlined,
   CloseOutlined,
+  CreditCardOutlined,
+  GiftOutlined,
+  BankOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import apiService from "../../services/apiService";
@@ -57,13 +60,32 @@ export default function BookingHistory() {
   const [stationFilter, setStationFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
 
-  // Thống kê tổng quan
+  // States cho lịch sử mua gói dịch vụ
+  const [paymentHistory, setPaymentHistory] = useState([]);
+  const [filteredPaymentData, setFilteredPaymentData] = useState([]);
+  const [servicePacksMap, setServicePacksMap] = useState({});
+  const [paymentDateRange, setPaymentDateRange] = useState(null);
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
+  const [packFilter, setPackFilter] = useState("all");
+  const [paymentSearchText, setPaymentSearchText] = useState("");
+
+  // Thống kê tổng quan cho booking
   const totalBookings = filteredData.length;
   const completedBookings = filteredData.filter(
     (item) => item.status === "completed"
   ).length;
   const totalSpent = filteredData.reduce(
     (sum, item) => sum + item.serviceFee,
+    0
+  );
+
+  // Thống kê tổng quan cho payment
+  const totalPayments = filteredPaymentData.length;
+  const successfulPayments = filteredPaymentData.filter(
+    (item) => item.status === "successful"
+  ).length;
+  const totalPaymentAmount = filteredPaymentData.reduce(
+    (sum, item) => sum + item.amountVND,
     0
   );
 
@@ -106,6 +128,54 @@ export default function BookingHistory() {
 
     setFilteredData(filtered);
   }, [bookingHistory, dateRange, statusFilter, stationFilter, searchText]);
+
+  // Lọc dữ liệu payment
+  useEffect(() => {
+    let filtered = [...paymentHistory];
+
+    // Lọc theo khoảng thời gian
+    if (paymentDateRange && paymentDateRange.length === 2) {
+      const startDate = paymentDateRange[0].startOf("day");
+      const endDate = paymentDateRange[1].endOf("day");
+      filtered = filtered.filter((item) => {
+        const itemDate = dayjs(item.createdAt);
+        return itemDate.isAfter(startDate) && itemDate.isBefore(endDate);
+      });
+    }
+
+    // Lọc theo trạng thái
+    if (paymentStatusFilter !== "all") {
+      filtered = filtered.filter((item) => item.status === paymentStatusFilter);
+    }
+
+    // Lọc theo gói dịch vụ
+    if (packFilter !== "all") {
+      filtered = filtered.filter(
+        (item) => String(item.packID) === String(packFilter)
+      );
+    }
+
+    // Lọc theo từ khóa tìm kiếm
+    if (paymentSearchText) {
+      filtered = filtered.filter(
+        (item) =>
+          String(item.vnp_TxnRef)
+            .toLowerCase()
+            .includes(paymentSearchText.toLowerCase()) ||
+          String(item.vnp_OrderInfo)
+            .toLowerCase()
+            .includes(paymentSearchText.toLowerCase())
+      );
+    }
+
+    setFilteredPaymentData(filtered);
+  }, [
+    paymentHistory,
+    paymentDateRange,
+    paymentStatusFilter,
+    packFilter,
+    paymentSearchText,
+  ]);
 
   // Định nghĩa cột cho bảng
   const columns = [
@@ -391,11 +461,224 @@ export default function BookingHistory() {
     },
   ];
 
+  // Định nghĩa cột cho bảng payment history
+  const paymentColumns = [
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <CreditCardOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Mã giao dịch
+          </Text>
+        </div>
+      ),
+      dataIndex: "vnp_TxnRef",
+      key: "vnp_TxnRef",
+      width: 180,
+      align: "center",
+      render: (text) => (
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <Text strong style={{ color: "#00083B", fontSize: "13px" }}>
+            {text}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <GiftOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Gói dịch vụ
+          </Text>
+        </div>
+      ),
+      dataIndex: "packID",
+      key: "packID",
+      width: 150,
+      align: "center",
+      render: (packID, record) => (
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <Text strong style={{ fontSize: "13px", fontWeight: "600" }}>
+            {servicePacksMap[packID]?.packName || `Gói #${packID}`}
+          </Text>
+          <div>
+            <Text
+              style={{
+                fontSize: "11px",
+                color: "#64748b",
+                lineHeight: "1.2",
+              }}
+            >
+              {servicePacksMap[packID]?.description || "Mô tả không có"}
+            </Text>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <DollarOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Số tiền
+          </Text>
+        </div>
+      ),
+      dataIndex: "amountVND",
+      key: "amountVND",
+      width: 140,
+      align: "center",
+      render: (amount) => (
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <Text
+            strong
+            style={{ color: "#10b981", fontSize: "13px", fontWeight: "600" }}
+          >
+            {formatVND(amount)}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <BankOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Ngân hàng
+          </Text>
+        </div>
+      ),
+      dataIndex: "vnp_BankCode",
+      key: "vnp_BankCode",
+      width: 120,
+      align: "center",
+      render: (bankCode) => (
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <Text style={{ fontSize: "13px", fontWeight: "500" }}>
+            {bankCode || "N/A"}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <CalendarOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Ngày thanh toán
+          </Text>
+        </div>
+      ),
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 130,
+      align: "center",
+      render: (date) => (
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <Text style={{ fontSize: "13px", fontWeight: "500" }}>
+            {dayjs(date).format("DD/MM/YYYY")}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Trạng thái
+          </Text>
+        </div>
+      ),
+      dataIndex: "status",
+      key: "status",
+      width: 120,
+      align: "center",
+      render: (status) => {
+        const statusConfig = {
+          successful: { color: "green", text: "Thành công" },
+          failed: { color: "red", text: "Thất bại" },
+          pending: { color: "orange", text: "Đang xử lý" },
+        };
+        const config = statusConfig[status] || statusConfig.pending;
+        return (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <Tag
+              color={config.color}
+              style={{ margin: 0, fontSize: "12px", fontWeight: "500" }}
+            >
+              {config.text}
+            </Tag>
+          </div>
+        );
+      },
+    },
+  ];
+
   const mapApiStatusToText = (status) => {
     // 0=pending, 1=completed, 2=expired, 3=cancelled
     if (status === 1) return "completed";
     if (status === 2) return "expired";
     if (status === 3) return "cancelled";
+    return "pending";
+  };
+
+  const mapPaymentStatus = (payment) => {
+    // Dựa trên API response:
+    // - failed: true → "failed"
+    // - pending: true → "pending"
+    // - successful: true → "successful"
+    // - Nếu không có flags, dựa vào status field (0=pending, 1=success, 2=failed)
+
+    if (payment.failed === true) return "failed";
+    if (payment.pending === true) return "pending";
+    if (payment.successful === true) return "successful";
+
+    // Fallback dựa vào status field
+    if (payment.status === 1) return "successful";
+    if (payment.status === 2) return "failed";
     return "pending";
   };
 
@@ -464,18 +747,76 @@ export default function BookingHistory() {
     }
   };
 
+  const fetchPaymentHistory = async () => {
+    if (!user?.userID) return;
+    try {
+      const res = await apiService.getPaymentHistory(user.userID);
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        const mapped = res.data.map((payment) => ({
+          ...payment,
+          status: mapPaymentStatus(payment),
+        }));
+        setPaymentHistory(mapped);
+        setFilteredPaymentData(mapped);
+      } else {
+        // API trả về success nhưng không có data
+        setPaymentHistory([]);
+        setFilteredPaymentData([]);
+      }
+    } catch (e) {
+      console.error("Fetch payment history error", e);
+
+      // Xử lý các trường hợp lỗi khác nhau
+      if (e.message?.includes("404")) {
+        console.log(`User ${user.userID} chưa có lịch sử thanh toán`);
+        setPaymentHistory([]);
+        setFilteredPaymentData([]);
+      } else if (e.message?.includes("CORS")) {
+        console.error("CORS error - Backend cần cấu hình CORS headers");
+        setPaymentHistory([]);
+        setFilteredPaymentData([]);
+      } else {
+        console.error("Lỗi không xác định:", e);
+        setPaymentHistory([]);
+        setFilteredPaymentData([]);
+      }
+    }
+  };
+
+  const fetchServicePacks = async () => {
+    try {
+      const res = await apiService.getServicePacks();
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        const map = {};
+        res.data.forEach((pack) => {
+          map[pack.packID] = {
+            packName: pack.packName,
+            description: pack.description,
+            price: pack.price,
+          };
+        });
+        setServicePacksMap(map);
+      }
+    } catch (e) {
+      console.error("Fetch service packs error", e);
+    }
+  };
+
   useEffect(() => {
     fetchStations();
+    fetchServicePacks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     fetchHistory();
+    fetchPaymentHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.userID, stationsMap]);
+  }, [user?.userID, stationsMap, servicePacksMap]);
 
   const handleRefresh = () => {
     fetchHistory();
+    fetchPaymentHistory();
   };
 
   const handleClearFilters = () => {
@@ -485,11 +826,26 @@ export default function BookingHistory() {
     setSearchText("");
   };
 
+  const handleClearPaymentFilters = () => {
+    setPaymentDateRange(null);
+    setPaymentStatusFilter("all");
+    setPackFilter("all");
+    setPaymentSearchText("");
+  };
+
   // Danh sách trạm để filter
   const stationsOptions = Object.entries(stationsMap).map(([id, info]) => ({
     id,
     name: info.stationName,
   }));
+
+  // Danh sách gói dịch vụ để filter
+  const servicePacksOptions = Object.entries(servicePacksMap).map(
+    ([id, info]) => ({
+      id,
+      name: info.packName,
+    })
+  );
 
   return (
     <div className="min-h-screen relative bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]">
@@ -585,7 +941,7 @@ export default function BookingHistory() {
           </Text>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Booking History */}
         <Row gutter={[24, 24]} className="mb-8">
           <Col xs={24} sm={8}>
             <Card
@@ -648,6 +1004,79 @@ export default function BookingHistory() {
                   </Space>
                 }
                 value={formatVND(totalSpent)}
+                valueStyle={{
+                  color: "#f59e0b",
+                  fontSize: "20px",
+                  fontWeight: "bold",
+                }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Statistics Cards - Payment History */}
+        <Row gutter={[24, 24]} className="mb-8">
+          <Col xs={24} sm={8}>
+            <Card
+              className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
+              bodyStyle={{ padding: "24px" }}
+            >
+              <Statistic
+                title={
+                  <Space>
+                    <CreditCardOutlined style={{ color: "#00083B" }} />
+                    <span style={{ color: "#64748b", fontSize: "14px" }}>
+                      Tổng giao dịch
+                    </span>
+                  </Space>
+                }
+                value={totalPayments}
+                valueStyle={{
+                  color: "#00083B",
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card
+              className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
+              bodyStyle={{ padding: "24px" }}
+            >
+              <Statistic
+                title={
+                  <Space>
+                    <CheckCircleOutlined style={{ color: "#10b981" }} />
+                    <span style={{ color: "#64748b", fontSize: "14px" }}>
+                      Thành công
+                    </span>
+                  </Space>
+                }
+                value={successfulPayments}
+                valueStyle={{
+                  color: "#10b981",
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card
+              className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
+              bodyStyle={{ padding: "24px" }}
+            >
+              <Statistic
+                title={
+                  <Space>
+                    <DollarOutlined style={{ color: "#f59e0b" }} />
+                    <span style={{ color: "#64748b", fontSize: "14px" }}>
+                      Tổng thanh toán
+                    </span>
+                  </Space>
+                }
+                value={formatVND(totalPaymentAmount)}
                 valueStyle={{
                   color: "#f59e0b",
                   fontSize: "20px",
@@ -787,6 +1216,156 @@ export default function BookingHistory() {
                 style: { marginTop: "16px" },
               }}
               scroll={{ x: 1400 }}
+              size="middle"
+              className="booking-history-table"
+              style={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 4px 12px rgba(0, 8, 59, 0.08)",
+              }}
+              rowClassName={(record, index) =>
+                index % 2 === 0 ? "table-row-even" : "table-row-odd"
+              }
+            />
+          )}
+        </Card>
+
+        {/* Payment History Table */}
+        <Card
+          className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
+          bodyStyle={{ padding: "24px" }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <Title level={3} style={{ color: "#00083B", margin: 0 }}>
+              Lịch sử mua gói dịch vụ
+            </Title>
+            <Badge
+              count={filteredPaymentData.length}
+              style={{ backgroundColor: "#10b981" }}
+            >
+              <Text style={{ color: "#64748b", fontSize: "14px" }}>
+                {filteredPaymentData.length} giao dịch
+              </Text>
+            </Badge>
+          </div>
+
+          {/* Payment Filters */}
+          <Card
+            className="rounded-xl shadow-[0_4px_12px_rgba(0,8,59,0.05)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.05)] mb-6"
+            bodyStyle={{ padding: "20px" }}
+          >
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={6}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Text strong style={{ color: "#00083B", fontSize: "14px" }}>
+                    Khoảng thời gian
+                  </Text>
+                  <RangePicker
+                    style={{ width: "100%" }}
+                    placeholder={["Từ ngày", "Đến ngày"]}
+                    value={paymentDateRange}
+                    onChange={setPaymentDateRange}
+                    format="DD/MM/YYYY"
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} sm={4}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Text strong style={{ color: "#00083B", fontSize: "14px" }}>
+                    Trạng thái
+                  </Text>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={paymentStatusFilter}
+                    onChange={setPaymentStatusFilter}
+                  >
+                    <Option value="all">Tất cả</Option>
+                    <Option value="successful">Thành công</Option>
+                    <Option value="failed">Thất bại</Option>
+                    <Option value="pending">Đang xử lý</Option>
+                  </Select>
+                </Space>
+              </Col>
+              <Col xs={24} sm={6}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Text strong style={{ color: "#00083B", fontSize: "14px" }}>
+                    Gói dịch vụ
+                  </Text>
+                  <Select
+                    style={{ width: "100%" }}
+                    value={packFilter}
+                    onChange={setPackFilter}
+                    showSearch
+                    optionFilterProp="label"
+                    placeholder="Chọn gói dịch vụ"
+                  >
+                    <Option value="all" label="Tất cả gói">
+                      Tất cả gói
+                    </Option>
+                    {servicePacksOptions.map((pack) => (
+                      <Option key={pack.id} value={pack.id} label={pack.name}>
+                        {pack.name}
+                      </Option>
+                    ))}
+                  </Select>
+                </Space>
+              </Col>
+              <Col xs={24} sm={6}>
+                <Space direction="vertical" size={4} style={{ width: "100%" }}>
+                  <Text strong style={{ color: "#00083B", fontSize: "14px" }}>
+                    Tìm kiếm
+                  </Text>
+                  <Input
+                    placeholder="Mã giao dịch, mô tả..."
+                    prefix={<SearchOutlined />}
+                    value={paymentSearchText}
+                    onChange={(e) => setPaymentSearchText(e.target.value)}
+                  />
+                </Space>
+              </Col>
+              <Col xs={24} sm={4}>
+                <Space>
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={handleRefresh}
+                    loading={loading}
+                  >
+                    Làm mới
+                  </Button>
+                  <Button
+                    icon={<FilterOutlined />}
+                    onClick={handleClearPaymentFilters}
+                  >
+                    Xóa bộ lọc
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
+          {filteredPaymentData.length === 0 ? (
+            <Empty
+              description={
+                paymentHistory.length === 0
+                  ? "Bạn chưa có lịch sử mua gói dịch vụ nào"
+                  : "Không có giao dịch nào phù hợp với bộ lọc"
+              }
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          ) : (
+            <Table
+              columns={paymentColumns}
+              dataSource={filteredPaymentData}
+              rowKey="vnp_TxnRef"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} của ${total} giao dịch`,
+                style: { marginTop: "16px" },
+              }}
+              scroll={{ x: 1200 }}
               size="middle"
               className="booking-history-table"
               style={{

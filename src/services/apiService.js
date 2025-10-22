@@ -1,4 +1,4 @@
-import API_CONFIG, { getApiUrl, getEndpoint } from "../config/apiConfig";
+import API_CONFIG, { getApiUrl } from "../config/apiConfig";
 
 // API Service class để quản lý tất cả API calls
 class ApiService {
@@ -15,18 +15,15 @@ class ApiService {
 
   // Helper method để build headers
   buildHeaders(customHeaders = {}) {
-    const headers = { 
-      ...this.defaultHeaders,
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      "ngrok-skip-browser-warning": "true",
-      ...customHeaders 
-    };
+    const headers = { ...this.defaultHeaders, ...customHeaders };
 
     const token = this.getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+
+    // Thêm header cho ngrok
+    headers["ngrok-skip-browser-warning"] = "true";
 
     return headers;
   }
@@ -35,43 +32,25 @@ class ApiService {
   async makeRequest(url, options = {}) {
     const config = {
       method: "GET",
-      mode: "cors",
-      credentials: "omit", // Default to omit
+      mode: "cors", // Explicitly enable CORS
       headers: this.buildHeaders(),
       ...options,
     };
 
     try {
-      console.log("🚀 Calling API:", url, config);
-      
-      // Thêm timeout để tránh request treo
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), this.timeout);
-      
-      const response = await fetch(url, {
-        ...config,
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeout);
-      
-      console.log("📡 Response status:", response.status);
-      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+      const response = await fetch(url, config);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ API Error:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
       }
 
       const data = await response.json();
-      console.log("✅ API Success:", data);
       return data;
     } catch (error) {
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout');
-      }
-      console.error("❌ API request failed:", error);
+      console.error("API request failed:", error);
       throw error;
     }
   }
@@ -377,6 +356,11 @@ class ApiService {
     return this.get(url, { latitude, longitude, radius });
   }
 
+  async getPinStations() {
+    const url = getApiUrl("STATION", "LIST");
+    return this.get(url);
+  }
+
   async getStationDetail(stationId) {
     const url = getApiUrl("STATION", "DETAIL", { stationID: stationId });
     return this.get(url);
@@ -614,6 +598,28 @@ class ApiService {
     return this.get(url, params);
   }
 
+  // Lấy danh sách báo cáo của user
+  async getUserReports(userID) {
+    const url = `${this.baseURL}/report/my-reports?userID=${userID}`;
+    return this.get(url);
+  }
+
+  // Tạo báo cáo mới
+  async createReport(userID, type, description) {
+    const url = `${
+      this.baseURL
+    }/report/create?userID=${userID}&type=${type}&description=${encodeURIComponent(
+      description
+    )}`;
+    return this.post(url);
+  }
+
+  // Lấy lịch sử thanh toán gói dịch vụ
+  async getPaymentHistory(userID) {
+    const url = `https://456e58d25f66.ngrok-free.app/vnpay/payment-history/${userID}`;
+    return this.get(url);
+  }
+
   async exportReport(reportType, params = {}) {
     const url = getApiUrl("REPORT", "EXPORT");
     return this.get(url, { ...params, type: reportType });
@@ -782,10 +788,29 @@ class ApiService {
    * Lấy danh sách service pack
    * @returns {Promise<Object>} - Danh sách service pack
    */
+  async getServicePacks() {
+    const url = getApiUrl("SERVICE_PACK", "LIST");
+    return this.get(url);
+  }
 
   async getServicePackDetail(packId) {
     const url = getApiUrl("SERVICE_PACK", "DETAIL", { id: packId });
     return this.get(url);
+  }
+
+  async createServicePack(packData) {
+    const url = getApiUrl("SERVICE_PACK", "CREATE");
+    return this.post(url, packData);
+  }
+
+  async updateServicePack(packId, packData) {
+    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
+    return this.put(url, packData);
+  }
+
+  async deleteServicePack(packId) {
+    const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
+    return this.delete(url);
   }
 
   // ===== TRANSACTION METHODS =====
@@ -847,7 +872,9 @@ class ApiService {
   // ===== VNPay METHODS =====
   // Tạo URL thanh toán VNPay cho mua gói dịch vụ
   async createVnpayUrl(data) {
-    const endpoint = getEndpoint("VNPAY", "CREATE_URL");
+    // VNPay endpoint nằm ngoài prefix /api → gọi trực tiếp root
+    const rootBase = this.baseURL.replace(/\/_?api$/, "");
+    // Backend yêu cầu POST với query parameters
     const queryString = new URLSearchParams({
       userID: data.userID,
       packID: data.packID,
@@ -855,31 +882,13 @@ class ApiService {
       orderInfo: data.orderInfo,
       total: data.total,
     }).toString();
-    const url = `${API_CONFIG.DOMAIN}${endpoint}?${queryString}`;
-    console.log("🔄 Creating VNPay URL:", url);
+    const fullUrl = `${rootBase}/vnpay/create-url?${queryString}`;
 
-    return this.makeRequest(url, {
+    return this.makeRequest(fullUrl, {
       method: "POST",
       headers: {
         ...this.buildHeaders(),
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-    });
-  }
-
-  // Lấy thống kê thanh toán VNPay (danh sách các payment)
-  async getVnpayStatistic() {
-    const endpoint = getEndpoint("VNPAY", "STATISTIC");
-    const url = `${API_CONFIG.DOMAIN}${endpoint}`;
-    console.log("🔄 Calling VNPay API:", url);
-    
-    return this.makeRequest(url, {
-      method: "GET",
-      headers: {
-        ...this.buildHeaders(),
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
       },
     });
   }
@@ -888,70 +897,9 @@ class ApiService {
    * Cập nhật trạng thái transaction
    * Only supports updating via query params: transactionID, status
    */
-  async updateTransactionStatus(transactionId, status) {
-    const base = this.baseURL + "/transaction/updateStatus";
-    const queryString = new URLSearchParams({
-      transactionID: transactionId,
-      status,
-    }).toString();
-    const fullUrl = `${base}?${queryString}`;
-
-    return this.makeRequest(fullUrl, {
-      method: "PUT",
-      headers: {
-        ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
-  }
-
-  // ===== PINSLOT SWAP METHODS =====
-  /**
-   * Swap pin data between two pin slots
-   * POST /api/pinSlot/swap?pinSlotID1=123&pinSlotID2=456
-   */
-  async swapPinSlots(pinSlotID1, pinSlotID2) {
-    const queryString = new URLSearchParams({
-      pinSlotID1: pinSlotID1,
-      pinSlotID2: pinSlotID2,
-    }).toString();
-    const url = `${this.baseURL}/pinSlot/swap?${queryString}`;
-
-    return this.makeRequest(url, {
-      method: "POST",
-      headers: {
-        ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
-  }
-
-  // ===== TRANSACTION METHODS =====
-  /**
-   * Get all transactions
-   * GET /api/transaction/list
-   */
-  async getTransactions() {
-    const url = `${this.baseURL}/transaction/list`;
-
-    return this.makeRequest(url, {
-      method: "GET",
-      headers: {
-        ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
-  }
-
-  // ===== REPORT STATUS UPDATE =====
-  /**
-   * Update report status
-   * PUT /api/report/{reportId}/status
-   * Status: 0=Pending, 1=InProgress, 2=Resolved
-   */
   async updateReportStatus(reportId, status, adminID) {
     const url = `${this.baseURL}/report/${reportId}/status?status=${status}&adminID=${adminID}`;
-    
+
     return this.makeRequest(url, {
       method: "PUT",
       headers: {

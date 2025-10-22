@@ -1,10 +1,14 @@
 // Cấu hình API endpoints - có thể thay đổi dễ dàng
 const API_CONFIG = {
   // Domain chính của API
-  DOMAIN: process.env.REACT_APP_DOMAIN || "https://81e3af9fe071.ngrok-free.app",
-  
+  DOMAIN:
+    process.env.REACT_APP_DOMAIN ||
+    "https://hal-proteiform-erna.ngrok-free.dev",
+
   // Base URL cho tất cả API calls
-  BASE_URL: process.env.REACT_APP_API_BASE_URL || "https://81e3af9fe071.ngrok-free.app/api",
+  BASE_URL:
+    process.env.REACT_APP_API_BASE_URL ||
+    "https://hal-proteiform-erna.ngrok-free.dev/api",
 
   // Các endpoint cụ thể
   ENDPOINTS: {
