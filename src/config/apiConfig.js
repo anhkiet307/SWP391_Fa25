@@ -96,13 +96,9 @@ const API_CONFIG = {
       LIST: "/servicePack/list",
       DETAIL: "/servicePack/:id",
       CREATE: "/servicePack/create",
-      UPDATE: "/servicePack/:id",
-      DELETE: "/servicePack/:id",
-      DETAIL: "/service-packs/:id",
-      CREATE: "/service-packs",
-      UPDATE: "/service-packs/update/:id",
+      UPDATE: "/servicePack/update",
       UPDATE_STATUS: "/servicePack/updateStatus",
-      DELETE: "/service-packs/:id",
+      DELETE: "/servicePack/:id",
     },
 
     // Vehicle endpoints
@@ -116,7 +112,7 @@ const API_CONFIG = {
     // Transaction endpoints
     TRANSACTION: {
       CREATE: "/transaction/create",
-      LIST: "/transactions",
+      LIST: "/transaction/list",
       DETAIL: "/transactions/:id",
       HISTORY: "/transactions/history",
       PAYMENT: "/transactions/payment",
@@ -151,9 +147,9 @@ const API_CONFIG = {
       SETTINGS: "/admin/settings",
     },
 
-    // VNPay endpoints (thêm dấu / ở cuối theo đúng API)
+    // VNPay endpoints
     VNPAY: {
-      CREATE_URL: "/vnpay/create-url/",
+      CREATE_URL: "/vnpay/create-url",
       STATISTIC: "/vnpay/statistic/",
     },
   },

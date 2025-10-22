@@ -1,4 +1,4 @@
-import API_CONFIG, { getApiUrl } from "../config/apiConfig";
+import API_CONFIG, { getApiUrl, getEndpoint } from "../config/apiConfig";
 
 // API Service class để quản lý tất cả API calls
 class ApiService {
@@ -497,13 +497,47 @@ class ApiService {
   }
 
   async createServicePack(packData) {
-    const url = getApiUrl("SERVICE_PACK", "CREATE");
-    return this.post(url, packData);
+    const url = this.baseURL + "/servicePack/create";
+    // API sử dụng POST với query parameters
+    const queryString = new URLSearchParams({
+      adminUserID: packData.adminUserID,
+      packName: packData.packName,
+      description: packData.description,
+      total: packData.total,
+      price: packData.price,
+      status: packData.status,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async updateServicePack(packId, packData) {
-    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
-    return this.put(url, packData);
+    const url = this.baseURL + "/servicePack/update";
+    // API sử dụng PUT với query parameters
+    const queryString = new URLSearchParams({
+      packID: packId,
+      adminUserID: packData.adminUserID,
+      packName: packData.packName,
+      description: packData.description,
+      total: packData.total,
+      price: packData.price,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+    return this.makeRequest(fullUrl, {
+      method: "PUT",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
   }
 
   async updateServicePackStatus(packId, adminUserID, status) {
@@ -888,7 +922,34 @@ class ApiService {
       method: "POST",
       headers: {
         ...this.buildHeaders(),
-        "ngrok-skip-browser-warning": "true",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  // Lấy thống kê thanh toán VNPay (danh sách các payment)
+  async getVnpayStatistic() {
+    const endpoint = getEndpoint("VNPAY", "STATISTIC");
+    // VNPay endpoints không có prefix /api
+    const baseUrl = API_CONFIG.DOMAIN;
+    const url = `${baseUrl}${endpoint}`;
+    console.log("🔄 Calling VNPay API:", url);
+    console.log("🔄 Base URL:", baseUrl);
+    console.log("🔄 Endpoint:", endpoint);
+
+    // Thử với query parameters nếu cần
+    const token = this.getAuthToken();
+    const queryParams = token ? `?token=${token}` : "";
+    const fullUrl = `${url}${queryParams}`;
+    console.log("🔄 Full URL with params:", fullUrl);
+
+    return this.makeRequest(fullUrl, {
+      method: "GET",
+      headers: {
+        ...this.buildHeaders(),
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
     });
   }
