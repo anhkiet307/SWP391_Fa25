@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import apiService from "../services/apiService";
 import {
@@ -36,6 +37,7 @@ const { TextArea } = Input;
 
 export default function Reports() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,8 +58,14 @@ export default function Reports() {
   ).length;
 
   useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
     const fetchReports = async () => {
-      if (!isAuthenticated || !user) return;
+      if (!user) return;
 
       try {
         setLoading(true);
@@ -80,7 +88,7 @@ export default function Reports() {
     };
 
     fetchReports();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, navigate]);
 
   // Filter reports based on type and status
   useEffect(() => {
@@ -331,7 +339,7 @@ export default function Reports() {
   };
 
   const fetchReports = async () => {
-    if (!isAuthenticated || !user) return;
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -351,19 +359,6 @@ export default function Reports() {
       setLoading(false);
     }
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-        <Alert
-          message="Cần đăng nhập"
-          description="Bạn cần đăng nhập để xem báo cáo của mình."
-          type="warning"
-          showIcon
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen relative bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]">
@@ -723,11 +718,29 @@ export default function Reports() {
             <Empty
               description={
                 reports.length === 0
-                  ? "Chưa có báo cáo nào"
-                  : "Không tìm thấy báo cáo phù hợp với bộ lọc"
+                  ? "Bạn chưa có báo cáo nào. Hãy tạo báo cáo đầu tiên của bạn!"
+                  : "Không tìm thấy báo cáo phù hợp với bộ lọc hiện tại"
               }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            >
+              {reports.length === 0 && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreateReport}
+                  className="mt-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  style={{
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "14px",
+                    padding: "8px 24px",
+                    height: "auto",
+                  }}
+                >
+                  Tạo báo cáo đầu tiên
+                </Button>
+              )}
+            </Empty>
           ) : (
             <Table
               columns={columns}
