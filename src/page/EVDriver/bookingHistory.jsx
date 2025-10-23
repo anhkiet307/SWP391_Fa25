@@ -159,10 +159,10 @@ export default function BookingHistory() {
     if (paymentSearchText) {
       filtered = filtered.filter(
         (item) =>
-          String(item.vnp_TxnRef)
+          String(item.paymentID)
             .toLowerCase()
             .includes(paymentSearchText.toLowerCase()) ||
-          String(item.vnp_OrderInfo)
+          String(servicePacksMap[item.packID]?.packName || "")
             .toLowerCase()
             .includes(paymentSearchText.toLowerCase())
       );
@@ -473,20 +473,19 @@ export default function BookingHistory() {
             gap: "6px",
           }}
         >
-          <CreditCardOutlined style={{ color: "white", fontSize: "16px" }} />
           <Text strong style={{ color: "white", fontSize: "14px" }}>
             Mã giao dịch
           </Text>
         </div>
       ),
-      dataIndex: "vnp_TxnRef",
-      key: "vnp_TxnRef",
-      width: 180,
+      dataIndex: "paymentID",
+      key: "paymentID",
+      width: 120,
       align: "center",
-      render: (text) => (
+      render: (paymentID) => (
         <div style={{ textAlign: "center", padding: "8px 0" }}>
           <Text strong style={{ color: "#00083B", fontSize: "13px" }}>
-            {text}
+            #{paymentID}
           </Text>
         </div>
       ),
@@ -509,7 +508,7 @@ export default function BookingHistory() {
       ),
       dataIndex: "packID",
       key: "packID",
-      width: 150,
+      width: 200,
       align: "center",
       render: (packID, record) => (
         <div style={{ textAlign: "center", padding: "8px 0" }}>
@@ -524,7 +523,7 @@ export default function BookingHistory() {
                 lineHeight: "1.2",
               }}
             >
-              {servicePacksMap[packID]?.description || "Mô tả không có"}
+              {record.total} lượt đổi
             </Text>
           </div>
         </div>
@@ -571,37 +570,9 @@ export default function BookingHistory() {
             gap: "6px",
           }}
         >
-          <BankOutlined style={{ color: "white", fontSize: "16px" }} />
-          <Text strong style={{ color: "white", fontSize: "14px" }}>
-            Ngân hàng
-          </Text>
-        </div>
-      ),
-      dataIndex: "vnp_BankCode",
-      key: "vnp_BankCode",
-      width: 120,
-      align: "center",
-      render: (bankCode) => (
-        <div style={{ textAlign: "center", padding: "8px 0" }}>
-          <Text style={{ fontSize: "13px", fontWeight: "500" }}>
-            {bankCode || "N/A"}
-          </Text>
-        </div>
-      ),
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-          }}
-        >
           <CalendarOutlined style={{ color: "white", fontSize: "16px" }} />
           <Text strong style={{ color: "white", fontSize: "14px" }}>
-            Ngày thanh toán
+            Ngày mua
           </Text>
         </div>
       ),
@@ -614,6 +585,17 @@ export default function BookingHistory() {
           <Text style={{ fontSize: "13px", fontWeight: "500" }}>
             {dayjs(date).format("DD/MM/YYYY")}
           </Text>
+          <div>
+            <Text
+              style={{
+                fontSize: "11px",
+                color: "#64748b",
+                lineHeight: "1.2",
+              }}
+            >
+              {dayjs(date).format("HH:mm")}
+            </Text>
+          </div>
         </div>
       ),
     },
@@ -636,13 +618,22 @@ export default function BookingHistory() {
       key: "status",
       width: 120,
       align: "center",
-      render: (status) => {
+      render: (status, record) => {
         const statusConfig = {
           successful: { color: "green", text: "Thành công" },
           failed: { color: "red", text: "Thất bại" },
-          pending: { color: "orange", text: "Đang xử lý" },
         };
-        const config = statusConfig[status] || statusConfig.pending;
+        const config = statusConfig[status];
+
+        // Chỉ hiển thị tag nếu có trạng thái successful hoặc failed
+        if (!config) {
+          return (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <Text style={{ fontSize: "12px", color: "#64748b" }}>-</Text>
+            </div>
+          );
+        }
+
         return (
           <div style={{ textAlign: "center", padding: "8px 0" }}>
             <Tag
@@ -672,6 +663,7 @@ export default function BookingHistory() {
     // - successful: true → "successful"
     // - Nếu không có flags, dựa vào status field (0=pending, 1=success, 2=failed)
 
+    // Ưu tiên kiểm tra các flag boolean trước
     if (payment.failed === true) return "failed";
     if (payment.pending === true) return "pending";
     if (payment.successful === true) return "successful";
@@ -752,10 +744,21 @@ export default function BookingHistory() {
     try {
       const res = await apiService.getPaymentHistory(user.userID);
       if (res?.status === "success" && Array.isArray(res.data)) {
-        const mapped = res.data.map((payment) => ({
-          ...payment,
-          status: mapPaymentStatus(payment),
-        }));
+        // Chỉ lấy các payment có status = 1 (successful) hoặc status = 2 (failed)
+        const filteredPayments = res.data.filter(
+          (payment) => payment.status === 1 || payment.status === 2
+        );
+
+        const mapped = filteredPayments.map((payment) => {
+          const mappedStatus = mapPaymentStatus(payment);
+          console.log(
+            `Payment ${payment.paymentID}: status=${payment.status}, pending=${payment.pending}, failed=${payment.failed}, successful=${payment.successful} → mapped=${mappedStatus}`
+          );
+          return {
+            ...payment,
+            status: mappedStatus,
+          };
+        });
         setPaymentHistory(mapped);
         setFilteredPaymentData(mapped);
       } else {
@@ -1282,7 +1285,6 @@ export default function BookingHistory() {
                     <Option value="all">Tất cả</Option>
                     <Option value="successful">Thành công</Option>
                     <Option value="failed">Thất bại</Option>
-                    <Option value="pending">Đang xử lý</Option>
                   </Select>
                 </Space>
               </Col>
@@ -1316,7 +1318,7 @@ export default function BookingHistory() {
                     Tìm kiếm
                   </Text>
                   <Input
-                    placeholder="Mã giao dịch, mô tả..."
+                    placeholder="Mã giao dịch, tên gói..."
                     prefix={<SearchOutlined />}
                     value={paymentSearchText}
                     onChange={(e) => setPaymentSearchText(e.target.value)}
@@ -1356,7 +1358,7 @@ export default function BookingHistory() {
             <Table
               columns={paymentColumns}
               dataSource={filteredPaymentData}
-              rowKey="vnp_TxnRef"
+              rowKey="paymentID"
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,

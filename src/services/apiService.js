@@ -650,7 +650,7 @@ class ApiService {
 
   // Lấy lịch sử thanh toán gói dịch vụ
   async getPaymentHistory(userID) {
-    const url = `https://456e58d25f66.ngrok-free.app/vnpay/payment-history/${userID}`;
+    const url = `https://hal-proteiform-erna.ngrok-free.dev/vnpay/servicePack-history/${userID}`;
     return this.get(url);
   }
 
