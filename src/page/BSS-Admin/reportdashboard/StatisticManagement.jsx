@@ -203,19 +203,19 @@ const StatisticManagement = () => {
         };
       }
       
-      // Doanh thu: chỉ tính pack = 0 (thanh toán tại quầy)
-      if (transaction.pack === 0) {
+      // Doanh thu: chỉ tính pack = 0 (thanh toán tại quầy) VÀ status = 1 (đã thanh toán)
+      if (transaction.pack === 0 && transaction.status === 1) {
         const amount = parseFloat(transaction.amount) || 0;
         totalRevenue += amount;
         dailyData[dateKey].revenue += amount;
-        console.log("💰 Added to revenue:", amount, "Total:", totalRevenue);
+        console.log("💰 Added to revenue:", amount, "Status:", transaction.status, "Total:", totalRevenue);
       }
       
-      // Số lượt đổi: tính cả pack = 0 và pack = 1
-      if (transaction.pack === 0 || transaction.pack === 1) {
+      // Số lượt đổi: tính cả pack = 0 và pack = 1, nhưng chỉ khi status = 1
+      if ((transaction.pack === 0 || transaction.pack === 1) && transaction.status === 1) {
         totalSwaps += 1;
         dailyData[dateKey].swaps += 1;
-        console.log("🔄 Added to swaps:", transaction.pack, "Total:", totalSwaps);
+        console.log("🔄 Added to swaps:", transaction.pack, "Status:", transaction.status, "Total:", totalSwaps);
       }
     });
     
@@ -231,13 +231,20 @@ const StatisticManagement = () => {
     setRevenueData(chartData);
     setOverviewStats(prev => ({
       ...prev,
-      counterRevenue: totalRevenue,  // Doanh thu tại quầy
+      counterRevenue: totalRevenue,  // Doanh thu tại quầy (pack=0)
       totalSwaps: totalSwaps
     }));
   };
 
   // Function để tính toán peak hours từ transactions
   const processPeakHoursData = (transactions) => {
+    console.log("⏰ Processing peak hours data with transactions:", transactions.length);
+    
+    // Debug: Log pack distribution
+    const pack0Count = transactions.filter(t => t.pack === 0 && t.status === 1).length;
+    const pack1Count = transactions.filter(t => t.pack === 1 && t.status === 1).length;
+    console.log("📊 Pack distribution - Pack 0:", pack0Count, "Pack 1:", pack1Count);
+    
     // Chỉ hiển thị giờ hoạt động của trạm (08:00 - 22:00)
     const hourRanges = [
       { hour: "08:00-10:00", start: 8, end: 10 },
@@ -249,14 +256,18 @@ const StatisticManagement = () => {
       { hour: "20:00-22:00", start: 20, end: 22 }
     ];
 
-    // Đếm số lượt đổi trong mỗi khung giờ
+    // Đếm số lượt đổi trong mỗi khung giờ - chỉ tính giao dịch có (pack=0 hoặc pack=1) VÀ status=1
     const hourCounts = hourRanges.map(range => {
       const count = transactions.filter(t => {
         if (!t.createAt) return false;
+        // Chỉ đếm giao dịch có (pack = 0 hoặc pack = 1) VÀ status = 1
+        if (!((t.pack === 0 || t.pack === 1) && t.status === 1)) return false;
         const date = new Date(t.createAt);
         const hour = date.getHours();
         return hour >= range.start && hour < range.end;
       }).length;
+      
+      console.log(`⏰ ${range.hour}: ${count} transactions`);
       
       return {
         hour: range.hour,
@@ -443,9 +454,10 @@ const StatisticManagement = () => {
 
   const getStatusText = (status) => {
     switch(status) {
-      case 2: return "Đã thanh toán";
-      case 1: return "Đang xử lý";
-      case 0: return "Chưa thanh toán";
+      case 0: return "Chờ xử lý";
+      case 1: return "Đã hoàn thành";
+      case 2: return "Hết hạn";
+      case 3: return "Đã hủy";
       default: return "Không xác định";
     }
   };
@@ -495,8 +507,9 @@ const StatisticManagement = () => {
   };
 
   // Pagination logic for pin swaps table (sort newest -> oldest before slicing)
+  // Chỉ lấy transactions có (pack = 0 hoặc pack = 1) VÀ status = 1
   const pinSwapTransactions = transactions
-    .filter(t => t.pack === 0 || t.pack === 1)
+    .filter(t => (t.pack === 0 || t.pack === 1) && t.status === 1)
     .sort((a, b) => new Date(b.createAt) - new Date(a.createAt));
   const totalPages = Math.ceil(pinSwapTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -944,7 +957,7 @@ const StatisticManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.filter(t => t.pack === 0).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
+                    {transactions.filter(t => t.pack === 0 && t.status === 1).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
                       <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
                         <td className="p-4 text-sm font-medium text-gray-900">
                           {getUserName(transaction.userID)}
@@ -960,11 +973,13 @@ const StatisticManagement = () => {
                         </td>
                         <td className="p-4 text-center">
                           <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                            transaction.status === 2 
+                            transaction.status === 1 
                               ? 'bg-green-100 text-green-800' 
-                              : transaction.status === 1 
+                              : transaction.status === 0
                                 ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                                : transaction.status === 2
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : 'bg-red-100 text-red-800'
                           }`}>
                             {getStatusText(transaction.status)}
                           </span>
@@ -974,7 +989,7 @@ const StatisticManagement = () => {
                         </td>
                       </tr>
                     ))}
-                    {transactions.filter(t => t.pack === 0).length === 0 && (
+                    {transactions.filter(t => t.pack === 0 && t.status === 1).length === 0 && (
                       <tr>
                         <td colSpan="6" className="p-8 text-center text-gray-500">
                           Không có dữ liệu giao dịch tại quầy
@@ -982,7 +997,7 @@ const StatisticManagement = () => {
                       </tr>
                     )}
                     {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
-                    {Array.from({ length: Math.max(0, 10 - transactions.filter(t => t.pack === 0).slice(0, 10).length) }, (_, i) => (
+                    {Array.from({ length: Math.max(0, 10 - transactions.filter(t => t.pack === 0 && t.status === 1).slice(0, 10).length) }, (_, i) => (
                       <tr key={`empty-${i}`}>
                         <td colSpan="6" className="p-4">&nbsp;</td>
                       </tr>
