@@ -891,6 +891,7 @@ export default function Booking() {
           transactionData: transactionResponse.data,
           amount: transactionData.amount,
           pack: transactionData.pack,
+          stationLocation: selectedStation.location, // Thêm location vào bookingData
         };
 
         setBookingData(normalizedValues);
