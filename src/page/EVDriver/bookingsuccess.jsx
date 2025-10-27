@@ -23,6 +23,7 @@ import {
   HomeOutlined,
   PhoneOutlined,
   MailOutlined,
+  CompassOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -92,6 +93,24 @@ export default function BookingSuccess() {
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
   const selectedSlotId = bookingData?.selectedSlot ?? null;
+
+  // Hàm mở Google Maps với địa chỉ trạm
+  const handleOpenDirections = () => {
+    const location = bookingData?.stationLocation;
+    if (location) {
+      const encodedAddress = encodeURIComponent(location);
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+      window.open(googleMapsUrl, "_blank");
+    } else {
+      // Fallback: nếu không có location thì dùng station name
+      const stationName = bookingData?.station;
+      if (stationName) {
+        const encodedAddress = encodeURIComponent(stationName);
+        const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+        window.open(googleMapsUrl, "_blank");
+      }
+    }
+  };
 
   return (
     <SimpleErrorBoundary>
@@ -417,6 +436,23 @@ export default function BookingSuccess() {
                     Xem lịch sử giao dịch
                   </Button>
                 </Link>
+                <Button
+                  size="large"
+                  icon={<CompassOutlined />}
+                  onClick={handleOpenDirections}
+                  style={{
+                    height: "48px",
+                    fontSize: "16px",
+                    borderRadius: "12px",
+                    background:
+                      "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    border: "none",
+                    color: "white",
+                    fontWeight: "600",
+                  }}
+                >
+                  Chỉ đường
+                </Button>
                 <Link to="/">
                   <Button
                     size="large"

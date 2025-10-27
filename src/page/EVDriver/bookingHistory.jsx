@@ -74,10 +74,9 @@ export default function BookingHistory() {
   const completedBookings = filteredData.filter(
     (item) => item.status === "completed"
   ).length;
-  const totalSpent = filteredData.reduce(
-    (sum, item) => sum + item.serviceFee,
-    0
-  );
+  const totalSpent = filteredData
+    .filter((item) => item.status === "completed")
+    .reduce((sum, item) => sum + item.serviceFee, 0);
 
   // Thống kê tổng quan cho payment
   const totalPayments = filteredPaymentData.length;
@@ -285,16 +284,20 @@ export default function BookingHistory() {
           <Text strong style={{ fontSize: "13px", fontWeight: "600" }}>
             {name}
           </Text>
-          <div>
-            <Text
-              style={{
-                fontSize: "11px",
-                color: "#64748b",
-                lineHeight: "1.2",
-              }}
-            >
-              {record.stationAddress}
-            </Text>
+          <div
+            onClick={() => handleOpenDirections(record.stationAddress)}
+            style={{
+              fontSize: "11px",
+              color: "#1890ff",
+              lineHeight: "1.2",
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontWeight: "600",
+            }}
+            onMouseEnter={(e) => (e.target.style.color = "#40a9ff")}
+            onMouseLeave={(e) => (e.target.style.color = "#1890ff")}
+          >
+            {record.stationAddress}
           </div>
         </div>
       ),
@@ -705,7 +708,10 @@ export default function BookingHistory() {
           status: mapApiStatusToText(t.status),
           createdAt: t.createAt,
         }));
-        const sorted = mapped.sort((a, b) => a.id - b.id);
+        const sorted = mapped.sort((a, b) => {
+          // Sắp xếp theo createdAt (ngày tạo) mới nhất trước
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
         setBookingHistory(sorted);
         setFilteredData(sorted);
       } else {
@@ -749,16 +755,21 @@ export default function BookingHistory() {
           (payment) => payment.status === 1 || payment.status === 2
         );
 
-        const mapped = filteredPayments.map((payment) => {
-          const mappedStatus = mapPaymentStatus(payment);
-          console.log(
-            `Payment ${payment.paymentID}: status=${payment.status}, pending=${payment.pending}, failed=${payment.failed}, successful=${payment.successful} → mapped=${mappedStatus}`
-          );
-          return {
-            ...payment,
-            status: mappedStatus,
-          };
-        });
+        const mapped = filteredPayments
+          .map((payment) => {
+            const mappedStatus = mapPaymentStatus(payment);
+            console.log(
+              `Payment ${payment.paymentID}: status=${payment.status}, pending=${payment.pending}, failed=${payment.failed}, successful=${payment.successful} → mapped=${mappedStatus}`
+            );
+            return {
+              ...payment,
+              status: mappedStatus,
+            };
+          })
+          .sort((a, b) => {
+            // Sắp xếp theo createdAt mới nhất trước
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
         setPaymentHistory(mapped);
         setFilteredPaymentData(mapped);
       } else {
@@ -849,6 +860,15 @@ export default function BookingHistory() {
       name: info.packName,
     })
   );
+
+  // Hàm mở Google Maps với địa chỉ trạm
+  const handleOpenDirections = (address) => {
+    if (address) {
+      const encodedAddress = encodeURIComponent(address);
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+      window.open(googleMapsUrl, "_blank");
+    }
+  };
 
   return (
     <div className="min-h-screen relative bg-[linear-gradient(135deg,#f8fafc_0%,#e2e8f0_100%)]">
