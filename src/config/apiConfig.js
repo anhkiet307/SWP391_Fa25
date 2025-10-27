@@ -61,6 +61,7 @@ const API_CONFIG = {
       LIST_BY_STATION: "/pinSlot/list",
       UPDATE_SLOT: "/pinSlot/updateSlot",
       UNRESERVE: "/pinSlot/unreserve",
+      SWAP: "/pinSlot/swap",
     },
 
     // Booking endpoints
