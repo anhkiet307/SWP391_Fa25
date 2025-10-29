@@ -357,7 +357,7 @@ const AdminDashboard = () => {
           {/* Report gần đây */}
           <div className="bg-white p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-gray-800 mb-5 text-xl font-semibold">
-              Report gần đây
+              Báo cáo gần đây
             </h2>
             <div className="space-y-3 flex-1 mt-8">
               {reportsLoading ? (
@@ -479,7 +479,7 @@ const AdminDashboard = () => {
                 onClick={() => navigate("/admin-report-management")}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
               >
-                Xem tất cả report
+                Xem tất cả báo cáo
               </button>
             </div>
           </div>

@@ -497,7 +497,7 @@ class ApiService {
   }
 
   async createServicePack(packData) {
-    const url = this.baseURL + "/servicePack/create";
+    const url = getApiUrl("SERVICE_PACK", "CREATE");
     // API sử dụng POST với query parameters
     const queryString = new URLSearchParams({
       adminUserID: packData.adminUserID,
@@ -519,16 +519,25 @@ class ApiService {
   }
 
   async updateServicePack(packId, packData) {
-    const url = this.baseURL + "/servicePack/update";
-    // API sử dụng PUT với query parameters
-    const queryString = new URLSearchParams({
-      packID: packId,
-      adminUserID: packData.adminUserID,
-      packName: packData.packName,
-      description: packData.description,
-      total: packData.total,
-      price: packData.price,
-    }).toString();
+    const url = getApiUrl("SERVICE_PACK", "UPDATE");
+    
+    // Validate và convert data theo đúng type API yêu cầu
+    const params = {
+      packID: parseInt(packId),
+      adminUserID: parseInt(packData.adminUserID),
+      packName: packData.packName || "",
+      total: parseInt(packData.total) || 0,
+      price: parseInt(packData.price) || 0,
+    };
+    
+    // Chỉ thêm description nếu có giá trị
+    if (packData.description && packData.description.trim() !== "") {
+      params.description = packData.description;
+    }
+    
+    console.log("📤 API UPDATE Request:", { url, params });
+    
+    const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
     return this.makeRequest(fullUrl, {
@@ -747,6 +756,30 @@ class ApiService {
     });
   }
 
+  /**
+   * Điều phối pin giữa 2 pin slots (swap pinPercent và pinHealth)
+   * API Documentation: POST /api/pinSlot/swap
+   * @param {number} pinSlotID1 - ID pin slot đầu tiên
+   * @param {number} pinSlotID2 - ID pin slot thứ hai
+   * @returns {Promise<Object>} - Kết quả điều phối
+   */
+  async swapPinSlots(pinSlotID1, pinSlotID2) {
+    const url = getApiUrl("PINSLOT", "SWAP");
+    const queryString = new URLSearchParams({
+      pinSlotID1: pinSlotID1,
+      pinSlotID2: pinSlotID2,
+    }).toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    
+    return this.makeRequest(fullUrl, {
+      method: "POST",
+      headers: {
+        ...this.buildHeaders(),
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+  }
+
   async createRating(ratingData) {
     const url = getApiUrl("RATING", "CREATE");
     // API sử dụng query parameters thay vì body
@@ -835,11 +868,6 @@ class ApiService {
   async createServicePack(packData) {
     const url = getApiUrl("SERVICE_PACK", "CREATE");
     return this.post(url, packData);
-  }
-
-  async updateServicePack(packId, packData) {
-    const url = getApiUrl("SERVICE_PACK", "UPDATE", { id: packId });
-    return this.put(url, packData);
   }
 
   async deleteServicePack(packId) {

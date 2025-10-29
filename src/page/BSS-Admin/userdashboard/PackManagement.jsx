@@ -55,21 +55,28 @@ const PackManagement = () => {
       const isBasicPack = editingPack && editingPack.packID === 1;
       const totalValue = isBasicPack ? 0 : (parseInt(formData.total) || 0);
       
+      console.log("📝 Form Data:", { 
+        isBasicPack, 
+        totalValue, 
+        formData 
+      });
+      
       const packData = {
         packName: formData.packName,
-        description: formData.description,
+        description: formData.description || "",
         total: totalValue,
-        price: parseInt(formData.price.replace(/[^0-9]/g, '')), // Loại bỏ dấu phẩy khi submit
-        status: parseInt(formData.status),
-        adminUserID: user?.userID || 1, // Thêm adminUserID từ AuthContext
+        price: parseInt(formData.price.replace(/[^0-9]/g, '') || '0'),
+        adminUserID: user?.userID || 1,
       };
 
       if (editingPack) {
-        // Update existing pack
+        // Update existing pack - API không cần status
+        console.log("🔄 Updating pack:", { packID: editingPack.packID, packData });
         await apiService.updateServicePack(editingPack.packID, packData);
         toast.success("Cập nhật gói dịch vụ thành công");
       } else {
-        // Create new pack
+        // Create new pack - cần thêm status cho create
+        packData.status = parseInt(formData.status);
         await apiService.createServicePack(packData);
         toast.success("Tạo gói dịch vụ thành công");
       }
