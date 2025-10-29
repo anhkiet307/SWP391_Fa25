@@ -125,15 +125,6 @@ export default function Login() {
             <h2 className="mt-6 text-center text-3xl font-bold text-white">
               Đăng nhập tài khoản
             </h2>
-            <p className="mt-2 text-center text-sm text-white/80">
-              Hoặc{" "}
-              <Link
-                to="/register"
-                className="font-medium text-blue-300 hover:text-blue-200 transition-colors"
-              >
-                tạo tài khoản mới
-              </Link>
-            </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
@@ -238,15 +229,6 @@ export default function Login() {
                 >
                   Ghi nhớ đăng nhập
                 </label>
-              </div>
-
-              <div className="text-sm">
-                <Link
-                  to="/forgot-password"
-                  className="font-medium text-blue-300 hover:text-blue-200 underline transition-colors"
-                >
-                  Quên mật khẩu?
-                </Link>
               </div>
             </div>
 

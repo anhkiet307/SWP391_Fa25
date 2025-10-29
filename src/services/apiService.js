@@ -397,11 +397,11 @@ class ApiService {
 
   /**
    * Đặt giữ một pin slot
-   * API yêu cầu method PUT với query params: pinID, userID
+   * API yêu cầu method PUT với query params: pinID, vehicleID
    */
-  async reservePinSlot(pinID, userID) {
+  async reservePinSlot(pinID, vehicleID) {
     const url = getApiUrl("PINSLOT", "RESERVE");
-    const queryString = new URLSearchParams({ pinID, userID }).toString();
+    const queryString = new URLSearchParams({ pinID, vehicleID }).toString();
     const fullUrl = `${url}?${queryString}`;
 
     return this.makeRequest(fullUrl, {
@@ -697,8 +697,8 @@ class ApiService {
 
   // ===== VEHICLE METHODS =====
   async getVehiclesByUser(userId) {
-    const url = getApiUrl("VEHICLE", "BY_USER");
-    return this.get(url, { userID: userId });
+    const fullUrl = `${this.baseURL}/vehicle/user?userID=${userId}`;
+    return this.get(fullUrl);
   }
 
   async vehiclePinSwap(vehicleId, pinSlotId) {

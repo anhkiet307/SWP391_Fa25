@@ -13,6 +13,7 @@ const BookingSummary = ({
   loadingSubscription,
   selectedStationId,
   selectedPinSlotId,
+  selectedVehicle,
 }) => {
   const { user } = useAuth();
   const formatVND = (value) =>
@@ -98,6 +99,10 @@ const BookingSummary = ({
         <span>Ổ pin:</span>
         <span style={{ color: "#0f172a" }}>
           {selectedPinSlotId ? `Ổ pin #${selectedPinSlotId}` : "Chưa chọn"}
+        </span>
+        <span>Xe:</span>
+        <span style={{ color: "#0f172a" }}>
+          {selectedVehicle ? selectedVehicle.licensePlate : "Chưa chọn"}
         </span>
         <span>Giá dịch vụ:</span>
         <span style={{ color: "#0f172a" }}>

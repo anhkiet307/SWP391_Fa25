@@ -106,7 +106,7 @@ const LocationMap = ({
   return (
     <Card
       className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative"
-      style={{ height: 700, overflow: "hidden" }}
+      style={{ height: 800, overflow: "hidden" }}
     >
       {/* Simple Decorative Elements */}
       <div className="absolute -top-[30px] -left-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
@@ -148,7 +148,7 @@ const LocationMap = ({
       {/* Map */}
       <div
         style={{
-          height: "400px",
+          height: "500px",
           borderRadius: "16px",
           overflow: "hidden",
           position: "relative",

@@ -309,6 +309,52 @@ export default function BookingSuccess() {
                     </Space>
                   </Col>
                 )}
+
+                {bookingData?.vehicleInfo && (
+                  <Col xs={24} sm={12}>
+                    <Space
+                      direction="vertical"
+                      size="small"
+                      style={{ width: "100%" }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            backgroundColor: "#3b82f6",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "12px",
+                          }}
+                        >
+                          🚗
+                        </div>
+                        <Text strong style={{ color: "#00083B" }}>
+                          Xe đã đặt:
+                        </Text>
+                      </div>
+                      <Text
+                        style={{
+                          color: "#475569",
+                          fontSize: "16px",
+                          marginLeft: "26px",
+                        }}
+                      >
+                        {bookingData.vehicleInfo.licensePlate} -{" "}
+                        {bookingData.vehicleInfo.vehicleType}
+                      </Text>
+                    </Space>
+                  </Col>
+                )}
               </Row>
 
               <Divider style={{ margin: "20px 0" }} />
