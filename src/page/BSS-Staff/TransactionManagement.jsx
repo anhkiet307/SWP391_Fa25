@@ -180,18 +180,65 @@ const TransactionManagement = () => {
     <StaffLayout>
       <div className="p-6 bg-gray-50 min-h-screen font-sans">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 rounded-lg mb-8 shadow-lg">
-          <h1 className="text-3xl font-semibold m-0">Quản lý Giao dịch</h1>
-          <p className="text-purple-100 mt-2">
-            Xem và quản lý các giao dịch đổi pin tại trạm
-          </p>
-          {station?.stationName && (
-            <p className="text-xs text-purple-100 mt-1">
-              Trạm: {station.stationName}
-            </p>
-          )}
-          {isLoading && <p className="text-xs mt-1">Đang tải dữ liệu…</p>}
-          {error && <p className="text-xs mt-1 text-red-200">{error}</p>}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-700 text-white p-6 rounded-lg mb-8 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold m-0 flex items-center">
+                <svg
+                  className="w-8 h-8 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M4 4a2 2 0 012-2h4a2 2 0 012 2v2h4a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h4V4z" />
+                </svg>
+                Quản lý Giao dịch
+              </h1>
+              <p className="text-green-100 mt-2">
+                Xem và quản lý các giao dịch đổi pin tại trạm
+              </p>
+              {station?.stationName && (
+                <p className="text-sm text-green-100 mt-1 flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Trạm: {station.stationName}
+                </p>
+              )}
+            </div>
+            {isLoading && (
+              <div className="flex items-center">
+                <svg
+                  className="animate-spin h-5 w-5 text-white mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span className="text-sm">Đang tải...</span>
+              </div>
+            )}
+          </div>
+          {error && <p className="text-xs mt-2 text-red-200">{error}</p>}
         </div>
 
         {/* Thống kê giao dịch */}
@@ -200,40 +247,112 @@ const TransactionManagement = () => {
             Thống kê giao dịch
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-lg text-center shadow-md">
-              <div className="text-4xl font-bold text-green-500 mb-2">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md border-t-4 border-green-500 hover:transform hover:-translate-y-1 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="text-4xl font-bold text-green-600 mb-2">
                 {transactions.filter((t) => t.status === "completed").length}
               </div>
-              <div className="text-sm text-gray-600">Hoàn thành</div>
+              <div className="text-sm text-gray-600 font-medium">
+                Hoàn thành
+              </div>
             </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md">
-              <div className="text-4xl font-bold text-yellow-500 mb-2">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md border-t-4 border-yellow-500 hover:transform hover:-translate-y-1 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-yellow-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="text-4xl font-bold text-yellow-600 mb-2">
                 {transactions.filter((t) => t.status === "pending").length}
               </div>
-              <div className="text-sm text-gray-600">Chờ xử lý</div>
+              <div className="text-sm text-gray-600 font-medium">Chờ xử lý</div>
             </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md">
-              <div className="text-4xl font-bold text-red-500 mb-2">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md border-t-4 border-red-500 hover:transform hover:-translate-y-1 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-red-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="text-4xl font-bold text-red-600 mb-2">
                 {transactions.filter((t) => t.status === "cancelled").length}
               </div>
-              <div className="text-sm text-gray-600">Đã hủy</div>
+              <div className="text-sm text-gray-600 font-medium">Đã hủy</div>
             </div>
-            <div className="bg-white p-6 rounded-lg text-center shadow-md">
-              <div className="text-4xl font-bold text-gray-500 mb-2">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md border-t-4 border-gray-500 hover:transform hover:-translate-y-1 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-6 h-6 text-gray-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="text-4xl font-bold text-gray-600 mb-2">
                 {transactions.filter((t) => t.status === "expired").length}
               </div>
-              <div className="text-sm text-gray-600">Đã hết hạn</div>
+              <div className="text-sm text-gray-600 font-medium">
+                Đã hết hạn
+              </div>
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {transactions
-                .filter((t) => t.status === "completed")
-                .reduce((sum, t) => sum + t.payment, 0)
-                .toLocaleString("vi-VN")}{" "}
-              VNĐ
+          <div className="text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border-2 border-green-200">
+            <div className="flex items-center justify-center mb-2">
+              <svg
+                className="w-8 h-8 text-green-600 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.187 1.276V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.187-1.276V5z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="text-3xl font-bold text-green-700">
+                {transactions
+                  .filter((t) => t.status === "completed")
+                  .reduce((sum, t) => sum + t.payment, 0)
+                  .toLocaleString("vi-VN")}{" "}
+                VNĐ
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Tổng doanh thu</div>
+            <div className="text-sm text-green-700 font-medium">
+              Tổng doanh thu
+            </div>
           </div>
         </div>
 
@@ -245,26 +364,26 @@ const TransactionManagement = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                <tr className="bg-gradient-to-r from-green-50 to-emerald-50">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Mã KH
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Tên KH
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Slot
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Trạng thái
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Thanh toán
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Thời gian
                   </th>
-                  <th className="p-3 text-left border-b border-gray-200 bg-gray-50 font-semibold text-gray-800 text-sm">
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Thao tác
                   </th>
                 </tr>
@@ -348,7 +467,7 @@ const TransactionManagement = () => {
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            className="px-3 py-1.5 rounded border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 text-xs font-medium transition-colors"
+                            className="px-3 py-1.5 rounded-md border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 text-xs font-medium transition-all hover:shadow-md"
                             onClick={() => toggleExpand(transaction.id)}
                           >
                             {expandedRowIds.has(transaction.id)
@@ -357,15 +476,26 @@ const TransactionManagement = () => {
                           </button>
                           {transaction.status === "pending" && (
                             <button
-                              className="px-3 py-1.5 rounded bg-green-500 hover:bg-green-600 text-white text-xs font-medium shadow-sm"
+                              className="px-4 py-1.5 rounded-md bg-green-600 hover:bg-green-700 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all transform hover:scale-105"
                               onClick={() => showConfirmModal(transaction)}
                             >
                               ✓ Xác nhận
                             </button>
                           )}
                           {transaction.status === "completed" && (
-                            <span className="text-xs text-green-600 font-medium">
-                              ✓ Hoàn thành
+                            <span className="text-xs text-green-600 font-medium flex items-center">
+                              <svg
+                                className="w-4 h-4 mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              Hoàn thành
                             </span>
                           )}
                           {transaction.status === "cancelled" && (
@@ -457,9 +587,9 @@ const TransactionManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
                 <svg
-                  className="w-6 h-6 text-yellow-600"
+                  className="w-6 h-6 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -468,7 +598,7 @@ const TransactionManagement = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
               </div>
@@ -551,7 +681,7 @@ const TransactionManagement = () => {
               </button>
               <button
                 onClick={() => updateToCompleted(confirmModal.transaction)}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 ✓ Xác nhận
               </button>

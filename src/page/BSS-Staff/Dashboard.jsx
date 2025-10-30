@@ -113,9 +113,9 @@ const StaffDashboard = () => {
     <StaffLayout>
       <div className="p-6 bg-gray-50 min-h-screen">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 rounded-lg mb-8 shadow-lg">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-700 text-white p-6 rounded-lg mb-8 shadow-lg">
           <h1 className="text-3xl font-semibold m-0">Dashboard</h1>
-          <p className="text-purple-100 mt-2">
+          <p className="text-green-100 mt-2">
             Tổng quan hoạt động{" "}
             {station?.stationName ? `- ${station.stationName}` : "trạm"}
           </p>
@@ -130,38 +130,87 @@ const StaffDashboard = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Pin đầy */}
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform border-t-4 border-green-500">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-8 h-8 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Pin đầy
               </h3>
-              <div className="text-4xl font-bold m-0 text-green-500">
+              <div className="text-4xl font-bold m-0 text-green-600">
                 {inventory.fullPins}
               </div>
             </div>
             {/* Pin chưa đầy */}
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform border-t-4 border-yellow-500">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-8 h-8 text-yellow-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Pin chưa đầy
               </h3>
-              <div className="text-4xl font-bold m-0 text-yellow-500">
+              <div className="text-4xl font-bold m-0 text-yellow-600">
                 {inventory.notFullPins}
               </div>
             </div>
             {/* Slot đang thuê */}
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform border-t-4 border-blue-500">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-8 h-8 text-blue-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+              </div>
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Slot đang thuê
               </h3>
-              <div className="text-4xl font-bold m-0 text-red-500">
+              <div className="text-4xl font-bold m-0 text-blue-600">
                 {inventory.rentingSlots}
               </div>
             </div>
             {/* Slot khả dụng */}
-            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
+            <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform border-t-4 border-emerald-500">
+              <div className="flex items-center justify-center mb-2">
+                <svg
+                  className="w-8 h-8 text-emerald-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
               <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                 Slot khả dụng
               </h3>
-              <div className="text-4xl font-bold m-0 text-blue-500">
+              <div className="text-4xl font-bold m-0 text-emerald-600">
                 {inventory.availableSlots}
               </div>
             </div>
@@ -174,25 +223,65 @@ const StaffDashboard = () => {
               Trạng thái slot
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-emerald-600">
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-lg p-5 text-center transform transition-all hover:shadow-lg">
+                <div className="flex items-center justify-center mb-2">
+                  <svg
+                    className="w-6 h-6 text-emerald-600 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="text-4xl font-bold text-emerald-700">
                   {inventory.availableSlots}
                 </div>
-                <div className="text-sm text-gray-600 mt-1">Cho phép đặt</div>
+                <div className="text-sm text-emerald-700 font-medium mt-2">
+                  Cho phép đặt
+                </div>
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-gray-700">
+              <div className="bg-gray-50 border-2 border-gray-300 rounded-lg p-5 text-center transform transition-all hover:shadow-lg">
+                <div className="flex items-center justify-center mb-2">
+                  <svg
+                    className="w-6 h-6 text-gray-600 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="text-4xl font-bold text-gray-700">
                   {inventory.unavailableSlots}
                 </div>
-                <div className="text-sm text-gray-600 mt-1">
+                <div className="text-sm text-gray-700 font-medium mt-2">
                   Không cho phép đặt
                 </div>
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-purple-600">
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-5 text-center transform transition-all hover:shadow-lg">
+                <div className="flex items-center justify-center mb-2">
+                  <svg
+                    className="w-6 h-6 text-blue-600 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                  </svg>
+                </div>
+                <div className="text-4xl font-bold text-blue-700">
                   {inventory.rentingSlots}
                 </div>
-                <div className="text-sm text-gray-600 mt-1">Đang thuê</div>
+                <div className="text-sm text-blue-700 font-medium mt-2">
+                  Đang thuê
+                </div>
               </div>
             </div>
           </div>
