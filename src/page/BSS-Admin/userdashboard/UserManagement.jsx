@@ -47,6 +47,7 @@ const UserManagement = () => {
     pinPercent: "",
     pinHealth: "",
   });
+  const [licensePlateError, setLicensePlateError] = useState(""); // State cho lỗi biển số xe
 
   // States cho modal xem danh sách phương tiện
   const [showVehicleListModal, setShowVehicleListModal] = useState(false);
@@ -598,32 +599,143 @@ const UserManagement = () => {
     setUserToChangeStatus(null);
   };
 
-  // Hàm format biển số xe
+  // Hàm format biển số xe với validation
   const formatLicensePlate = (value) => {
-    // Loại bỏ tất cả ký tự không phải số hoặc chữ
+    // Loại bỏ ký tự đặc biệt (giữ số và chữ)
     const cleaned = value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
     
-    let formatted = '';
+    let result = '';
     
-    // Format: XXAB-XXX.XX
-    // 2 số đầu
-    if (cleaned.length > 0) {
-      formatted += cleaned.substring(0, 2);
+    // Format: XXA[B/X]-XXX.XX (tổng 9 ký tự)
+    for (let i = 0; i < cleaned.length && result.length < 9; i++) {
+      const char = cleaned[i];
+      const currentPos = result.length;
+      
+      // Vị trí 0-1: CHỈ SỐ (2 số đầu)
+      if (currentPos < 2) {
+        if (/[0-9]/.test(char)) {
+          result += char;
+        }
+        // Bỏ qua chữ cái ở vị trí này
+      }
+      // Vị trí 2: CHỈ CHỮ (bắt buộc là chữ cái)
+      else if (currentPos === 2) {
+        if (/[A-Z]/.test(char)) {
+          result += char;
+        }
+        // Bỏ qua số ở vị trí này
+      }
+      // Vị trí 3: CHỮ hoặc SỐ đều được
+      else if (currentPos === 3) {
+        if (/[A-Z0-9]/.test(char)) {
+          result += char;
+        }
+      }
+      // Vị trí 4-6: CHỈ SỐ (3 số sau dấu gạch ngang)
+      else if (currentPos < 7) {
+        if (/[0-9]/.test(char)) {
+          result += char;
+        }
+        // Bỏ qua chữ cái ở vị trí này
+      }
+      // Vị trí 7-8: CHỈ SỐ (2 số cuối)
+      else if (currentPos < 9) {
+        if (/[0-9]/.test(char)) {
+          result += char;
+        }
+        // Bỏ qua chữ cái ở vị trí này
+      }
     }
-    // 2 chữ cái
-    if (cleaned.length > 2) {
-      formatted += cleaned.substring(2, 4);
+    
+    // Thêm dấu phân cách
+    let formatted = '';
+    if (result.length > 0) {
+      formatted += result.substring(0, 2); // XX
     }
-    // Thêm dấu gạch ngang
-    if (cleaned.length > 4) {
-      formatted += '-' + cleaned.substring(4, 7);
+    if (result.length > 2) {
+      formatted += result.substring(2, 4); // A[B/X]
     }
-    // Thêm dấu chấm
-    if (cleaned.length > 7) {
-      formatted += '.' + cleaned.substring(7, 9);
+    if (result.length > 4) {
+      formatted += '-' + result.substring(4, 7); // -XXX
+    }
+    if (result.length > 7) {
+      formatted += '.' + result.substring(7, 9); // .XX
     }
     
     return formatted;
+  };
+
+  // Hàm kiểm tra biển số xe trùng lặp (real-time)
+  const checkLicensePlateRealtime = (licensePlate) => {
+    // Xóa lỗi nếu chưa nhập đủ
+    if (!licensePlate || licensePlate.length === 0) {
+      setLicensePlateError("");
+      return;
+    }
+
+    // Loại bỏ dấu gạch ngang và dấu chấm để so sánh
+    const cleanedInput = licensePlate.replace(/[-\.]/g, '');
+    
+    // Chưa đủ 9 ký tự thì không hiện lỗi (đang nhập)
+    if (cleanedInput.length < 9) {
+      setLicensePlateError("");
+      return;
+    }
+    
+    // Lấy 4 ký tự đầu và 5 ký tự sau
+    const first4 = cleanedInput.substring(0, 4); // XXA[B/X]
+    const last5 = cleanedInput.substring(4, 9);  // XXXXX
+    
+    // Kiểm tra trong danh sách xe hiện có
+    for (const vehicle of vehicles) {
+      const existingClean = vehicle.licensePlate.replace(/[-\.]/g, '');
+      const existingFirst4 = existingClean.substring(0, 4);
+      const existingLast5 = existingClean.substring(4, 9);
+      
+      // Nếu 4 ký tự đầu giống nhau VÀ 5 ký tự sau cũng giống nhau → Trùng
+      if (first4 === existingFirst4 && last5 === existingLast5) {
+        setLicensePlateError(`Xe này đã tồn tại (${vehicle.licensePlate} đã được đăng ký)`);
+        return;
+      }
+    }
+    
+    // Không có lỗi
+    setLicensePlateError("");
+  };
+
+  // Hàm kiểm tra biển số xe trùng lặp (khi submit)
+  const validateLicensePlate = (licensePlate) => {
+    // Loại bỏ dấu gạch ngang và dấu chấm để so sánh
+    const cleanedInput = licensePlate.replace(/[-\.]/g, '');
+    
+    // Phải đủ 9 ký tự (XXA[B/X]-XXX.XX)
+    if (cleanedInput.length !== 9) {
+      return {
+        isValid: false,
+        message: "Biển số xe chưa đầy đủ! Vui lòng nhập đủ 9 ký tự theo format XXA[B/X]-XXX.XX"
+      };
+    }
+    
+    // Lấy 4 ký tự đầu và 5 ký tự sau
+    const first4 = cleanedInput.substring(0, 4); // XXA[B/X]
+    const last5 = cleanedInput.substring(4, 9);  // XXXXX
+    
+    // Kiểm tra trong danh sách xe hiện có
+    for (const vehicle of vehicles) {
+      const existingClean = vehicle.licensePlate.replace(/[-\.]/g, '');
+      const existingFirst4 = existingClean.substring(0, 4);
+      const existingLast5 = existingClean.substring(4, 9);
+      
+      // Nếu 4 ký tự đầu giống nhau VÀ 5 ký tự sau cũng giống nhau → Trùng
+      if (first4 === existingFirst4 && last5 === existingLast5) {
+        return {
+          isValid: false,
+          message: `Biển số xe đã tồn tại! (${vehicle.licensePlate} đã được đăng ký)`
+        };
+      }
+    }
+    
+    return { isValid: true };
   };
 
   // Hàm mở modal thêm phương tiện
@@ -636,6 +748,7 @@ const UserManagement = () => {
       pinPercent: "",
       pinHealth: "",
     });
+    setLicensePlateError(""); // Reset lỗi biển số xe
     setShowVehicleModal(true);
   };
 
@@ -643,6 +756,13 @@ const UserManagement = () => {
   const handleAddVehicle = async () => {
     if (!vehicleData.licensePlate || !vehicleData.vehicleType || !vehicleData.pinPercent || !vehicleData.pinHealth) {
       showError("Vui lòng điền đầy đủ thông tin phương tiện!");
+      return;
+    }
+
+    // Validate biển số xe (kiểm tra trùng lặp)
+    const licenseValidation = validateLicensePlate(vehicleData.licensePlate);
+    if (!licenseValidation.isValid) {
+      showError(licenseValidation.message);
       return;
     }
 
@@ -679,6 +799,7 @@ const UserManagement = () => {
         pinPercent: "",
         pinHealth: "",
       });
+      setLicensePlateError(""); // Reset lỗi biển số xe
     } catch (error) {
       console.error("Error adding vehicle:", error);
       showError("Không thể thêm phương tiện. Vui lòng thử lại.");
@@ -696,6 +817,7 @@ const UserManagement = () => {
       pinPercent: "",
       pinHealth: "",
     });
+    setLicensePlateError(""); // Reset lỗi biển số xe
   };
 
   // Hàm mở modal xem danh sách phương tiện
@@ -1988,7 +2110,7 @@ const UserManagement = () => {
                             </div>
                             <div className="flex-1">
                               <div className="text-sm font-semibold text-cyan-600 mb-1">Biển số xe</div>
-                              <div className="text-base text-gray-800 font-medium">
+                              <div className="text-lg text-gray-800 font-bold font-mono tracking-wider">
                                 {userVehicle.licensePlate}
                               </div>
                             </div>
@@ -2268,20 +2390,15 @@ const UserManagement = () => {
                       >
                         {/* Card Header */}
                         <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 text-white">
-                          <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                              </div>
-                              <span className="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                                #{vehicle.vehicleID}
-                              </span>
+                              <p className="text-green-100 text-base font-medium">{vehicle.vehicleType}</p>
                             </div>
+                            <span className="text-xs font-medium bg-white bg-opacity-20 px-3 py-1.5 rounded-full">
+                              ID xe: {vehicle.vehicleID}
+                            </span>
                           </div>
-                          <h4 className="text-2xl font-bold mb-1">{vehicle.licensePlate}</h4>
-                          <p className="text-green-100 text-sm">{vehicle.vehicleType}</p>
+                          <h4 className="text-3xl font-bold font-mono tracking-wider">{vehicle.licensePlate}</h4>
                         </div>
 
                         {/* Card Body */}
@@ -2423,21 +2540,29 @@ const UserManagement = () => {
                           onChange={(e) => {
                             const formatted = formatLicensePlate(e.target.value);
                             setVehicleData({ ...vehicleData, licensePlate: formatted });
+                            checkLicensePlateRealtime(formatted); // Validate real-time
                           }}
                           maxLength={11}
-                          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white font-mono text-lg tracking-wider"
+                          className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-2 transition-all duration-200 bg-gray-50 focus:bg-white font-mono text-lg tracking-wider ${
+                            licensePlateError 
+                              ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+                              : 'border-gray-200 focus:ring-green-500 focus:border-green-500'
+                          }`}
                           placeholder="60B2-188.88"
                         />
                         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs font-medium">
-                          Format: XXAB-XXX.XX
+                          
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 flex items-center space-x-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Nhập 2 số + 2 chữ + 3 số + 2 số (tự động định dạng)</span>
-                      </p>
+                      {/* Hiển thị lỗi real-time */}
+                      {licensePlateError && (
+                        <div className="flex items-center space-x-2 text-red-600 text-sm mt-2">
+                          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          <span className="font-medium">{licensePlateError}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -2501,7 +2626,7 @@ const UserManagement = () => {
 
                   {/* Footer với buttons đẹp hơn */}
                   <div className="flex items-center justify-between pt-8 border-t-2 border-gray-100">
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2 text-sm text-red-600">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
