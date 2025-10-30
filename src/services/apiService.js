@@ -13,6 +13,21 @@ class ApiService {
     return localStorage.getItem("authToken");
   }
 
+  // Helper: cố gắng lấy userID từ localStorage (fallback khi hàm cũ chưa truyền userID)
+  getCurrentUserId() {
+    try {
+      const raw =
+        localStorage.getItem("user") ||
+        localStorage.getItem("authUser") ||
+        localStorage.getItem("currentUser");
+      if (!raw) return undefined;
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return parsed?.userID || parsed?.id || parsed?.uid;
+    } catch (_) {
+      return undefined;
+    }
+  }
+
   // Helper method để build headers
   buildHeaders(customHeaders = {}) {
     const headers = { ...this.defaultHeaders, ...customHeaders };
@@ -397,12 +412,27 @@ class ApiService {
 
   /**
    * Đặt giữ một pin slot
-   * API yêu cầu method PUT với query params: pinID, vehicleID
+   * API yêu cầu method PUT với query params: pinID, userID, vehicleID
    */
-  async reservePinSlot(pinID, vehicleID) {
+  async reservePinSlot(pinID, userID, vehicleID) {
     const url = getApiUrl("PINSLOT", "RESERVE");
-    const queryString = new URLSearchParams({ pinID, vehicleID }).toString();
+    // Backward compatibility: nếu chỉ truyền 2 tham số (pinID, vehicleID)
+    // thì suy ra userID từ localStorage
+    if (userID !== undefined && vehicleID === undefined) {
+      // Cú pháp cũ: reservePinSlot(pinID, vehicleID)
+      vehicleID = userID;
+      userID = this.getCurrentUserId();
+    }
+
+    const params = {};
+    if (pinID !== undefined) params.pinID = String(pinID);
+    if (userID !== undefined) params.userID = String(userID);
+    if (vehicleID !== undefined) params.vehicleID = String(vehicleID);
+    const queryString = new URLSearchParams(params).toString();
     const fullUrl = `${url}?${queryString}`;
+
+    console.log("🔗 reservePinSlot URL:", fullUrl);
+    console.log("🔎 reservePinSlot params:", params);
 
     return this.makeRequest(fullUrl, {
       method: "PUT",
@@ -520,7 +550,7 @@ class ApiService {
 
   async updateServicePack(packId, packData) {
     const url = getApiUrl("SERVICE_PACK", "UPDATE");
-    
+
     // Validate và convert data theo đúng type API yêu cầu
     const params = {
       packID: parseInt(packId),
@@ -529,14 +559,14 @@ class ApiService {
       total: parseInt(packData.total) || 0,
       price: parseInt(packData.price) || 0,
     };
-    
+
     // Chỉ thêm description nếu có giá trị
     if (packData.description && packData.description.trim() !== "") {
       params.description = packData.description;
     }
-    
+
     console.log("📤 API UPDATE Request:", { url, params });
-    
+
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
@@ -770,7 +800,7 @@ class ApiService {
       pinSlotID2: pinSlotID2,
     }).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
-    
+
     return this.makeRequest(fullUrl, {
       method: "POST",
       headers: {

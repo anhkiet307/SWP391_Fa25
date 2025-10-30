@@ -55,6 +55,7 @@ export default function BookingHistory() {
   const [bookingHistory, setBookingHistory] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [stationsMap, setStationsMap] = useState({});
+  const [vehiclesMap, setVehiclesMap] = useState({});
   const [dateRange, setDateRange] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [stationFilter, setStationFilter] = useState("all");
@@ -202,6 +203,59 @@ export default function BookingHistory() {
           <Text strong style={{ color: "#00083B", fontSize: "13px" }}>
             {text}
           </Text>
+        </div>
+      ),
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+          }}
+        >
+          <UserOutlined style={{ color: "white", fontSize: "16px" }} />
+          <Text strong style={{ color: "white", fontSize: "14px" }}>
+            Xe
+          </Text>
+        </div>
+      ),
+      key: "vehicle",
+      width: 260,
+      align: "center",
+      render: (_, record) => (
+        <div style={{ textAlign: "center", padding: "10px 0" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "6px 12px",
+              borderRadius: 12,
+              background: "linear-gradient(135deg,#00083B,#1a1f5c)",
+              color: "white",
+              fontWeight: 700,
+              boxShadow: "0 2px 6px rgba(0,8,59,0.15)",
+              marginBottom: 6,
+            }}
+          >
+            <UserOutlined />
+            <span style={{ fontSize: 14 }}>{record.vehiclePlate}</span>
+          </div>
+          <div>
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#334155",
+                lineHeight: 1.25,
+                fontWeight: 600,
+              }}
+            >
+              {record.vehicleType}
+            </Text>
+          </div>
         </div>
       ),
     },
@@ -696,6 +750,9 @@ export default function BookingHistory() {
             stationsMap[t.stationID]?.location || `Mã trạm: ${t.stationID}`,
           city: "-",
           batterySlot: `Ổ pin #${t.pinID}`,
+          vehiclePlate:
+            vehiclesMap[t.vehicleID]?.licensePlate || `Xe #${t.vehicleID}`,
+          vehicleType: vehiclesMap[t.vehicleID]?.vehicleType || "-",
           batterySoC: 100,
           batterySoH: 100,
           staffName: "-",
@@ -742,6 +799,24 @@ export default function BookingHistory() {
       }
     } catch (e) {
       console.error("Fetch stations error", e);
+    }
+  };
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await apiService.getVehicles();
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        const map = {};
+        res.data.forEach((v) => {
+          map[v.vehicleID] = {
+            licensePlate: v.licensePlate,
+            vehicleType: v.vehicleType,
+          };
+        });
+        setVehiclesMap(map);
+      }
+    } catch (e) {
+      console.error("Fetch vehicles error", e);
     }
   };
 
@@ -818,6 +893,7 @@ export default function BookingHistory() {
 
   useEffect(() => {
     fetchStations();
+    fetchVehicles();
     fetchServicePacks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -826,7 +902,7 @@ export default function BookingHistory() {
     fetchHistory();
     fetchPaymentHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.userID, stationsMap, servicePacksMap]);
+  }, [user?.userID, stationsMap, vehiclesMap, servicePacksMap]);
 
   const handleRefresh = () => {
     fetchHistory();

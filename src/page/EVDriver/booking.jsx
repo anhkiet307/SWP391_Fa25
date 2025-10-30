@@ -1009,12 +1009,24 @@ export default function Booking() {
       console.log("Tạo transaction với dữ liệu:", transactionData);
 
       // Gọi đồng thời: tạo transaction và reserve pin slot
+      // Reserve pin slot with explicit URL to ensure all params are sent
+      const reserveUrl = `${
+        apiService.baseURL
+      }/pinSlot/reserve?pinID=${encodeURIComponent(
+        selectedPinSlot.pinID
+      )}&userID=${encodeURIComponent(
+        user.userID
+      )}&vehicleID=${encodeURIComponent(selectedVehicle.vehicleID)}`;
+
       const [transactionResponse, reserveResponse] = await Promise.all([
         apiService.createTransaction(transactionData),
-        apiService.reservePinSlot(
-          selectedPinSlot.pinID,
-          selectedVehicle.vehicleID
-        ),
+        apiService.makeRequest(reserveUrl, {
+          method: "PUT",
+          headers: {
+            ...apiService.buildHeaders(),
+            "ngrok-skip-browser-warning": "true",
+          },
+        }),
       ]);
 
       if (
