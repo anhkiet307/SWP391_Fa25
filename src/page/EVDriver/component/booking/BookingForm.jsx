@@ -15,6 +15,7 @@ import {
   EnvironmentOutlined,
   ThunderboltOutlined,
   AimOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import { calculateDistance } from "../../../../utils/locationUtils";
 
@@ -34,11 +35,17 @@ const BookingForm = ({
   handleGetUserLocation,
   handleFormChange,
   fetchStationData,
+  onStationChange,
+  userVehicles,
+  selectedVehicle,
+  setSelectedVehicle,
+  loadingVehicles,
+  reservedVehicleIds = [],
 }) => {
   return (
     <Card
       className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] relative overflow-hidden"
-      style={{ height: 700, maxHeight: 700 }}
+      style={{ height: 800, maxHeight: 800 }}
     >
       {/* Simple Decorative Elements */}
       <div className="absolute -top-[30px] -right-[30px] w-[60px] h-[60px] bg-[rgba(0,8,59,0.05)] rounded-full z-0" />
@@ -407,6 +414,11 @@ const BookingForm = ({
                       if (selectedStation) {
                         // Fetch station detail và pinSlots khi chọn trạm
                         fetchStationData(selectedStation.id);
+                        // Reset lựa chọn ổ pin nếu có
+                        form.setFieldsValue({ selectedSlot: null });
+                        if (typeof onStationChange === "function") {
+                          onStationChange();
+                        }
                       }
                     }}
                   >
@@ -532,6 +544,92 @@ const BookingForm = ({
                     })()}
                   </Select>
                 </div>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* Vehicle Selection */}
+          <Row gutter={16}>
+            <Col xs={24}>
+              <Form.Item
+                name="vehicle"
+                label={
+                  <Space size="small">
+                    <CarOutlined
+                      style={{ color: "#00083B", fontSize: "14px" }}
+                    />
+                    <span
+                      style={{
+                        color: "#00083B",
+                        fontWeight: "600",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Chọn xe
+                    </span>
+                  </Space>
+                }
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn xe!",
+                  },
+                ]}
+              >
+                <Select
+                  placeholder="Chọn xe của bạn"
+                  size="large"
+                  value={
+                    selectedVehicle ? selectedVehicle.vehicleID : undefined
+                  }
+                  optionLabelProp="label"
+                  onChange={(vehicleID) => {
+                    const vehicle = userVehicles.find(
+                      (v) => v.vehicleID === vehicleID
+                    );
+                    setSelectedVehicle(vehicle);
+                  }}
+                  loading={loadingVehicles}
+                  style={{ width: "100%" }}
+                  className="rounded-lg"
+                >
+                  {userVehicles.map((vehicle) => {
+                    const isReserved = reservedVehicleIds.includes(
+                      vehicle.vehicleID
+                    );
+                    const optionLabel = `${vehicle.licensePlate} — ${vehicle.vehicleType}  SoC: ${vehicle.pinPercent}%  SoH: ${vehicle.pinHealth}%`;
+                    return (
+                      <Option
+                        key={vehicle.vehicleID}
+                        value={vehicle.vehicleID}
+                        label={optionLabel}
+                        disabled={isReserved}
+                      >
+                        <div style={{ opacity: isReserved ? 0.5 : 1 }}>
+                          <div style={{ fontWeight: "600" }}>
+                            {vehicle.licensePlate}
+                            {isReserved && (
+                              <span
+                                style={{
+                                  marginLeft: 8,
+                                  fontSize: 12,
+                                  color: "#dc2626",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                (Đã có lịch)
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#64748b" }}>
+                            {vehicle.vehicleType} — SoC: {vehicle.pinPercent}% •
+                            SoH: {vehicle.pinHealth}%
+                          </div>
+                        </div>
+                      </Option>
+                    );
+                  })}
+                </Select>
               </Form.Item>
             </Col>
           </Row>

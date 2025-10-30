@@ -10,7 +10,7 @@ const TransactionManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [userInfoById, setUserInfoById] = useState({});
-  const [vehiclesByUserId, setVehiclesByUserId] = useState({});
+  const [vehiclesById, setVehiclesById] = useState({});
   const [expandedRowIds, setExpandedRowIds] = useState(new Set());
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -50,6 +50,7 @@ const TransactionManagement = () => {
             customerId: t.userID,
             customerName: `KH #${t.userID}`,
             slot: t.pinID,
+            vehicleId: t.vehicleID,
             pack: t.pack || 0, // Thêm field pack từ API response
             status:
               t.status === 0
@@ -70,9 +71,6 @@ const TransactionManagement = () => {
           setTransactions(mapped);
 
           // Fetch bổ sung: driver info + vehicles theo userID
-          const uniqueUserIds = [
-            ...new Set(list.map((t) => t.userID).filter(Boolean)),
-          ];
           try {
             const driversRes = await apiService.listDrivers();
             const drivers = Array.isArray(driversRes?.data)
@@ -90,19 +88,16 @@ const TransactionManagement = () => {
             });
             setUserInfoById(infoMap);
 
-            const vehPairs = await Promise.all(
-              uniqueUserIds.map(async (uid) => {
-                try {
-                  const r = await apiService.getVehiclesByUser(uid);
-                  return [uid, Array.isArray(r?.data) ? r.data : []];
-                } catch {
-                  return [uid, []];
-                }
-              })
-            );
-            const vehMap = {};
-            vehPairs.forEach(([uid, arr]) => (vehMap[uid] = arr));
-            setVehiclesByUserId(vehMap);
+            // Lấy toàn bộ danh sách vehicle để map theo vehicleID
+            const vehRes = await apiService.getVehicles();
+            const vehList = Array.isArray(vehRes?.data) ? vehRes.data : [];
+            const vehById = {};
+            vehList.forEach((v) => {
+              if (v.vehicleID != null) {
+                vehById[v.vehicleID] = v;
+              }
+            });
+            setVehiclesById(vehById);
           } catch (e) {
             console.warn("Load drivers/vehicles failed", e);
           }
@@ -375,6 +370,9 @@ const TransactionManagement = () => {
                     Slot
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
+                    Biển số
+                  </th>
+                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Trạng thái
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
@@ -424,6 +422,10 @@ const TransactionManagement = () => {
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                           Slot {transaction.slot}
                         </span>
+                      </td>
+                      <td className="p-3 text-left border-b border-gray-200 text-sm">
+                        {vehiclesById[transaction.vehicleId]?.licensePlate ||
+                          "-"}
                       </td>
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
                         <span
@@ -514,7 +516,7 @@ const TransactionManagement = () => {
                     {expandedRowIds.has(transaction.id) && (
                       <tr>
                         <td
-                          colSpan={7}
+                          colSpan={8}
                           className="p-4 bg-gray-50 border-b border-gray-200"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -544,31 +546,10 @@ const TransactionManagement = () => {
                               <div className="font-semibold text-gray-800 mb-3">
                                 Phương tiện
                               </div>
-                              {(vehiclesByUserId[transaction.customerId] || [])
-                                .length === 0 ? (
-                                <div className="text-gray-500">
-                                  Không có phương tiện
-                                </div>
-                              ) : (
-                                <div className="divide-y">
-                                  {(
-                                    vehiclesByUserId[transaction.customerId] ||
-                                    []
-                                  ).map((v) => (
-                                    <div
-                                      key={v.vehicleID}
-                                      className="flex items-center justify-between py-2"
-                                    >
-                                      <div className="text-gray-800 font-medium">
-                                        {v.licensePlate}
-                                      </div>
-                                      <div className="text-gray-600">
-                                        {v.vehicleType}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <div className="text-gray-800 font-medium">
+                                {vehiclesById[transaction.vehicleId]
+                                  ?.licensePlate || "-"}
+                              </div>
                             </div>
                           </div>
                         </td>

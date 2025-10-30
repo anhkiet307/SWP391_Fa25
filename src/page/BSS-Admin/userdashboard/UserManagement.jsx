@@ -47,6 +47,11 @@ const UserManagement = () => {
     pinPercent: "",
     pinHealth: "",
   });
+
+  // States cho modal xem danh sách phương tiện
+  const [showVehicleListModal, setShowVehicleListModal] = useState(false);
+  const [selectedUserVehicles, setSelectedUserVehicles] = useState([]);
+  const [vehicleListLoading, setVehicleListLoading] = useState(false);
   const [newUser, setNewUser] = useState({
     userId: "",
     name: "",
@@ -593,6 +598,34 @@ const UserManagement = () => {
     setUserToChangeStatus(null);
   };
 
+  // Hàm format biển số xe
+  const formatLicensePlate = (value) => {
+    // Loại bỏ tất cả ký tự không phải số hoặc chữ
+    const cleaned = value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+    
+    let formatted = '';
+    
+    // Format: XXAB-XXX.XX
+    // 2 số đầu
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, 2);
+    }
+    // 2 chữ cái
+    if (cleaned.length > 2) {
+      formatted += cleaned.substring(2, 4);
+    }
+    // Thêm dấu gạch ngang
+    if (cleaned.length > 4) {
+      formatted += '-' + cleaned.substring(4, 7);
+    }
+    // Thêm dấu chấm
+    if (cleaned.length > 7) {
+      formatted += '.' + cleaned.substring(7, 9);
+    }
+    
+    return formatted;
+  };
+
   // Hàm mở modal thêm phương tiện
   const openVehicleModal = (user) => {
     setSelectedUserForVehicle(user);
@@ -665,6 +698,34 @@ const UserManagement = () => {
     });
   };
 
+  // Hàm mở modal xem danh sách phương tiện
+  const openVehicleListModal = async (user) => {
+    setShowVehicleListModal(true);
+    setVehicleListLoading(true);
+    try {
+      const response = await apiService.getVehiclesByUser(user.id);
+      console.log("User vehicles response:", response);
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        setSelectedUserVehicles(response.data);
+      } else {
+        setSelectedUserVehicles([]);
+      }
+    } catch (error) {
+      console.error("Error fetching user vehicles:", error);
+      showError("Không thể tải danh sách phương tiện");
+      setSelectedUserVehicles([]);
+    } finally {
+      setVehicleListLoading(false);
+    }
+  };
+
+  // Hàm đóng modal xem danh sách phương tiện
+  const closeVehicleListModal = () => {
+    setShowVehicleListModal(false);
+    setSelectedUserVehicles([]);
+  };
+
   // Hàm kiểm tra user có phương tiện hay không
   const userHasVehicle = (userId) => {
     return vehicles.some(vehicle => vehicle.userID === userId);
@@ -673,6 +734,11 @@ const UserManagement = () => {
   // Hàm lấy thông tin phương tiện của user
   const getUserVehicle = (userId) => {
     return vehicles.find(vehicle => vehicle.userID === userId);
+  };
+
+  // Hàm đếm số xe của user
+  const getUserVehicleCount = (userId) => {
+    return vehicles.filter(vehicle => vehicle.userID === userId).length;
   };
 
   // Hàm tạo gói thuê pin
@@ -940,7 +1006,7 @@ const UserManagement = () => {
                       Số điện thoại
                     </th>
                     <th className="p-4 text-center font-semibold text-base">
-                      Thêm phương tiện
+                      Số xe liên kết
                     </th>
                     <th className="p-4 text-center font-semibold text-base">
                       Trạng thái
@@ -1012,16 +1078,37 @@ const UserManagement = () => {
                       </td>
                       <td className="p-4 border-b border-gray-200">
                         <div className="flex justify-center">
-                          {userHasVehicle(user.id) ? (
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Đã liên kết
-                            </span>
+                          {getUserVehicleCount(user.id) > 0 ? (
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-800">
+                                {/* <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg> */}
+                                {getUserVehicleCount(user.id)} chiếc
+                              </span>
+                              <button
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors duration-200"
+                                onClick={() => openVehicleModal(user)}
+                                title="Thêm xe mới"
+                              >
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
                           ) : (
                             <button
-                              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors duration-200"
+                              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-200"
                               onClick={() => openVehicleModal(user)}
                             >
                               <svg
@@ -1037,7 +1124,7 @@ const UserManagement = () => {
                                   d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                                 />
                               </svg>
-                             Thêm phương tiện
+                             Thêm xe
                             </button>
                           )}
                         </div>
@@ -1105,6 +1192,36 @@ const UserManagement = () => {
                             </svg>
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
                               Chi tiết
+                            </div>
+                          </button>
+
+                          {/* Xem phương tiện */}
+                          <button
+                            className="group relative bg-teal-500 hover:bg-teal-600 text-white p-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                            onClick={() => openVehicleListModal(user)}
+                            title="Xem phương tiện"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+                              />
+                            </svg>
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                              Xem phương tiện
                             </div>
                           </button>
 
@@ -2082,27 +2199,37 @@ const UserManagement = () => {
           </div>
         )}
 
-        {/* Modal thêm phương tiện */}
-        {showVehicleModal && selectedUserForVehicle && (
+        {/* Modal xem danh sách phương tiện */}
+        {showVehicleListModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
               {/* Header */}
-              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 text-white p-8">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-5 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
+                
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-xl">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Thêm phương tiện</h3>
-                      <p className="text-sm text-gray-600">Thêm phương tiện cho {selectedUserForVehicle.name}</p>
+                      <h3 className="text-3xl font-bold mb-2">Danh sách phương tiện</h3>
+                      <p className="text-green-100">
+                        {vehicleListLoading 
+                          ? "Đang tải dữ liệu..." 
+                          : `Tổng cộng: ${selectedUserVehicles.length} phương tiện`}
+                      </p>
                     </div>
                   </div>
                   <button
-                    onClick={cancelVehicleModal}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                    onClick={closeVehicleListModal}
+                    className="p-3 text-white hover:text-red-200 hover:bg-white hover:bg-opacity-10 rounded-xl transition-all duration-200 backdrop-blur-sm"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2111,90 +2238,298 @@ const UserManagement = () => {
                 </div>
               </div>
 
-              {/* Form */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Biển số xe */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Biển số xe <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={vehicleData.licensePlate}
-                      onChange={(e) => setVehicleData({ ...vehicleData, licensePlate: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Nhập biển số xe"
-                      required
-                    />
+              {/* Content */}
+              <div className="p-8 bg-gray-50 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+                {vehicleListLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600"></div>
+                      <span className="text-lg text-gray-600 font-medium">Đang tải danh sách phương tiện...</span>
+                    </div>
                   </div>
+                ) : selectedUserVehicles.length === 0 ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                      <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-xl font-medium mb-2">Chưa có phương tiện</p>
+                      <p className="text-gray-400">Người dùng này chưa đăng ký phương tiện nào</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {selectedUserVehicles.map((vehicle, index) => (
+                      <div
+                        key={vehicle.vehicleID}
+                        className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-green-300"
+                      >
+                        {/* Card Header */}
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-6 text-white">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                              </div>
+                              <span className="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                                #{vehicle.vehicleID}
+                              </span>
+                            </div>
+                          </div>
+                          <h4 className="text-2xl font-bold mb-1">{vehicle.licensePlate}</h4>
+                          <p className="text-green-100 text-sm">{vehicle.vehicleType}</p>
+                        </div>
 
-                  {/* Loại phương tiện */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Loại phương tiện <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={vehicleData.vehicleType}
-                      onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Nhập loại phương tiện (VD: Xe máy, Xe đạp điện...)"
-                      required
-                    />
-                  </div>
+                        {/* Card Body */}
+                        <div className="p-6 space-y-4">
+                          {/* Pin Percent */}
+                          <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-100">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="text-xs font-medium text-green-600">Mức pin</div>
+                                <div className="text-2xl font-bold text-green-700">{vehicle.pinPercent}%</div>
+                              </div>
+                            </div>
+                            <div className="relative w-16 h-16">
+                              <svg className="transform -rotate-90 w-16 h-16">
+                                <circle
+                                  cx="32"
+                                  cy="32"
+                                  r="28"
+                                  stroke="#d1fae5"
+                                  strokeWidth="6"
+                                  fill="none"
+                                />
+                                <circle
+                                  cx="32"
+                                  cy="32"
+                                  r="28"
+                                  stroke="#10b981"
+                                  strokeWidth="6"
+                                  fill="none"
+                                  strokeDasharray={`${2 * Math.PI * 28}`}
+                                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - vehicle.pinPercent / 100)}`}
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                          </div>
 
-                  {/* Phần trăm pin */}
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phần trăm pin (%) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={vehicleData.pinPercent}
-                      onChange={(e) => setVehicleData({ ...vehicleData, pinPercent: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Nhập phần trăm pin (0-100)"
-                      required
-                    />
+                          {/* Pin Health */}
+                          <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-100">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="text-xs font-medium text-orange-600">Sức khỏe pin</div>
+                                <div className="text-2xl font-bold text-orange-700">{vehicle.pinHealth}%</div>
+                              </div>
+                            </div>
+                            <div className="relative w-16 h-16">
+                              <svg className="transform -rotate-90 w-16 h-16">
+                                <circle
+                                  cx="32"
+                                  cy="32"
+                                  r="28"
+                                  stroke="#fed7aa"
+                                  strokeWidth="6"
+                                  fill="none"
+                                />
+                                <circle
+                                  cx="32"
+                                  cy="32"
+                                  r="28"
+                                  stroke="#f97316"
+                                  strokeWidth="6"
+                                  fill="none"
+                                  strokeDasharray={`${2 * Math.PI * 28}`}
+                                  strokeDashoffset={`${2 * Math.PI * 28 * (1 - vehicle.pinHealth / 100)}`}
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
-                  {/* Sức khỏe pin */}
-                  <div className="md:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sức khỏe pin (%) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={vehicleData.pinHealth}
-                      onChange={(e) => setVehicleData({ ...vehicleData, pinHealth: e.target.value })}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      placeholder="Nhập sức khỏe pin (0-100)"
-                      required
-                    />
+        {/* Modal thêm phương tiện */}
+        {showVehicleModal && selectedUserForVehicle && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header với gradient đẹp hơn */}
+              <div className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 text-white p-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold">Thêm phương tiện mới</h3>
+                      <p className="text-green-100 text-base mt-1">
+                        Thêm phương tiện cho {selectedUserForVehicle.name}
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={cancelVehicleModal}
+                    className="text-white hover:text-green-200 transition-all duration-200 p-3 hover:bg-white hover:bg-opacity-20 rounded-xl"
+                  >
+                    <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl flex justify-end space-x-3">
-                <button
-                  onClick={cancelVehicleModal}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                >
-                  Hủy bỏ
-                </button>
-                <button
-                  onClick={handleAddVehicle}
-                  disabled={!vehicleData.licensePlate || !vehicleData.vehicleType || !vehicleData.pinPercent || !vehicleData.pinHealth}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  <span>Thêm phương tiện</span>
-                </button>
+              {/* Body với layout 2 cột */}
+              <div className="p-8">
+                <form onSubmit={(e) => { e.preventDefault(); handleAddVehicle(); }} className="space-y-8">
+                  {/* Row 1: Biển số xe và Loại xe */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Biển số xe *</span>
+                        </div>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={vehicleData.licensePlate}
+                          onChange={(e) => {
+                            const formatted = formatLicensePlate(e.target.value);
+                            setVehicleData({ ...vehicleData, licensePlate: formatted });
+                          }}
+                          maxLength={11}
+                          className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white font-mono text-lg tracking-wider"
+                          placeholder="60B2-188.88"
+                        />
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs font-medium">
+                          Format: XXAB-XXX.XX
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 flex items-center space-x-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Nhập 2 số + 2 chữ + 3 số + 2 số (tự động định dạng)</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                          <span>Loại phương tiện *</span>
+                        </div>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={vehicleData.vehicleType}
+                        onChange={(e) => setVehicleData({ ...vehicleData, vehicleType: e.target.value })}
+                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                        placeholder="Nhập loại xe (VD: Vision Honda)"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Phần trăm pin và Sức khỏe pin */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                          <span>Mức pin hiện tại (%) *</span>
+                        </div>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        value={vehicleData.pinPercent}
+                        onChange={(e) => setVehicleData({ ...vehicleData, pinPercent: e.target.value })}
+                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                        placeholder="Nhập mức pin (0-100)"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                          <span>Sức khỏe pin (%) *</span>
+                        </div>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="100"
+                        value={vehicleData.pinHealth}
+                        onChange={(e) => setVehicleData({ ...vehicleData, pinHealth: e.target.value })}
+                        className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-gray-50 focus:bg-white"
+                        placeholder="Nhập sức khỏe pin (0-100)"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Footer với buttons đẹp hơn */}
+                  <div className="flex items-center justify-between pt-8 border-t-2 border-gray-100">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Các trường có dấu * là bắt buộc</span>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <button
+                        type="button"
+                        onClick={cancelVehicleModal}
+                        className="px-8 py-3 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 border-2 border-transparent hover:border-gray-300"
+                      >
+                        Hủy bỏ
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>Thêm phương tiện</span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

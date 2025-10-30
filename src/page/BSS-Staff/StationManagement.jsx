@@ -14,6 +14,7 @@ const StationManagement = () => {
   const [slots, setSlots] = useState([]);
   const [transactionsByPinId, setTransactionsByPinId] = useState({});
   const [vehiclesByUserId, setVehiclesByUserId] = useState({});
+  const [vehiclesById, setVehiclesById] = useState({});
   const [isSwappingId, setIsSwappingId] = useState(null);
 
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -222,6 +223,7 @@ const StationManagement = () => {
             batteryCapacity: item.pinPercent,
             batteryHealth: item.pinHealth,
             batteryId: String(item.pinID),
+            vehicleId: item.vehicleID ?? null,
             batteryStatus,
             slotStatus,
             pinStatusRaw: item.pinStatus,
@@ -229,6 +231,19 @@ const StationManagement = () => {
           };
         });
         setSlots(mapped);
+
+        // Tải danh sách vehicle để map theo vehicleID
+        try {
+          const vehRes = await apiService.getVehicles();
+          const vehList = Array.isArray(vehRes?.data) ? vehRes.data : [];
+          const vehById = {};
+          vehList.forEach((v) => {
+            if (v.vehicleID != null) vehById[v.vehicleID] = v;
+          });
+          setVehiclesById(vehById);
+        } catch (e) {
+          console.warn("Load vehicles failed", e);
+        }
 
         // Transactions theo station
         const txRes = await apiService.getTransactionsByStation(st.stationID);
@@ -269,19 +284,42 @@ const StationManagement = () => {
     loadData();
   }, [user?.userID]);
 
+  // Khi mở modal xác nhận, làm mới danh sách vehicle để lấy trạng thái pin mới nhất
+  useEffect(() => {
+    const refreshVehicles = async () => {
+      if (!confirmSwapModal.isOpen) return;
+      try {
+        const vehRes = await apiService.getVehicles();
+        const vehList = Array.isArray(vehRes?.data) ? vehRes.data : [];
+        const vehById = {};
+        vehList.forEach((v) => {
+          if (v.vehicleID != null) vehById[v.vehicleID] = v;
+        });
+        setVehiclesById(vehById);
+      } catch (e) {
+        console.warn("Refresh vehicles in modal failed", e);
+      }
+    };
+    refreshVehicles();
+  }, [confirmSwapModal.isOpen]);
+
   const handleSwapPin = async (slot) => {
     try {
       const pinId = Number(slot.batteryId);
-      const tx = transactionsByPinId[pinId];
-      if (!tx || tx.status !== 1) return;
-
-      let vehicles = vehiclesByUserId[tx.userID];
-      if (!vehicles) {
-        const res = await apiService.getVehiclesByUser(tx.userID);
-        vehicles = Array.isArray(res?.data) ? res.data : [];
-        setVehiclesByUserId({ ...vehiclesByUserId, [tx.userID]: vehicles });
+      // Ưu tiên dùng vehicleID có ngay trên slot (API mới)
+      let vehicleId = slot?.vehicleId;
+      // Fallback: nếu không có, dùng logic cũ qua transaction -> vehiclesByUserId
+      if (!vehicleId) {
+        const tx = transactionsByPinId[pinId];
+        if (!tx || tx.status !== 1) return;
+        let vehicles = vehiclesByUserId[tx.userID];
+        if (!vehicles) {
+          const res = await apiService.getVehiclesByUser(tx.userID);
+          vehicles = Array.isArray(res?.data) ? res.data : [];
+          setVehiclesByUserId({ ...vehiclesByUserId, [tx.userID]: vehicles });
+        }
+        vehicleId = vehicles?.[0]?.vehicleID;
       }
-      const vehicleId = vehicles?.[0]?.vehicleID;
       if (!vehicleId) {
         showToast(
           "Không tìm thấy phương tiện của khách hàng để đổi pin.",
@@ -575,6 +613,17 @@ const StationManagement = () => {
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-medium">Trạng thái:</span>
                       </div>
+                      {/* Biển số xe: chỉ hiện khi slot đang thuê */}
+                      {slot.slotStatus === "Đang thuê" &&
+                        slot.vehicleId &&
+                        vehiclesById[slot.vehicleId] && (
+                          <div className="text-sm">
+                            <span className="font-medium">Biển số:</span>
+                            <span className="ml-1">
+                              {vehiclesById[slot.vehicleId].licensePlate}
+                            </span>
+                          </div>
+                        )}
                       <div>
                         {slot.pinStatusRaw === 0 ? (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -665,7 +714,7 @@ const StationManagement = () => {
       {/* Modal xác nhận đổi pin */}
       {confirmSwapModal.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+          <div className="bg-white rounded-2xl p-6 md:p-8 max-w-4xl w-full mx-4 shadow-2xl">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
                 <svg
@@ -692,54 +741,158 @@ const StationManagement = () => {
               </div>
             </div>
 
-            {/* Thông tin slot */}
+            {/* Thông tin đổi pin: Pin Xe -> Pin Slot */}
             {confirmSwapModal.slot && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Pin ID:</span>
-                    <span className="ml-2 font-medium">
-                      #{confirmSwapModal.slot.batteryId}
-                    </span>
+              <div className="bg-gray-50 rounded-2xl p-6 md:p-7 mb-6 border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-stretch">
+                  {/* Khối Pin Xe */}
+                  <div className="rounded-xl border border-blue-100 bg-white shadow-sm overflow-hidden md:col-span-2">
+                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-white border-b">
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-[11px] font-semibold mr-2">
+                          PIN XE
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800">
+                          Thông tin pin của xe
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Biển số</span>
+                          <span className="font-semibold text-gray-900">
+                            {confirmSwapModal.slot.vehicleId &&
+                            vehiclesById[confirmSwapModal.slot.vehicleId]
+                              ? vehiclesById[confirmSwapModal.slot.vehicleId]
+                                  .licensePlate
+                              : "-"}
+                          </span>
+                        </div>
+                        <div className="h-px bg-gray-100" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Pin xe</span>
+                          <span className="font-semibold text-gray-900">
+                            {confirmSwapModal.slot.vehicleId &&
+                            vehiclesById[confirmSwapModal.slot.vehicleId]
+                              ? `${
+                                  vehiclesById[confirmSwapModal.slot.vehicleId]
+                                    .pinPercent
+                                }%`
+                              : "-"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Sức khỏe pin xe</span>
+                          <span className="font-semibold text-gray-900">
+                            {confirmSwapModal.slot.vehicleId &&
+                            vehiclesById[confirmSwapModal.slot.vehicleId]
+                              ? `${
+                                  vehiclesById[confirmSwapModal.slot.vehicleId]
+                                    .pinHealth
+                                }%`
+                              : "-"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Dung lượng:</span>
-                    <span className="ml-2 font-medium">
-                      {confirmSwapModal.slot.batteryCapacity}%
-                    </span>
+
+                  {/* Mũi tên chiều đổi */}
+                  <div className="hidden md:flex items-center justify-center md:col-span-1">
+                    <div className="flex flex-col items-center text-gray-600">
+                      <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center shadow-sm">
+                        <svg
+                          className="w-6 h-6 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7h8m0 0l-4-4m4 4l-4 4M11 17H3m0 0l4 4m-4-4l4-4"
+                          />
+                        </svg>
+                      </div>
+                      <div className="mt-2 text-xs font-medium text-emerald-700">
+                        Sẽ đổi pin từ xe sang slot
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Sức khỏe:</span>
-                    <span className="ml-2 font-medium">
-                      {confirmSwapModal.slot.batteryHealth}%
-                    </span>
+
+                  {/* Khối Pin Slot */}
+                  <div className="rounded-xl border border-emerald-100 bg-white shadow-sm overflow-hidden md:col-span-2">
+                    <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-white border-b">
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[11px] font-semibold mr-2">
+                          PIN SLOT
+                        </span>
+                        <span className="text-sm font-semibold text-gray-800">
+                          Trạng thái pin tại slot
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Pin ID</span>
+                          <span className="font-semibold text-gray-900">
+                            #{confirmSwapModal.slot.batteryId}
+                          </span>
+                        </div>
+                        <div className="h-px bg-gray-100" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Dung lượng</span>
+                          <span className="font-semibold text-gray-900">
+                            {confirmSwapModal.slot.batteryCapacity}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Sức khỏe</span>
+                          <span className="font-semibold text-gray-900">
+                            {confirmSwapModal.slot.batteryHealth}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-500">Trạng thái</span>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+                              confirmSwapModal.slot.batteryStatus === "Đầy"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {confirmSwapModal.slot.batteryStatus}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Trạng thái:</span>
-                    <span className="ml-2 font-medium">
-                      {confirmSwapModal.slot.batteryStatus}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center">
-                    <svg
-                      className="w-4 h-4 text-blue-600 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-sm text-blue-800 font-medium">
-                      Sau khi đổi pin, slot này sẽ được đổi thành pin mới từ
-                      khách hàng
-                    </span>
+
+                  {/* Mũi tên chiều đổi (mobile) */}
+                  <div className="md:hidden flex items-center justify-center">
+                    <div className="flex items-center text-gray-600">
+                      <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center shadow-sm">
+                        <svg
+                          className="w-5 h-5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7h8m0 0l-4-4m4 4l-4 4M11 17H3m0 0l4 4m-4-4l4-4"
+                          />
+                        </svg>
+                      </div>
+                      <div className="ml-2 text-xs font-medium text-emerald-700">
+                        Sẽ đổi pin từ xe sang slot
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
