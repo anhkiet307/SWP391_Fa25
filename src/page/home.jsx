@@ -14,7 +14,7 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center py-20 sm:py-28 lg:py-36">
             <h1 className="text-[64px] sm:text-[80px] lg:text-[112px] leading-none font-extrabold tracking-tight bg-gradient-to-r from-cyan-300 via-blue-300 to-green-300 bg-clip-text text-transparent">
-              Voltswaps
+              Voltswapssssss
             </h1>
             <div className="h-1 w-28 rounded-full bg-cyan-300/70 mt-4 mb-8" />
             <p className="max-w-3xl text-white/80 text-lg sm:text-xl lg:text-2xl">
