@@ -384,7 +384,10 @@ const AdminReportManagement = () => {
     setSelectedReport(report);
     setShowDetailModal(true);
   };
-
+  
+  // AnhKietdeptrai nhat the gioi 
+  // 24h1234567890
+  
   // Show confirmation modal before updating status
   const handleUpdateStatusClick = (report, newStatus) => {
     setConfirmAction({ report, newStatus });
