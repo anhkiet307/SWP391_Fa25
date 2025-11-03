@@ -574,11 +574,11 @@ const StationManagement = () => {
               <div
                 key={slot.id}
                 className={`p-4 rounded-lg border-2 transition-all shadow-sm hover:shadow-md ${
-                  slot.batteryHealth >= 90
-                    ? "border-green-400 bg-green-50 hover:bg-green-100"
-                    : slot.batteryHealth >= 75
-                    ? "border-blue-300 bg-blue-50 hover:bg-blue-100"
-                    : "border-orange-300 bg-orange-50 hover:bg-orange-100"
+                  slot.slotStatus === "Cho phép đặt"
+                    ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100"
+                    : slot.slotStatus === "Không cho phép đặt"
+                    ? "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                    : "border-purple-400 bg-purple-50 hover:bg-purple-100"
                 }`}
               >
                 <div className="text-center">

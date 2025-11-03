@@ -16,6 +16,8 @@ const TransactionManagement = () => {
     isOpen: false,
     transaction: null,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Format ISO time (server UTC or with TZ) to local time dd/MM/yyyy HH:mm:ss (no manual offset)
   const formatPlus7 = (isoString) => {
@@ -113,6 +115,17 @@ const TransactionManagement = () => {
     };
     load();
   }, [user?.userID]);
+
+  // Reset trang khi dữ liệu hoặc kích thước trang thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions.length, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
+  const paginatedTransactions = transactions.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const canUpdateToCompleted = (t) => t.status === "pending";
 
@@ -370,9 +383,6 @@ const TransactionManagement = () => {
                     Slot
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
-                    Biển số
-                  </th>
-                  <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
                     Trạng thái
                   </th>
                   <th className="p-3 text-left border-b border-gray-200 font-semibold text-gray-800 text-sm">
@@ -387,45 +397,20 @@ const TransactionManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((transaction) => (
+                {paginatedTransactions.map((transaction) => (
                   <React.Fragment key={transaction.id}>
                     <tr className="hover:bg-gray-50 transition-colors">
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
                         {transaction.customerId}
                       </td>
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-semibold">
-                            {(
-                              userInfoById[transaction.customerId]?.name ||
-                              transaction.customerName ||
-                              "?"
-                            )
-                              .toString()
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="text-gray-900 font-medium">
-                              {userInfoById[transaction.customerId]?.name ||
-                                transaction.customerName}
-                            </div>
-                            {userInfoById[transaction.customerId]?.phone && (
-                              <div className="text-[11px] text-gray-500 mt-0.5">
-                                {userInfoById[transaction.customerId]?.phone}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        {userInfoById[transaction.customerId]?.name ||
+                          transaction.customerName}
                       </td>
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                           Slot {transaction.slot}
                         </span>
-                      </td>
-                      <td className="p-3 text-left border-b border-gray-200 text-sm">
-                        {vehiclesById[transaction.vehicleId]?.licensePlate ||
-                          "-"}
                       </td>
                       <td className="p-3 text-left border-b border-gray-200 text-sm">
                         <span
@@ -516,7 +501,7 @@ const TransactionManagement = () => {
                     {expandedRowIds.has(transaction.id) && (
                       <tr>
                         <td
-                          colSpan={8}
+                          colSpan={7}
                           className="p-4 bg-gray-50 border-b border-gray-200"
                         >
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -559,6 +544,64 @@ const TransactionManagement = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Pagination */}
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Hiển thị</span>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              >
+                {[5, 10, 20, 50].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <span>mục mỗi trang</span>
+              <span className="ml-3">
+                Tổng: {transactions.length.toLocaleString("vi-VN")} giao dịch
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                className="px-3 py-1.5 text-sm rounded border bg-white hover:bg-gray-50 disabled:opacity-50"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              {Array.from({ length: totalPages })
+                .slice(0, 7)
+                .map((_, idx) => {
+                  const page = idx + 1;
+                  return (
+                    <button
+                      key={page}
+                      className={`px-3 py-1.5 text-sm rounded border ${
+                        currentPage === page
+                          ? "bg-emerald-600 text-white border-emerald-600"
+                          : "bg-white hover:bg-gray-50"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              {totalPages > 7 && <span className="px-2 text-gray-500">…</span>}
+              <button
+                className="px-3 py-1.5 text-sm rounded border bg-white hover:bg-gray-50 disabled:opacity-50"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Sau
+              </button>
+            </div>
           </div>
         </div>
       </div>
