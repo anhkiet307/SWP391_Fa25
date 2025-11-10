@@ -61,6 +61,7 @@ const AdminAddStaff = () => {
         Password: formData.password,
         phone: parseInt(formData.phone), // Chuyển đổi thành số
         roleID: 2, // Staff = 2
+        status: 1, // 1 = kích hoạt (active)
       };
 
       // Gọi API thật
