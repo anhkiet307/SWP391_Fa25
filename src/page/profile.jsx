@@ -322,7 +322,7 @@ export default function Profile() {
                         />
                       ) : (
                         <div className="px-3 py-2 bg-gray-50 rounded-lg">
-                          <Text>{user?.phone || "Chưa cập nhật"}</Text>
+                           (+84) <Text>{user?.phone || "Chưa cập nhật"}</Text>
                         </div>
                       )}
                     </Form.Item>
