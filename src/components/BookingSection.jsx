@@ -11,10 +11,12 @@ import {
   DollarOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Title, Paragraph } = Typography;
 
 export default function BookingSection() {
+  const { isAuthenticated } = useAuth();
   return (
     <section
       className="py-16 relative overflow-hidden"
@@ -196,7 +198,7 @@ export default function BookingSection() {
 
           {/* Main CTA Button */}
           <div className="text-center mb-12">
-            <Link to="/booking">
+            <Link to={isAuthenticated ? "/booking" : "/login"}>
               <Button
                 type="primary"
                 size="large"

@@ -1052,7 +1052,7 @@ export default function BookingHistory() {
                   <Space>
                     <CalendarOutlined style={{ color: "#00083B" }} />
                     <span style={{ color: "#64748b", fontSize: "14px" }}>
-                      Tổng đặt lịch
+                      Tổng số lần đặt pin
                     </span>
                   </Space>
                 }
@@ -1125,7 +1125,7 @@ export default function BookingHistory() {
                   <Space>
                     <CreditCardOutlined style={{ color: "#00083B" }} />
                     <span style={{ color: "#64748b", fontSize: "14px" }}>
-                      Tổng giao dịch
+                      Tổng gói đã thanh toán
                     </span>
                   </Space>
                 }

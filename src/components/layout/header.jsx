@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import apiService from "../../services/apiService";
 
@@ -13,6 +13,7 @@ const navItems = [
 
 export default function Header() {
   const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [packName, setPackName] = useState(null);
   const [subscriptionTotal, setSubscriptionTotal] = useState(null);
@@ -58,7 +59,8 @@ export default function Header() {
   }, [isAuthenticated, user]);
 
   const handleLogout = () => {
-    logout(); // logout() sẽ tự động chuyển hướng về /login
+    logout();
+    navigate("/"); // Chuyển hướng về trang home sau khi logout
   };
 
   return (
@@ -248,12 +250,6 @@ export default function Header() {
                     Báo cáo của tôi
                   </Link>
 
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10"
-                  >
-                    Cài đặt
-                  </a>
                   <div className="mt-2 pt-2 border-t border-white/10">
                     <button
                       onClick={handleLogout}
