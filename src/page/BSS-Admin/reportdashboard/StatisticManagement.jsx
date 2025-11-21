@@ -52,6 +52,10 @@ const StatisticManagement = () => {
   const [packPage, setPackPage] = useState(1);
   const [packItemsPerPage] = useState(6);
   
+  // Pagination for counter revenue table
+  const [counterPage, setCounterPage] = useState(1);
+  const [counterItemsPerPage] = useState(6);
+  
   // Pagination state for pin swaps table
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
@@ -957,7 +961,11 @@ const StatisticManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.filter(t => t.pack === 0 && t.status === 1).sort((a, b) => new Date(b.createAt) - new Date(a.createAt)).slice(0, 10).map((transaction, index) => (
+                    {transactions
+                      .filter(t => t.pack === 0 && t.status === 1)
+                      .sort((a, b) => new Date(b.createAt) - new Date(a.createAt))
+                      .slice((counterPage - 1) * counterItemsPerPage, counterPage * counterItemsPerPage)
+                      .map((transaction, index) => (
                       <tr key={transaction.transactionID} className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? 'bg-white' : 'bg-green-50'}`}>
                         <td className="p-4 text-sm font-medium text-gray-900">
                           {getUserName(transaction.userID)}
@@ -997,17 +1005,46 @@ const StatisticManagement = () => {
                       </tr>
                     )}
                     {/* Thêm các hàng trống để giữ độ cao khi không đủ dữ liệu */}
-                    {Array.from({ length: Math.max(0, 10 - transactions.filter(t => t.pack === 0 && t.status === 1).slice(0, 10).length) }, (_, i) => (
+                    {Array.from({ length: Math.max(0, 6 - transactions.filter(t => t.pack === 0 && t.status === 1).slice((counterPage - 1) * counterItemsPerPage, counterPage * counterItemsPerPage).length) }, (_, i) => (
                       <tr key={`empty-${i}`}>
                         <td colSpan="6" className="p-4">&nbsp;</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                        </div>
+              </div>
+
+              {/* Pagination for counter revenue - luôn ở dưới cùng */}
+              <div className="px-6 py-4 border-t border-gray-100 mt-auto">
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => setCounterPage(Math.max(1, counterPage - 1))}
+                    disabled={counterPage === 1}
+                    className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Trước
+                  </button>
+                  {Array.from({ length: Math.ceil(transactions.filter(t => t.pack === 0 && t.status === 1).length / counterItemsPerPage) }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCounterPage(page)}
+                      className={`px-3 py-1 text-sm font-medium rounded-md ${counterPage === page ? 'bg-green-600 text-white' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCounterPage(Math.min(Math.ceil(transactions.filter(t => t.pack === 0 && t.status === 1).length / counterItemsPerPage), counterPage + 1))}
+                    disabled={counterPage === Math.ceil(transactions.filter(t => t.pack === 0 && t.status === 1).length / counterItemsPerPage)}
+                    className="px-3 py-1 text-sm font-medium text-green-700 bg-white border border-green-300 rounded-md hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sau
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
 
         {/* Số lượt đổi pin */}
         <div className="mb-8 ml-8 mr-8">
