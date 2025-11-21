@@ -84,6 +84,7 @@ export default function ServicePack() {
             name: p.packName || (isDefault ? "Free" : "Membership"),
             type,
             price: formatVND(p.price || 0),
+            rawPrice: Number(p.price || 0), // Lưu giá gốc để sắp xếp
             period,
             total: p.total || (isDefault ? 1 : 0),
             description: p.description || "",
@@ -94,7 +95,28 @@ export default function ServicePack() {
           };
         });
 
-        if (isMounted) setServicePlans(mapped);
+        // Sắp xếp: gói cơ bản (id === 1) luôn đứng đầu, các gói còn lại theo giá tăng dần
+        const sorted = mapped.sort((a, b) => {
+          // Gói cơ bản (id === 1) luôn đứng đầu
+          if (a.id === 1) return -1;
+          if (b.id === 1) return 1;
+          // Các gói còn lại sắp xếp theo giá tăng dần
+          return a.rawPrice - b.rawPrice;
+        });
+
+        // Tìm 2 gói mắc tiền nhất (không tính gói cơ bản) và highlight chúng
+        const nonDefaultPlans = sorted.filter((plan) => plan.id !== 1);
+        const topTwoExpensive = nonDefaultPlans
+          .sort((a, b) => b.rawPrice - a.rawPrice)
+          .slice(0, 2)
+          .map((plan) => plan.id);
+
+        // Set popular cho 2 gói mắc tiền nhất
+        sorted.forEach((plan) => {
+          plan.popular = topTwoExpensive.includes(plan.id);
+        });
+
+        if (isMounted) setServicePlans(sorted);
       } catch (e) {
         if (isMounted) setError("Không tải được danh sách gói dịch vụ");
       } finally {
@@ -282,7 +304,7 @@ export default function ServicePack() {
                       gap: "6px",
                     }}
                   >
-                    <CrownOutlined /> PHỔ BIẾN NHẤT
+                    {/* <CrownOutlined /> PHỔ BIẾN NHẤT */}
                   </div>
                 )}
 
