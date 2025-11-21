@@ -15,6 +15,13 @@ const AdminAddStaff = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  
+  // States cho validation errors
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   // Force reset form on component mount
   useEffect(() => {
@@ -29,20 +36,79 @@ const AdminAddStaff = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let newErrors = { ...errors };
 
-    // Xử lý số điện thoại - chỉ cho phép số và giới hạn 10 chữ số
+    // Validation cho field Tên - không được chứa số
+    if (name === "name") {
+      // Chỉ kiểm tra có số hay không
+      const hasNumber = /\d/.test(value);
+      if (hasNumber) {
+        newErrors.name = "Tên không được chứa số, chỉ được chứa chữ cái!";
+      } else {
+        newErrors.name = "";
+      }
+    }
+
+    // Validation cho field Email
+    if (name === "email") {
+      // Reset error khi đang nhập
+      newErrors.email = "";
+      
+      // Kiểm tra khi có giá trị
+      if (value) {
+        // Phải có @gmail.com
+        if (!value.includes("@gmail.com")) {
+          newErrors.email = "Email phải có định dạng @gmail.com";
+        } else {
+          // Lấy phần trước @gmail.com
+          const localPart = value.split("@")[0];
+          
+          // Kiểm tra phần trước @ không được toàn số
+          const isOnlyNumbers = /^\d+$/.test(localPart);
+          if (isOnlyNumbers) {
+            newErrors.email = "Email không được chỉ toàn số trước @gmail.com (VD: 11111@gmail.com)";
+          }
+          
+          // Kiểm tra phải có ít nhất 1 chữ cái
+          const hasLetter = /[a-zA-Z]/.test(localPart);
+          if (!hasLetter && localPart.length > 0) {
+            newErrors.email = "Email phải chứa ít nhất 1 chữ cái trước @gmail.com";
+          }
+        }
+      }
+    }
+
+    // Xử lý số điện thoại - chỉ cho phép số, bắt đầu bằng 0, và giới hạn 10 chữ số
     if (name === "phone") {
       const phoneValue = value.replace(/\D/g, "").slice(0, 10);
+      
+      // Validation số điện thoại
+      if (phoneValue.length > 0) {
+        if (phoneValue[0] !== "0") {
+          newErrors.phone = "Số điện thoại phải bắt đầu bằng số 0";
+        } else if (phoneValue.length < 10 && phoneValue.length > 0) {
+          newErrors.phone = "Số điện thoại phải đủ 10 chữ số";
+        } else {
+          newErrors.phone = "";
+        }
+      } else {
+        newErrors.phone = "";
+      }
+      
       setFormData({
         ...formData,
         [name]: phoneValue,
       });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      setErrors(newErrors);
+      return;
     }
+
+    // Update formData cho các field khác
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+    setErrors(newErrors);
   };
 
   const handlePreview = (e) => {
@@ -54,15 +120,70 @@ const AdminAddStaff = () => {
     setIsSubmitting(true);
 
     try {
+      // Validation - kiểm tra tất cả fields required
+      if (!formData.name || !formData.email || !formData.password || !formData.phone) {
+        showError("Vui lòng điền đầy đủ thông tin nhân viên!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation tên - không được chứa số
+      const nameHasNumber = /\d/.test(formData.name);
+      if (nameHasNumber) {
+        showError("Tên không được chứa số, chỉ được chứa chữ cái!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation phone number
+      if (formData.phone.length !== 10) {
+        showError("Số điện thoại phải có đúng 10 chữ số!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation số điện thoại phải bắt đầu bằng 0
+      if (formData.phone[0] !== "0") {
+        showError("Số điện thoại phải bắt đầu bằng số 0!");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validation email format - phải có @gmail.com
+      if (!formData.email.includes("@gmail.com")) {
+        showError("Email phải có định dạng @gmail.com!");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Kiểm tra phần trước @gmail.com không được toàn số
+      const localPart = formData.email.split("@")[0];
+      const isOnlyNumbers = /^\d+$/.test(localPart);
+      if (isOnlyNumbers) {
+        showError("Email không được chỉ toàn số trước @gmail.com!");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Phải có ít nhất 1 chữ cái
+      const hasLetter = /[a-zA-Z]/.test(localPart);
+      if (!hasLetter) {
+        showError("Email phải chứa ít nhất 1 chữ cái!");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Chuẩn bị dữ liệu cho API
       const userData = {
         Name: formData.name,
         Email: formData.email,
         Password: formData.password,
-        phone: parseInt(formData.phone), // Chuyển đổi thành số
+        phone: formData.phone, // Giữ nguyên string như API yêu cầu
         roleID: 2, // Staff = 2
         status: 1, // 1 = kích hoạt (active)
       };
+
+      console.log("Sending staff data:", userData); // Debug log
 
       // Gọi API thật
       const response = await apiService.addUser(userData);
@@ -83,8 +204,29 @@ const AdminAddStaff = () => {
         showError(response?.message || "Có lỗi xảy ra khi thêm Staff!");
       }
     } catch (error) {
-      console.error("Add user error:", error);
-      showError("Có lỗi xảy ra khi thêm Staff mới!");
+      console.error("Add staff error:", error);
+      
+      // Parse error message from API response
+      let errorMessage = "Có lỗi xảy ra khi thêm nhân viên mới!";
+      
+      try {
+        if (error.message) {
+          const errorData = JSON.parse(error.message.split('message: ')[1]);
+          if (errorData.message) {
+            if (errorData.message.includes("Phone number already exists")) {
+              errorMessage = "Số điện thoại này đã được sử dụng! Vui lòng chọn số khác.";
+            } else if (errorData.message.includes("Email already exists")) {
+              errorMessage = "Email này đã được sử dụng! Vui lòng chọn email khác.";
+            } else {
+              errorMessage = errorData.message;
+            }
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing error message:", parseError);
+      }
+      
+      showError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -135,10 +277,23 @@ const AdminAddStaff = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                    errors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Nguyễn Văn B"
                   required
                 />
+                {errors.name && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {errors.name}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  💡 Chỉ được chứa chữ cái, không được có số
+                </p>
               </div>
 
               {/* Email */}
@@ -151,10 +306,23 @@ const AdminAddStaff = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="staff@email.com"
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="staff@gmail.com"
                   required
                 />
+                {errors.email && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {errors.email}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  💡 Phải có @gmail.com và chứa ít nhất 1 chữ cái
+                </p>
               </div>
 
               {/* Mật khẩu */}
@@ -183,14 +351,24 @@ const AdminAddStaff = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                    errors.phone ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="0901234567"
                   maxLength={10}
                   pattern="[0-9]{10}"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Nhập đúng 10 chữ số (VD: 0901234567)
+                {errors.phone && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    {errors.phone}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  💡 Phải bắt đầu bằng số 0 và đủ 10 chữ số (VD: 0901234567)
                 </p>
               </div>
 
@@ -202,7 +380,7 @@ const AdminAddStaff = () => {
                 <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
                   Staff (Mặc định)
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 mt-1">
                   💡 Tài khoản này sẽ được tạo với quyền Staff
                 </p>
               </div>
@@ -218,7 +396,8 @@ const AdminAddStaff = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-md hover:from-green-600 hover:to-emerald-700 transition-all"
+                disabled={errors.name || errors.email || errors.phone}
+                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-md hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Xem trước
               </button>
