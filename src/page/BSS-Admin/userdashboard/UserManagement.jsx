@@ -946,7 +946,7 @@ const UserManagement = () => {
             <h2 className="text-gray-800 mb-5 text-2xl font-semibold">
               Thống kê khách hàng
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
                 <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
                   Tổng khách hàng
@@ -969,22 +969,6 @@ const UserManagement = () => {
                 </h3>
                 <div className="text-4xl font-bold m-0 text-red-500">
                   {userStats.suspendedUsers}
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                  Tổng giao dịch
-                </h3>
-                <div className="text-4xl font-bold m-0 text-purple-500">
-                  {userStats.totalTransactions}
-                </div>
-              </div>
-              <div className="bg-white p-6 rounded-lg text-center shadow-md hover:transform hover:-translate-y-1 transition-transform">
-                <h3 className="m-0 mb-4 text-gray-600 text-base font-medium">
-                  Tổng doanh thu
-                </h3>
-                <div className="text-4xl font-bold m-0 text-orange-500">
-                  {(userStats.totalRevenue / 1000000).toFixed(1)}M
                 </div>
               </div>
             </div>
