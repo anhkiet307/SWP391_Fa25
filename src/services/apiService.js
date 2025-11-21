@@ -880,29 +880,10 @@ class ApiService {
     });
   }
 
-  // ===== SERVICE PACK METHODS =====
-  /**
-   * Lấy danh sách service pack
-   * @returns {Promise<Object>} - Danh sách service pack
-   */
-  async getServicePacks() {
-    const url = getApiUrl("SERVICE_PACK", "LIST");
-    return this.get(url);
-  }
-
+  // Phương thức getServicePackDetail đã được định nghĩa ở trên (dòng 524-527)
   async getServicePackDetail(packId) {
     const url = getApiUrl("SERVICE_PACK", "DETAIL", { id: packId });
     return this.get(url);
-  }
-
-  async createServicePack(packData) {
-    const url = getApiUrl("SERVICE_PACK", "CREATE");
-    return this.post(url, packData);
-  }
-
-  async deleteServicePack(packId) {
-    const url = getApiUrl("SERVICE_PACK", "DELETE", { id: packId });
-    return this.delete(url);
   }
 
   // ===== TRANSACTION METHODS =====
