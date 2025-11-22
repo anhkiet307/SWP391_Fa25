@@ -1,19 +1,43 @@
 import API_CONFIG, { getApiUrl, getEndpoint } from "../config/apiConfig";
 
-// API Service class để quản lý tất cả API calls
+/**
+ * API Service Class - Quản lý tất cả API calls trong ứng dụng
+ *
+ * Thư viện sử dụng:
+ * - Fetch API (native browser API) - không cần cài đặt thêm
+ * - Hỗ trợ async/await cho xử lý bất đồng bộ
+ * - Tự động thêm Authorization header từ localStorage
+ * - Hỗ trợ CORS và các header mặc định
+ *
+ * Cấu trúc:
+ * - Singleton pattern: Export một instance duy nhất của ApiService
+ * - Centralized API management: Tất cả API calls đều đi qua class này
+ * - Helper methods: getAuthToken, getCurrentUserId, buildHeaders
+ * - HTTP methods: get, post, put, delete, patch
+ * - Domain-specific methods: Authentication, User, Station, Transaction, etc.
+ */
 class ApiService {
   constructor() {
+    // Lưu cấu hình từ API_CONFIG
     this.baseURL = API_CONFIG.BASE_URL;
     this.timeout = API_CONFIG.TIMEOUT;
     this.defaultHeaders = API_CONFIG.DEFAULT_HEADERS;
   }
 
-  // Helper method để get token từ localStorage
+  /**
+   * Helper method: Lấy authentication token từ localStorage
+   * Token được lưu khi user đăng nhập thành công
+   * @returns {string|null} Auth token hoặc null nếu chưa đăng nhập
+   */
   getAuthToken() {
     return localStorage.getItem("authToken");
   }
 
-  // Helper: cố gắng lấy userID từ localStorage (fallback khi hàm cũ chưa truyền userID)
+  /**
+   * Helper method: Lấy userID từ localStorage (fallback cho các hàm cũ)
+   * Thử nhiều key khác nhau để tương thích với code cũ
+   * @returns {number|undefined} UserID hoặc undefined nếu không tìm thấy
+   */
   getCurrentUserId() {
     try {
       const raw =
@@ -28,22 +52,36 @@ class ApiService {
     }
   }
 
-  // Helper method để build headers
+  /**
+   * Helper method: Build headers cho API request
+   * Tự động thêm Authorization header nếu có token
+   * Merge với custom headers nếu được truyền vào
+   * @param {Object} customHeaders - Headers tùy chỉnh để merge
+   * @returns {Object} Headers đã được build
+   */
   buildHeaders(customHeaders = {}) {
     const headers = { ...this.defaultHeaders, ...customHeaders };
 
+    // Tự động thêm Authorization header nếu có token
     const token = this.getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    // Thêm header cho ngrok
+    // Thêm header để bypass ngrok warning page
     headers["ngrok-skip-browser-warning"] = "true";
 
     return headers;
   }
 
-  // Generic method để thực hiện API call
+  /**
+   * Generic method: Thực hiện API call sử dụng Fetch API
+   * Xử lý response, error và tự động parse JSON
+   * @param {string} url - Full URL của API endpoint
+   * @param {Object} options - Fetch options (method, body, headers, etc.)
+   * @returns {Promise<Object>} Response data đã được parse JSON
+   * @throws {Error} Nếu request thất bại hoặc response không OK
+   */
   async makeRequest(url, options = {}) {
     const config = {
       method: "GET",
@@ -53,8 +91,10 @@ class ApiService {
     };
 
     try {
+      // Gọi API sử dụng Fetch API
       const response = await fetch(url, config);
 
+      // Kiểm tra response status
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -62,6 +102,7 @@ class ApiService {
         );
       }
 
+      // Parse JSON response
       const data = await response.json();
       return data;
     } catch (error) {
@@ -70,7 +111,13 @@ class ApiService {
     }
   }
 
-  // GET request
+  /**
+   * HTTP GET method - Lấy dữ liệu từ server
+   * Tự động build query string từ params object
+   * @param {string} url - API endpoint URL
+   * @param {Object} params - Query parameters (sẽ được convert thành query string)
+   * @returns {Promise<Object>} Response data
+   */
   async get(url, params = {}) {
     const queryString = new URLSearchParams(params).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
@@ -84,7 +131,13 @@ class ApiService {
     });
   }
 
-  // POST request
+  /**
+   * HTTP POST method - Tạo dữ liệu mới trên server
+   * Tự động stringify data thành JSON
+   * @param {string} url - API endpoint URL
+   * @param {Object} data - Data object sẽ được gửi trong request body
+   * @returns {Promise<Object>} Response data
+   */
   async post(url, data = {}) {
     return this.makeRequest(url, {
       method: "POST",
@@ -96,7 +149,13 @@ class ApiService {
     });
   }
 
-  // PUT request
+  /**
+   * HTTP PUT method - Cập nhật toàn bộ dữ liệu
+   * Tự động stringify data thành JSON
+   * @param {string} url - API endpoint URL
+   * @param {Object} data - Data object sẽ được gửi trong request body
+   * @returns {Promise<Object>} Response data
+   */
   async put(url, data = {}) {
     return this.makeRequest(url, {
       method: "PUT",
@@ -104,12 +163,22 @@ class ApiService {
     });
   }
 
-  // DELETE request
+  /**
+   * HTTP DELETE method - Xóa dữ liệu
+   * @param {string} url - API endpoint URL
+   * @returns {Promise<Object>} Response data
+   */
   async delete(url) {
     return this.makeRequest(url, { method: "DELETE" });
   }
 
-  // PATCH request
+  /**
+   * HTTP PATCH method - Cập nhật một phần dữ liệu
+   * Tự động stringify data thành JSON
+   * @param {string} url - API endpoint URL
+   * @param {Object} data - Data object sẽ được gửi trong request body
+   * @returns {Promise<Object>} Response data
+   */
   async patch(url, data = {}) {
     return this.makeRequest(url, {
       method: "PATCH",
@@ -118,9 +187,15 @@ class ApiService {
   }
 
   // ===== AUTHENTICATION METHODS =====
+  /**
+   * Đăng nhập user
+   * API sử dụng POST với query parameters (không phải body)
+   * @param {Object} credentials - {username, password} hoặc {email, password}
+   * @returns {Promise<Object>} Response chứa token và user info
+   */
   async login(credentials) {
     const url = getApiUrl("AUTH", "LOGIN");
-    // API này sử dụng POST với query parameters
+    // API này sử dụng POST với query parameters (không phải body)
     const queryString = new URLSearchParams(credentials).toString();
     const fullUrl = queryString ? `${url}?${queryString}` : url;
 
@@ -411,8 +486,14 @@ class ApiService {
   }
 
   /**
-   * Đặt giữ một pin slot
+   * Đặt giữ một pin slot (reserve pin slot cho user và vehicle)
    * API yêu cầu method PUT với query params: pinID, userID, vehicleID
+   * Hỗ trợ backward compatibility: nếu chỉ truyền 2 tham số thì tự động lấy userID từ localStorage
+   *
+   * @param {number} pinID - ID của pin slot cần reserve
+   * @param {number} userID - ID của user (optional, sẽ tự động lấy nếu không truyền)
+   * @param {number} vehicleID - ID của vehicle
+   * @returns {Promise<Object>} Response data
    */
   async reservePinSlot(pinID, userID, vehicleID) {
     const url = getApiUrl("PINSLOT", "RESERVE");
@@ -907,18 +988,22 @@ class ApiService {
 
   // ===== TRANSACTION METHODS =====
   /**
-   * Tạo transaction mới
+   * Tạo transaction mới (giao dịch đặt lịch đổi pin)
+   * API sử dụng POST với query parameters (không phải body)
+   *
    * @param {Object} transactionData - Dữ liệu transaction
    * @param {number} transactionData.userID - ID của user
-   * @param {number} transactionData.amount - Số tiền
-   * @param {number} transactionData.pack - ID của pack
-   * @param {number} transactionData.stationID - ID của trạm
-   * @param {number} transactionData.pinID - ID của pin
-   * @param {number} transactionData.status - Trạng thái (mặc định 0)
-   * @returns {Promise<Object>} - Kết quả tạo transaction
+   * @param {number} transactionData.amount - Số tiền phí dịch vụ
+   * @param {number} transactionData.pack - ID của service pack (1 = subscription, khác = thanh toán tại trạm)
+   * @param {number} transactionData.stationID - ID của trạm đổi pin
+   * @param {number} transactionData.pinID - ID của pin slot được đặt
+   * @param {number} transactionData.vehicleID - ID của vehicle
+   * @param {number} transactionData.status - Trạng thái (0 = pending, mặc định)
+   * @returns {Promise<Object>} Response chứa transactionID và thông tin transaction
    */
   async createTransaction(transactionData) {
     const url = getApiUrl("TRANSACTION", "CREATE");
+    // API sử dụng query parameters thay vì body
     const queryString = new URLSearchParams(transactionData).toString();
     const fullUrl = `${url}?${queryString}`;
 
@@ -1013,8 +1098,12 @@ class ApiService {
   }
 
   /**
-   * Cập nhật trạng thái transaction
-   * Only supports updating via query params: transactionID, status
+   * Cập nhật trạng thái report
+   * API sử dụng PUT với query parameters: reportId, status, adminID
+   * @param {number} reportId - ID của report
+   * @param {number} status - Trạng thái mới
+   * @param {number} adminID - ID của admin thực hiện cập nhật
+   * @returns {Promise<Object>} Response data
    */
   async updateReportStatus(reportId, status, adminID) {
     const url = `${this.baseURL}/report/${reportId}/status?status=${status}&adminID=${adminID}`;
@@ -1029,6 +1118,13 @@ class ApiService {
   }
 }
 
-// Create and export singleton instance
+/**
+ * Singleton Pattern: Tạo và export một instance duy nhất của ApiService
+ * Đảm bảo toàn bộ ứng dụng sử dụng cùng một instance, tránh tạo nhiều instance không cần thiết
+ *
+ * Cách sử dụng:
+ * import apiService from './services/apiService';
+ * const data = await apiService.getUserProfile();
+ */
 const apiService = new ApiService();
 export default apiService;

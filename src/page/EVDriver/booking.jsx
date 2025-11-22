@@ -1,9 +1,13 @@
+// Component đặt lịch đổi pin - quản lý toàn bộ quy trình đặt lịch đổi pin cho xe điện
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+// Context cung cấp thông tin xác thực người dùng
 import { useAuth } from "../../contexts/AuthContext";
 import Header from "../../components/layout/header.jsx";
+// Service gọi API
 import apiService from "../../services/apiService";
 import dayjs from "dayjs";
+// Utility functions xử lý pin slot (kiểm tra trạng thái, format dữ liệu)
 import {
   calculateSlotStatistics,
   isSlotAvailable,
@@ -16,6 +20,7 @@ import {
   getPinPercentColor,
   getPinHealthColor,
 } from "../../utils/pinSlotUtils";
+// Utility functions xử lý vị trí (tìm trạm gần nhất, lấy vị trí người dùng)
 import {
   findNearestStation,
   getUserCurrentLocation,
@@ -41,7 +46,7 @@ import {
   CheckOutlined,
 } from "@ant-design/icons";
 
-// Import các component mới
+// Import các component con xử lý từng phần của form đặt lịch
 import BookingForm from "./component/booking/BookingForm";
 import LocationMap from "./component/booking/LocationMap";
 import PinInventory from "./component/booking/PinInventory";
@@ -49,45 +54,64 @@ import BookingSummary from "./component/booking/BookingSummary";
 
 const { Title, Paragraph } = Typography;
 
+/**
+ * Component Booking - Trang đặt lịch đổi pin
+ * Chức năng chính:
+ * 1. Quản lý form đặt lịch (trạm, ngày, giờ, ổ pin, xe)
+ * 2. Kiểm tra subscription và tính phí dựa trên gói dịch vụ
+ * 3. Kiểm tra trùng lịch - ngăn đặt nhiều lịch cho cùng một xe
+ * 4. Tự động tìm trạm gần nhất dựa trên vị trí người dùng
+ * 5. Validate và xử lý đặt lịch (tạo transaction + reserve pin slot)
+ * 6. Hiển thị thông tin trạm, danh sách pin slots, và tóm tắt đặt lịch
+ */
 export default function Booking() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  // Lấy stationID từ URL query params để tự động chọn trạm
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  // State quản lý trạng thái đang xử lý đặt lịch
   const [isBooking, setIsBooking] = useState(false);
+  // State quản lý trạng thái đặt lịch thành công
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  // State lưu dữ liệu đặt lịch sau khi thành công
   const [bookingData, setBookingData] = useState(null);
+  // State lưu danh sách lỗi validation
   const [validationErrors, setValidationErrors] = useState([]);
+  // State quản lý thành phố được chọn (HN hoặc HCM)
   const [selectedCity, setSelectedCity] = useState("HN");
 
-  // States cho service packs
+  // States quản lý service packs - dùng để tính phí khi không có subscription
   const [servicePacks, setServicePacks] = useState([]);
   const [loadingServicePacks, setLoadingServicePacks] = useState(false);
 
-  // States cho subscription
+  // States quản lý subscription của user - nếu có thì miễn phí, không thì tính phí theo gói cơ bản
   const [userSubscription, setUserSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
 
-  // States cho kiểm tra pin slot đang được user giữ
+  // States quản lý pin slot đang được user giữ - dùng để kiểm tra trùng lịch
   const [userReservedSlots, setUserReservedSlots] = useState([]);
   const [loadingReservedSlots, setLoadingReservedSlots] = useState(false);
+  // State hiển thị cảnh báo khi xe đã có lịch đặt
   const [showBookingAlert, setShowBookingAlert] = useState(false);
 
-  // States cho station detail và pinSlots từ API
+  // States quản lý thông tin chi tiết trạm và danh sách pin slots của trạm
   const [stationDetail, setStationDetail] = useState(null);
   const [pinSlots, setPinSlots] = useState([]);
 
-  // States cho danh sách trạm từ API
+  // States quản lý danh sách tất cả trạm từ API
   const [stationsList, setStationsList] = useState([]);
   const [loadingStationsList, setLoadingStationsList] = useState(false);
 
-  // States cho vị trí và trạm gần nhất
+  // States quản lý vị trí người dùng và trạm gần nhất
   const [userLocation, setUserLocation] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [nearestStation, setNearestStation] = useState(null);
+  // Lưu danh sách trạm đang hoạt động để tính toán khoảng cách
   const [allStations, setAllStations] = useState([]);
 
+  // State quản lý giá trị form (trạm, ngày, giờ, slot được chọn)
   const [formValues, setFormValues] = useState({
     station: null,
     date: null,
@@ -95,27 +119,29 @@ export default function Booking() {
     selectedSlot: null,
   });
 
-  // State cho ổ pin được chọn
+  // State quản lý ổ pin được chọn để đặt lịch
   const [selectedPinSlot, setSelectedPinSlot] = useState(null);
+  // Hàm reset ổ pin khi thay đổi trạm
   const handleStationChange = () => {
     setSelectedPinSlot(null);
     form.setFieldsValue({ selectedSlot: null });
   };
 
-  // States cho danh sách xe và xe được chọn
+  // States quản lý danh sách xe của user và xe được chọn
   const [userVehicles, setUserVehicles] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [loadingVehicles, setLoadingVehicles] = useState(false);
+  // State lưu danh sách vehicleID đang có lịch đặt (để disable trong select)
   const [reservedVehicleIds, setReservedVehicleIds] = useState([]);
   const [modal] = Modal.useModal();
 
-  // Chỉ cho phép đặt trong ngày: luôn dùng ngày hôm nay
+  // Tự động set ngày hôm nay khi component mount - chỉ cho phép đặt lịch trong ngày
   useEffect(() => {
     const today = dayjs();
     setFormValues((prev) => ({ ...prev, date: today }));
   }, []);
 
-  // Fetch station data khi có StationID từ URL
+  // Tự động chọn trạm từ URL query params (stationID) khi có trong URL
   useEffect(() => {
     const stationID = searchParams.get("stationID");
     if (stationID && stationsList.length > 0) {
@@ -124,12 +150,14 @@ export default function Booking() {
       );
 
       if (selectedStation) {
+        // Tự động điền form với trạm được chọn từ URL
         form.setFieldsValue({ station: selectedStation.stationName });
         setFormValues((prev) => ({
           ...prev,
           station: selectedStation.stationName,
         }));
 
+        // Tự động set thành phố dựa trên trạm được chọn
         const cityCode = selectedStation.city === "Hà Nội" ? "HN" : "HCM";
         setSelectedCity(cityCode);
         form.setFieldsValue({ city: cityCode });
@@ -138,20 +166,20 @@ export default function Booking() {
           city: cityCode,
         }));
 
-        // Fetch dữ liệu trạm được chọn
+        // Fetch thông tin chi tiết và pin slots của trạm được chọn
         fetchStationData(selectedStation.stationID);
       }
     }
   }, [searchParams, stationsList]);
 
-  // Fetch danh sách trạm, service packs, subscription và xe khi component mount
+  // Fetch dữ liệu ban đầu khi component mount: danh sách trạm, service packs, subscription
   useEffect(() => {
     fetchStationsList();
     fetchServicePacks();
     checkUserSubscription();
   }, []);
 
-  // Re-check subscription và fetch xe when user info is ready (fix F5 refresh case)
+  // Re-check subscription và fetch xe khi user info sẵn sàng (xử lý trường hợp F5 refresh)
   useEffect(() => {
     if (user?.userID) {
       checkUserSubscription();
@@ -160,7 +188,7 @@ export default function Booking() {
     }
   }, [user]);
 
-  // Kiểm tra trùng lịch khi xe được chọn thay đổi
+  // Kiểm tra trùng lịch khi xe được chọn thay đổi - ngăn đặt nhiều lịch cho cùng một xe
   useEffect(() => {
     if (!selectedVehicle) {
       setShowBookingAlert(false);
@@ -168,12 +196,14 @@ export default function Booking() {
       return;
     }
 
+    // Hàm kiểm tra xem xe đã chọn có đang có lịch đặt chưa
     const checkReserved = async () => {
       if (!user?.userID) return;
 
       try {
         const response = await apiService.getPinslots();
         if (response?.status === "success") {
+          // Lọc các pin slot có status = 2 (đã được đặt) và vehicleID trùng với xe đã chọn
           const reservedSlots = response.data.filter(
             (slot) =>
               slot.status === 2 && slot.vehicleID === selectedVehicle.vehicleID
@@ -181,7 +211,7 @@ export default function Booking() {
           setUserReservedSlots(reservedSlots);
           setShowBookingAlert(reservedSlots.length > 0);
 
-          // Hiển thị modal nếu xe đã có lịch đặt
+          // Hiển thị modal cảnh báo nếu xe đã có lịch đặt và yêu cầu chọn xe khác
           if (reservedSlots.length > 0) {
             modal.warning({
               title: `⚠️ Xe ${selectedVehicle.licensePlate} đã có lịch đặt`,
@@ -217,7 +247,7 @@ export default function Booking() {
               },
               width: 450,
               onOk: () => {
-                // Clear xe đã chọn và reset select trong form
+                // Reset xe đã chọn khi người dùng xác nhận
                 setSelectedVehicle(null);
                 form.setFieldsValue({ vehicle: undefined });
               },
@@ -232,7 +262,7 @@ export default function Booking() {
     checkReserved();
   }, [selectedVehicle, user?.userID, modal]);
 
-  // Function để lấy danh sách service packs
+  // Hàm fetch danh sách service packs từ API - dùng để tính phí khi không có subscription
   const fetchServicePacks = async () => {
     console.log("Bắt đầu lấy danh sách service pack");
     setLoadingServicePacks(true);
@@ -254,7 +284,7 @@ export default function Booking() {
     }
   };
 
-  // Function để kiểm tra subscription của user
+  // Hàm kiểm tra subscription của user - nếu có subscription thì miễn phí, không thì tính phí theo gói cơ bản
   const checkUserSubscription = async () => {
     if (!user?.userID) {
       console.log("Không có user ID, không thể kiểm tra subscription");
@@ -271,11 +301,11 @@ export default function Booking() {
 
       if (subscriptionResponse?.status === "success") {
         if (subscriptionResponse.data && subscriptionResponse.data !== null) {
-          // User có subscription
+          // User có subscription - sẽ được miễn phí khi đặt lịch
           setUserSubscription(subscriptionResponse.data);
           console.log("✅ User có subscription:", subscriptionResponse.data);
         } else {
-          // User không có subscription (data = null)
+          // User không có subscription - sẽ tính phí theo gói cơ bản
           console.log("❌ User không có subscription (data = null)");
           setUserSubscription(null);
         }
@@ -339,7 +369,7 @@ export default function Booking() {
     }
   };
 
-  // Function để lấy danh sách xe của user
+  // Hàm fetch danh sách xe của user từ API
   const fetchUserVehicles = async () => {
     if (!user?.userID) {
       console.log("Không có user ID, không thể lấy danh sách xe");
@@ -367,11 +397,12 @@ export default function Booking() {
     }
   };
 
-  // Lấy danh sách vehicleID đang được giữ (đã có lịch)
+  // Hàm lấy danh sách vehicleID đang có lịch đặt (status = 2) - dùng để disable trong select xe
   const fetchReservedVehicleIds = async () => {
     try {
       const response = await apiService.getPinslots();
       if (response?.status === "success") {
+        // Lọc các vehicleID có pin slot đang được đặt (status = 2)
         const ids = response.data
           .filter((slot) => slot.status === 2 && slot.vehicleID)
           .map((slot) => slot.vehicleID);
@@ -386,7 +417,7 @@ export default function Booking() {
     }
   };
 
-  // Function để hủy lịch đổi pin
+  // Hàm hủy lịch đổi pin - giải phóng pin slot để người khác có thể sử dụng
   const handleCancelBooking = async (pinID) => {
     try {
       console.log("Hủy lịch cho pin ID:", pinID);
@@ -394,7 +425,7 @@ export default function Booking() {
 
       if (response?.status === "success") {
         message.success("Hủy lịch thành công!");
-        // Refresh lại danh sách pin slot đã giữ
+        // Refresh lại danh sách pin slot đã giữ sau khi hủy
         await checkUserReservedSlots();
       } else {
         message.error("Không thể hủy lịch. Vui lòng thử lại!");
@@ -405,21 +436,21 @@ export default function Booking() {
     }
   };
 
-  // Tự động định vị vị trí khi load trang
+  // Tự động định vị vị trí người dùng khi có danh sách trạm - dùng để tìm trạm gần nhất
   useEffect(() => {
     const autoGetLocation = async () => {
       try {
         const location = await getUserCurrentLocation();
         setUserLocation([location.lat, location.lng]);
 
-        // Tìm trạm gần nhất
+        // Tìm trạm gần nhất dựa trên vị trí người dùng
         const nearest = findNearestStation(
           allStations,
           location.lat,
           location.lng
         );
         setNearestStation(nearest);
-        // Chỉ đề xuất trạm gần nhất, KHÔNG tự động chọn
+        // Chỉ đề xuất trạm gần nhất, không tự động chọn để người dùng có thể chọn trạm khác
       } catch (error) {
         console.error("Error getting user location:", error);
         setLocationError(error.message);
@@ -427,24 +458,25 @@ export default function Booking() {
       }
     };
 
-    // Chỉ tự động định vị nếu có danh sách trạm
+    // Chỉ tự động định vị nếu đã có danh sách trạm
     if (allStations.length > 0) {
       autoGetLocation();
     }
   }, [allStations]); // Chạy khi allStations thay đổi
 
-  // Function để fetch danh sách trạm từ API
+  // Hàm fetch danh sách trạm từ API - chỉ lấy các trạm đang hoạt động (status = 1)
   const fetchStationsList = async () => {
     setLoadingStationsList(true);
     try {
       const response = await apiService.getPinStations();
       if (response?.status === "success") {
-        // Chỉ lấy các trạm có status = 1 (đang hoạt động), ẩn các trạm status = 0 (bảo dưỡng)
+        // Lọc chỉ các trạm có status = 1 (đang hoạt động), ẩn các trạm status = 0 (bảo dưỡng)
         const activeStations = response.data.filter(
           (station) => station.status === 1
         );
         setStationsList(activeStations);
-        setAllStations(activeStations); // Lưu các trạm đang hoạt động để tính toán khoảng cách
+        // Lưu danh sách trạm đang hoạt động để tính toán khoảng cách và tìm trạm gần nhất
+        setAllStations(activeStations);
       }
     } catch (error) {
       console.error("Error fetching stations list:", error);
@@ -454,7 +486,7 @@ export default function Booking() {
     }
   };
 
-  // Function để lấy vị trí hiện tại của người dùng
+  // Hàm lấy vị trí hiện tại của người dùng khi click nút - dùng để tìm trạm gần nhất
   const handleGetUserLocation = async () => {
     setIsLoadingLocation(true);
     setLocationError(null);
@@ -463,14 +495,14 @@ export default function Booking() {
       const location = await getUserCurrentLocation();
       setUserLocation([location.lat, location.lng]);
 
-      // Tìm trạm gần nhất
+      // Tìm trạm gần nhất dựa trên vị trí vừa lấy được
       const nearest = findNearestStation(
         allStations,
         location.lat,
         location.lng
       );
       setNearestStation(nearest);
-      // Chỉ đề xuất trạm gần nhất, KHÔNG tự động chọn
+      // Chỉ đề xuất trạm gần nhất, không tự động chọn
     } catch (error) {
       console.error("Error getting user location:", error);
       setLocationError(error.message);
@@ -480,16 +512,15 @@ export default function Booking() {
     }
   };
 
-  // Function để fetch station detail và pinSlots
+  // Hàm fetch thông tin chi tiết trạm và danh sách pin slots của trạm
   const fetchStationData = async (stationID) => {
     try {
-      // Fetch station detail
+      // Fetch thông tin chi tiết trạm (tên, địa chỉ, tọa độ, ...)
       const stationResponse = await apiService.getStationDetail(stationID);
       if (stationResponse?.status === "success") {
         setStationDetail(stationResponse.data);
 
-        // Set station trong form
-        // Set station name vào form (form expect string, không phải object)
+        // Tự động điền tên trạm vào form
         form.setFieldsValue({ station: stationResponse.data.stationName });
         setFormValues((prev) => ({
           ...prev,
@@ -497,7 +528,7 @@ export default function Booking() {
         }));
       }
 
-      // Fetch pinSlots
+      // Fetch danh sách pin slots của trạm (trạng thái, pin percent, pin health, ...)
       const pinSlotsResponse = await apiService.getPinSlots(stationID);
       if (pinSlotsResponse?.status === "success") {
         setPinSlots(pinSlotsResponse.data);
@@ -937,8 +968,9 @@ export default function Booking() {
     setFormValues((prev) => ({ ...prev, ...changedValues }));
   };
 
+  // Hàm xử lý đặt lịch - validate form, tạo transaction và reserve pin slot
   const handleBooking = async (values) => {
-    // Validate form data
+    // Validate form data - kiểm tra các trường bắt buộc
     const errors = [];
 
     if (!values.station) {
@@ -964,7 +996,7 @@ export default function Booking() {
     setIsBooking(true);
 
     try {
-      // Tìm trạm được chọn để lấy stationID
+      // Tìm trạm được chọn từ danh sách để lấy stationID
       const selectedStation = stationsList.find(
         (station) => station.stationName === values.station
       );
@@ -980,7 +1012,7 @@ export default function Booking() {
         return;
       }
 
-      // Kiểm tra pinStatus và status: chỉ cho phép khi pinStatus = 1 (đầy) và status = 1 (khả dụng)
+      // Kiểm tra trạng thái pin: chỉ cho phép đặt khi pinStatus = 1 (đầy) và status = 1 (khả dụng)
       if (selectedPinSlot.pinStatus !== 1) {
         message.error("Ổ pin đang sạc, vui lòng chọn ổ pin khác");
         return;
@@ -990,26 +1022,27 @@ export default function Booking() {
         return;
       }
 
-      // Chuẩn bị dữ liệu transaction dựa trên subscription
+      // Tìm gói cơ bản để tính phí nếu không có subscription
       const basicPack = servicePacks.find(
         (pack) => pack.packID === 1 && pack.status === 1
       );
 
+      // Chuẩn bị dữ liệu transaction: tính phí dựa trên subscription
       const transactionData = {
         userID: user.userID,
-        amount: userSubscription ? 0 : basicPack?.price || 0, // Nếu có subscription thì 0, không thì giá gói cơ bản
+        // Nếu có subscription thì amount = 0 (miễn phí), không thì tính theo giá gói cơ bản
+        amount: userSubscription ? 0 : basicPack?.price || 0,
         // pack: 0 = thanh toán tiền mặt tại trạm, 1 = thanh toán bằng lượt (subscription)
         pack: userSubscription ? 1 : 0,
         stationID: selectedStation.stationID,
-        pinID: selectedPinSlot.pinID, // Sử dụng ổ pin được chọn
-        vehicleID: selectedVehicle.vehicleID, // Thêm vehicleID vào transaction
+        pinID: selectedPinSlot.pinID, // ID của ổ pin được chọn
+        vehicleID: selectedVehicle.vehicleID, // ID của xe được chọn
         status: 0, // Mặc định là pending
       };
 
       console.log("Tạo transaction với dữ liệu:", transactionData);
 
-      // Gọi đồng thời: tạo transaction và reserve pin slot
-      // Reserve pin slot with explicit URL to ensure all params are sent
+      // Gọi đồng thời 2 API: tạo transaction và reserve pin slot để đảm bảo tính nhất quán
       const reserveUrl = `${
         apiService.baseURL
       }/pinSlot/reserve?pinID=${encodeURIComponent(
@@ -1029,13 +1062,14 @@ export default function Booking() {
         }),
       ]);
 
+      // Chỉ thành công khi cả 2 API đều thành công
       if (
         transactionResponse?.status === "success" &&
         reserveResponse?.status === "success"
       ) {
         message.success("Đặt lịch thành công!");
 
-        // Chuẩn hóa dữ liệu trước khi điều hướng
+        // Chuẩn hóa dữ liệu trước khi điều hướng đến trang success
         const normalizedValues = {
           ...values,
           date: dayjs().format("YYYY-MM-DD"),
@@ -1054,7 +1088,7 @@ export default function Booking() {
         setBookingData(normalizedValues);
         setBookingSuccess(true);
 
-        // Navigate to success page with booking data
+        // Điều hướng đến trang success với dữ liệu đặt lịch
         navigate("/booking-success", {
           state: { bookingData: normalizedValues },
         });
@@ -1341,11 +1375,11 @@ export default function Booking() {
 
         {/* Loading UI cho service packs ẩn */}
 
-        {/* Validation Errors Alert */}
+        {/* Validation Errors Alert - Hiển thị lỗi validation khi form thiếu thông tin */}
         <ValidationErrorsAlert />
 
         <Row gutter={[32, 32]}>
-          {/* Left Side - Booking Form */}
+          {/* Left Side - Booking Form - Form nhập thông tin đặt lịch */}
           <Col
             xs={24}
             lg={14}
@@ -1372,7 +1406,7 @@ export default function Booking() {
               reservedVehicleIds={reservedVehicleIds}
             />
           </Col>
-          {/* Right Side - Map + Summary */}
+          {/* Right Side - LocationMap - Bản đồ hiển thị vị trí người dùng và các trạm */}
           <Col
             xs={24}
             lg={10}
@@ -1390,8 +1424,9 @@ export default function Booking() {
           </Col>
         </Row>
 
-        {/* Bottom grid: Inventory (left) and Booking Summary (right) */}
+        {/* Bottom grid: PinInventory (left) và BookingSummary (right) */}
         <Row gutter={[32, 32]} align="stretch" style={{ marginTop: 16 }}>
+          {/* PinInventory - Hiển thị danh sách pin slots của trạm được chọn */}
           {selectedStationData ? (
             <Col xs={24} lg={14}>
               <PinInventory
@@ -1405,6 +1440,7 @@ export default function Booking() {
           ) : (
             <Col xs={24} lg={14} />
           )}
+          {/* BookingSummary - Tóm tắt thông tin đặt lịch và nút xác nhận */}
           <Col xs={24} lg={10}>
             <BookingSummary
               watchedStation={watchedStation}

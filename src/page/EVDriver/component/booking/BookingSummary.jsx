@@ -1,8 +1,17 @@
+// Component tóm tắt thông tin đặt lịch và nút xác nhận đặt lịch
 import React from "react";
 import { Card, Button, Alert, message } from "antd";
 import dayjs from "dayjs";
 import { useAuth } from "../../../../contexts/AuthContext";
 
+/**
+ * Component BookingSummary - Tóm tắt thông tin đặt lịch
+ * Chức năng:
+ * 1. Hiển thị tóm tắt thông tin đặt lịch (trạm, ngày, giờ, xe, ổ pin)
+ * 2. Tính phí dịch vụ dựa trên subscription (miễn phí nếu có subscription, không thì tính theo gói cơ bản)
+ * 3. Validate form và gọi handleBooking khi click xác nhận
+ * 4. Hiển thị cảnh báo về quy định thời gian đến
+ */
 const BookingSummary = ({
   watchedStation,
   isBooking,
@@ -16,10 +25,11 @@ const BookingSummary = ({
   selectedVehicle,
 }) => {
   const { user } = useAuth();
+  // Hàm format số tiền theo định dạng VND
   const formatVND = (value) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
-  // Tính giá dựa trên subscription
+  // Hàm tính phí dịch vụ: miễn phí nếu có subscription, không thì tính theo gói cơ bản
   const getServiceFee = () => {
     if (loadingSubscription) return 0;
     if (userSubscription) return 0; // Có subscription thì miễn phí
@@ -29,6 +39,7 @@ const BookingSummary = ({
     return basicPack?.price || 0; // Không có subscription thì tính theo gói cơ bản
   };
 
+  // Hàm lấy packID: trả về packID của subscription nếu có, không thì trả về packID của gói cơ bản
   const getPackId = () => {
     if (userSubscription) return userSubscription.packID;
     const basicPack = servicePacks.find(
@@ -216,6 +227,7 @@ const BookingSummary = ({
         }}
       />
 
+      {/* Nút xác nhận đặt lịch - validate form trước khi gọi handleBooking */}
       <div style={{ marginTop: "auto" }}>
         <Button
           type="primary"
@@ -229,22 +241,15 @@ const BookingSummary = ({
             fontWeight: 700,
           }}
           onClick={() => {
-            // Trigger form submission manually
-            console.log("Button clicked, attempting form submission...");
-            console.log("Form values:", form.getFieldsValue());
-            console.log("Form errors:", form.getFieldsError());
-
-            // Validate form first
+            // Validate form trước khi submit
             form
               .validateFields()
               .then((values) => {
-                console.log(
-                  "Form validation successful, calling handleBooking..."
-                );
+                // Nếu validation thành công, gọi handleBooking để tạo transaction và reserve pin slot
                 handleBooking(values);
               })
               .catch((errorInfo) => {
-                console.log("Form validation failed:", errorInfo);
+                // Hiển thị lỗi nếu validation thất bại
                 message.error("Vui lòng điền đầy đủ thông tin!");
               });
           }}

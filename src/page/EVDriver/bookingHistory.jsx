@@ -1,3 +1,4 @@
+// Component lịch sử đặt lịch và thanh toán - quản lý và hiển thị lịch sử giao dịch của người dùng
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -45,59 +46,76 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-// ĐÃ BỎ mock data, sử dụng dữ liệu từ API
-const mockBookingHistory = [];
-
+/**
+ * Component BookingHistory - Trang lịch sử đặt lịch và thanh toán
+ * Chức năng chính:
+ * 1. Hiển thị lịch sử đặt lịch đổi pin (transactions) với thông tin chi tiết
+ * 2. Hiển thị lịch sử mua gói dịch vụ (payment history)
+ * 3. Lọc và tìm kiếm lịch sử theo nhiều tiêu chí (thời gian, trạng thái, trạm, gói dịch vụ)
+ * 4. Hủy lịch đặt (chỉ cho phép khi status = pending)
+ * 5. Tính toán và hiển thị thống kê tổng quan (tổng số, đã hoàn thành, tổng chi phí)
+ * 6. Tích hợp Google Maps để chỉ đường đến trạm
+ */
 export default function BookingHistory() {
   const { user } = useAuth();
   const [modal, modalContextHolder] = Modal.useModal();
+  // State quản lý trạng thái loading khi fetch dữ liệu
   const [loading, setLoading] = useState(false);
+  // State quản lý danh sách lịch sử đặt lịch từ API
   const [bookingHistory, setBookingHistory] = useState([]);
+  // State quản lý danh sách đã lọc để hiển thị
   const [filteredData, setFilteredData] = useState([]);
+  // Map lưu thông tin trạm (key = stationID) để tra cứu nhanh
   const [stationsMap, setStationsMap] = useState({});
+  // Map lưu thông tin xe (key = vehicleID) để tra cứu nhanh
   const [vehiclesMap, setVehiclesMap] = useState({});
+  // States quản lý bộ lọc cho booking history
   const [dateRange, setDateRange] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [stationFilter, setStationFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
 
-  // States cho lịch sử mua gói dịch vụ
+  // States quản lý lịch sử mua gói dịch vụ
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [filteredPaymentData, setFilteredPaymentData] = useState([]);
+  // Map lưu thông tin service packs (key = packID) để tra cứu nhanh
   const [servicePacksMap, setServicePacksMap] = useState({});
+  // States quản lý bộ lọc cho payment history
   const [paymentDateRange, setPaymentDateRange] = useState(null);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [packFilter, setPackFilter] = useState("all");
   const [paymentSearchText, setPaymentSearchText] = useState("");
 
-  // Thống kê tổng quan cho booking
+  // Tính toán thống kê tổng quan cho booking history từ dữ liệu đã lọc
   const totalBookings = filteredData.length;
   const completedBookings = filteredData.filter(
     (item) => item.status === "completed"
   ).length;
+  // Tính tổng chi phí từ các giao dịch đã hoàn thành
   const totalSpent = filteredData
     .filter((item) => item.status === "completed")
     .reduce((sum, item) => sum + item.serviceFee, 0);
 
-  // Thống kê tổng quan cho payment
+  // Tính toán thống kê tổng quan cho payment history từ dữ liệu đã lọc
   const totalPayments = filteredPaymentData.length;
   const successfulPayments = filteredPaymentData.filter(
     (item) => item.status === "successful"
   ).length;
+  // Tính tổng số tiền thanh toán
   const totalPaymentAmount = filteredPaymentData.reduce(
     (sum, item) => sum + item.amountVND,
     0
   );
 
-  // Format tiền tệ
+  // Hàm format số tiền theo định dạng VND
   const formatVND = (value) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
-  // Lọc dữ liệu
+  // Tự động lọc danh sách booking history khi thay đổi bộ lọc hoặc dữ liệu
   useEffect(() => {
     let filtered = [...bookingHistory];
 
-    // Lọc theo khoảng thời gian
+    // Lọc theo khoảng thời gian (từ ngày đến ngày)
     if (dateRange && dateRange.length === 2) {
       const startDate = dateRange[0].startOf("day");
       const endDate = dateRange[1].endOf("day");
@@ -107,7 +125,7 @@ export default function BookingHistory() {
       });
     }
 
-    // Lọc theo trạng thái
+    // Lọc theo trạng thái (pending, completed, expired, cancelled)
     if (statusFilter !== "all") {
       filtered = filtered.filter((item) => item.status === statusFilter);
     }
@@ -119,7 +137,7 @@ export default function BookingHistory() {
       );
     }
 
-    // Lọc theo từ khóa tìm kiếm
+    // Lọc theo từ khóa tìm kiếm (tìm trong mã đặt lịch)
     if (searchText) {
       filtered = filtered.filter((item) =>
         String(item.id).toLowerCase().includes(searchText.toLowerCase())
@@ -129,11 +147,11 @@ export default function BookingHistory() {
     setFilteredData(filtered);
   }, [bookingHistory, dateRange, statusFilter, stationFilter, searchText]);
 
-  // Lọc dữ liệu payment
+  // Tự động lọc danh sách payment history khi thay đổi bộ lọc hoặc dữ liệu
   useEffect(() => {
     let filtered = [...paymentHistory];
 
-    // Lọc theo khoảng thời gian
+    // Lọc theo khoảng thời gian (từ ngày đến ngày)
     if (paymentDateRange && paymentDateRange.length === 2) {
       const startDate = paymentDateRange[0].startOf("day");
       const endDate = paymentDateRange[1].endOf("day");
@@ -143,19 +161,19 @@ export default function BookingHistory() {
       });
     }
 
-    // Lọc theo trạng thái
+    // Lọc theo trạng thái (successful, failed)
     if (paymentStatusFilter !== "all") {
       filtered = filtered.filter((item) => item.status === paymentStatusFilter);
     }
 
-    // Lọc theo gói dịch vụ
+    // Lọc theo gói dịch vụ (theo packID)
     if (packFilter !== "all") {
       filtered = filtered.filter(
         (item) => String(item.packID) === String(packFilter)
       );
     }
 
-    // Lọc theo từ khóa tìm kiếm
+    // Lọc theo từ khóa tìm kiếm (tìm trong mã giao dịch hoặc tên gói)
     if (paymentSearchText) {
       filtered = filtered.filter(
         (item) =>
@@ -471,7 +489,8 @@ export default function BookingHistory() {
       width: 140,
       align: "center",
       render: (_, record) => {
-        const canCancel = record.status === "pending"; // chỉ cho phép khi đang chờ
+        // Chỉ cho phép hủy lịch khi status = pending (đang chờ xử lý)
+        const canCancel = record.status === "pending";
         return (
           <Space>
             <Tooltip title={canCancel ? "" : "Chỉ có thể hủy khi đang chờ"}>
@@ -480,6 +499,7 @@ export default function BookingHistory() {
                 danger
                 disabled={!canCancel}
                 onClick={() => {
+                  // Hiển thị modal xác nhận hủy lịch
                   modal.confirm({
                     title: "Xác nhận hủy đặt lịch",
                     content:
@@ -490,14 +510,15 @@ export default function BookingHistory() {
                     onOk: () =>
                       new Promise(async (resolve) => {
                         try {
+                          // Gọi đồng thời 2 API: cập nhật status transaction = 3 (cancelled) và unreserve pin slot
                           const [updateRes] = await Promise.all([
-                            // 3 = cancel theo quy ước mới
                             apiService.updateTransactionStatus(record.id, 3),
                             apiService.unreservePinSlot(
                               record.pinId || record.batterySlot?.split("#")[1]
                             ),
                           ]);
                           if (updateRes?.status === "success") {
+                            // Refresh lại danh sách sau khi hủy thành công
                             fetchHistory();
                           }
                         } catch (e) {
@@ -705,38 +726,36 @@ export default function BookingHistory() {
     },
   ];
 
+  // Hàm map status từ API (số) sang text để hiển thị: 0=pending, 1=completed, 2=expired, 3=cancelled
   const mapApiStatusToText = (status) => {
-    // 0=pending, 1=completed, 2=expired, 3=cancelled
     if (status === 1) return "completed";
     if (status === 2) return "expired";
     if (status === 3) return "cancelled";
     return "pending";
   };
 
+  // Hàm map payment status từ API response sang text để hiển thị
+  // Ưu tiên kiểm tra các flag boolean (failed, pending, successful), sau đó fallback về status field
   const mapPaymentStatus = (payment) => {
-    // Dựa trên API response:
-    // - failed: true → "failed"
-    // - pending: true → "pending"
-    // - successful: true → "successful"
-    // - Nếu không có flags, dựa vào status field (0=pending, 1=success, 2=failed)
-
     // Ưu tiên kiểm tra các flag boolean trước
     if (payment.failed === true) return "failed";
     if (payment.pending === true) return "pending";
     if (payment.successful === true) return "successful";
 
-    // Fallback dựa vào status field
+    // Fallback dựa vào status field: 0=pending, 1=success, 2=failed
     if (payment.status === 1) return "successful";
     if (payment.status === 2) return "failed";
     return "pending";
   };
 
+  // Hàm fetch lịch sử đặt lịch từ API và map dữ liệu để hiển thị
   const fetchHistory = async () => {
     if (!user?.userID) return;
     setLoading(true);
     try {
       const res = await apiService.getTransactionsByUser(user.userID);
       if (res?.status === "success" && Array.isArray(res.data)) {
+        // Map dữ liệu từ API sang format để hiển thị, kết hợp với stationsMap và vehiclesMap
         const mapped = res.data.map((t, idx) => ({
           id: t.transactionID,
           bookingDate: dayjs(t.createAt).format("YYYY-MM-DD"),
@@ -764,9 +783,10 @@ export default function BookingHistory() {
           serviceFee: t.amount,
           status: mapApiStatusToText(t.status),
           createdAt: t.createAt,
+          pinId: t.pinID, // Lưu pinID để dùng khi hủy lịch
         }));
+        // Sắp xếp theo ngày tạo mới nhất trước
         const sorted = mapped.sort((a, b) => {
-          // Sắp xếp theo createdAt (ngày tạo) mới nhất trước
           return new Date(b.createdAt) - new Date(a.createdAt);
         });
         setBookingHistory(sorted);
@@ -784,6 +804,7 @@ export default function BookingHistory() {
     }
   };
 
+  // Hàm fetch danh sách trạm và lưu vào map để tra cứu nhanh
   const fetchStations = async () => {
     try {
       const res = await apiService.getPinStations();
@@ -802,6 +823,7 @@ export default function BookingHistory() {
     }
   };
 
+  // Hàm fetch danh sách xe và lưu vào map để tra cứu nhanh
   const fetchVehicles = async () => {
     try {
       const res = await apiService.getVehicles();
@@ -820,6 +842,7 @@ export default function BookingHistory() {
     }
   };
 
+  // Hàm fetch lịch sử thanh toán (mua gói dịch vụ) từ API
   const fetchPaymentHistory = async () => {
     if (!user?.userID) return;
     try {
@@ -830,19 +853,16 @@ export default function BookingHistory() {
           (payment) => payment.status === 1 || payment.status === 2
         );
 
+        // Map status và sắp xếp theo ngày tạo mới nhất trước
         const mapped = filteredPayments
           .map((payment) => {
             const mappedStatus = mapPaymentStatus(payment);
-            console.log(
-              `Payment ${payment.paymentID}: status=${payment.status}, pending=${payment.pending}, failed=${payment.failed}, successful=${payment.successful} → mapped=${mappedStatus}`
-            );
             return {
               ...payment,
               status: mappedStatus,
             };
           })
           .sort((a, b) => {
-            // Sắp xếp theo createdAt mới nhất trước
             return new Date(b.createdAt) - new Date(a.createdAt);
           });
         setPaymentHistory(mapped);
@@ -855,7 +875,7 @@ export default function BookingHistory() {
     } catch (e) {
       console.error("Fetch payment history error", e);
 
-      // Xử lý các trường hợp lỗi khác nhau
+      // Xử lý các trường hợp lỗi khác nhau (404, CORS, lỗi khác)
       if (e.message?.includes("404")) {
         console.log(`User ${user.userID} chưa có lịch sử thanh toán`);
         setPaymentHistory([]);
@@ -872,6 +892,7 @@ export default function BookingHistory() {
     }
   };
 
+  // Hàm fetch danh sách service packs và lưu vào map để tra cứu nhanh
   const fetchServicePacks = async () => {
     try {
       const res = await apiService.getServicePacks();
@@ -891,6 +912,7 @@ export default function BookingHistory() {
     }
   };
 
+  // Fetch dữ liệu tham chiếu (trạm, xe, service packs) khi component mount
   useEffect(() => {
     fetchStations();
     fetchVehicles();
@@ -898,17 +920,20 @@ export default function BookingHistory() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fetch lịch sử đặt lịch và thanh toán khi user sẵn sàng và đã có dữ liệu tham chiếu
   useEffect(() => {
     fetchHistory();
     fetchPaymentHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userID, stationsMap, vehiclesMap, servicePacksMap]);
 
+  // Hàm làm mới dữ liệu - fetch lại lịch sử đặt lịch và thanh toán
   const handleRefresh = () => {
     fetchHistory();
     fetchPaymentHistory();
   };
 
+  // Hàm xóa bộ lọc booking history - reset về "Tất cả"
   const handleClearFilters = () => {
     setDateRange(null);
     setStatusFilter("all");
@@ -916,6 +941,7 @@ export default function BookingHistory() {
     setSearchText("");
   };
 
+  // Hàm xóa bộ lọc payment history - reset về "Tất cả"
   const handleClearPaymentFilters = () => {
     setPaymentDateRange(null);
     setPaymentStatusFilter("all");
@@ -923,13 +949,13 @@ export default function BookingHistory() {
     setPaymentSearchText("");
   };
 
-  // Danh sách trạm để filter
+  // Chuyển đổi stationsMap thành danh sách options để dùng trong Select filter
   const stationsOptions = Object.entries(stationsMap).map(([id, info]) => ({
     id,
     name: info.stationName,
   }));
 
-  // Danh sách gói dịch vụ để filter
+  // Chuyển đổi servicePacksMap thành danh sách options để dùng trong Select filter
   const servicePacksOptions = Object.entries(servicePacksMap).map(
     ([id, info]) => ({
       id,
@@ -937,7 +963,7 @@ export default function BookingHistory() {
     })
   );
 
-  // Hàm mở Google Maps với địa chỉ trạm
+  // Hàm mở Google Maps với địa chỉ trạm để chỉ đường
   const handleOpenDirections = (address) => {
     if (address) {
       const encodedAddress = encodeURIComponent(address);

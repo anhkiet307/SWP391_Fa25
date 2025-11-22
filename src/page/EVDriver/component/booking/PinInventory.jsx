@@ -1,6 +1,8 @@
+// Component hiển thị danh sách pin slots của trạm và cho phép chọn ổ pin để đặt lịch
 import React from "react";
 import { Card } from "antd";
 import dayjs from "dayjs";
+// Utility functions xử lý pin slot (kiểm tra trạng thái, format dữ liệu, tính toán thống kê)
 import {
   getPinStatusText,
   getSlotStatusText,
@@ -20,6 +22,15 @@ import {
   PIN_STATUS,
 } from "../../../../utils/pinSlotUtils";
 
+/**
+ * Component PinInventory - Hiển thị danh sách pin slots và cho phép chọn ổ pin
+ * Chức năng:
+ * 1. Hiển thị thống kê tổng quan về pin slots (tổng số, khả dụng, đang cho thuê, không khả dụng)
+ * 2. Hiển thị danh sách tất cả pin slots với trạng thái và thông tin pin (SoC, SoH)
+ * 3. Cho phép chọn ổ pin khả dụng (status = AVAILABLE và pinStatus = FULL) để đặt lịch
+ * 4. Tính toán và hiển thị thời gian ước tính pin đầy cho các ổ đang sạc
+ * 5. Phân biệt trạng thái pin slots bằng màu sắc (xanh = khả dụng, vàng = đang sạc, xám = không khả dụng, đỏ = đang cho thuê)
+ */
 const PinInventory = ({
   selectedStationData,
   pinSlots,
@@ -33,15 +44,15 @@ const PinInventory = ({
 
   const stationSlots = selectedStationData?.slots || [];
 
-  // Thống kê tổng quan toàn trạm sử dụng utility functions
+  // Tính toán thống kê tổng quan về pin slots sử dụng utility functions
   const slotStatistics = calculateSlotStatistics(pinSlots);
   const totalSlotsAll = slotStatistics.total;
-  const readySlotsAll = slotStatistics.available; // Slots khả dụng
-  const bookedSlotsAll = slotStatistics.rented; // Slots đã cho thuê
-  const maintenanceSlotsAll = slotStatistics.unavailable; // Slots không khả dụng
+  const readySlotsAll = slotStatistics.available; // Slots khả dụng (status = AVAILABLE và pinStatus = FULL)
+  const bookedSlotsAll = slotStatistics.rented; // Slots đã cho thuê (status = RENTED)
+  const maintenanceSlotsAll = slotStatistics.unavailable; // Slots không khả dụng (status = UNAVAILABLE)
   const chargingSlotsAll = 0; // Không có thông tin charging trong API hiện tại
 
-  // Sắp xếp tất cả ổ pin theo slotNumber từ 1-15
+  // Sắp xếp tất cả ổ pin theo slotNumber từ 1-15 để hiển thị theo thứ tự
   const sortedAllSlots = stationSlots
     .slice()
     .sort((a, b) => a.slotNumber - b.slotNumber);
@@ -312,6 +323,7 @@ const PinInventory = ({
           }}
         >
           {sortedAllSlots.map((slot) => {
+            // Xác định trạng thái của pin slot
             const isMaintenance = slot.status === SLOT_STATUS.UNAVAILABLE;
             const isRented = slot.status === SLOT_STATUS.RENTED;
             const socValue = slot.soc || 0;
@@ -320,17 +332,19 @@ const PinInventory = ({
             const isChargingVisual = slot.pinStatus === PIN_STATUS.NOT_FULL;
             const isSelected =
               selectedPinSlot?.pinID === (slot.pinID || slot.id);
-            // Ổ pin chỉ khả dụng khi status = AVAILABLE và pinStatus = FULL
+            // Ổ pin chỉ khả dụng khi status = AVAILABLE và pinStatus = FULL (đầy pin)
             const isAvailable =
               slot.status === SLOT_STATUS.AVAILABLE &&
               slot.pinStatus === PIN_STATUS.FULL;
 
+            // Tính toán thời gian ước tính pin đầy cho các ổ đang sạc (giả định 1%/phút)
             const remainingToFull = Math.max(0, 100 - socValue);
             const etaFullMinutes = remainingToFull; // 1%/phút
             const etaFullTime = dayjs()
               .add(etaFullMinutes, "minute")
               .format("HH:mm");
 
+            // Hàm xử lý click chọn ổ pin - chỉ cho phép chọn các ổ khả dụng
             const handleSlotClick = () => {
               if (isAvailable) {
                 setSelectedPinSlot(slot);

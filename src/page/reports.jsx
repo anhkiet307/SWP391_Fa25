@@ -1,6 +1,9 @@
+// Component quản lý báo cáo của người dùng - xem, tạo và lọc báo cáo
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+// Context cung cấp thông tin xác thực người dùng
 import { useAuth } from "../contexts/AuthContext";
+// Service gọi API
 import apiService from "../services/apiService";
 import {
   Card,
@@ -35,20 +38,39 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
+/**
+ * Component Reports - Trang quản lý báo cáo của người dùng
+ * Chức năng chính:
+ * 1. Hiển thị danh sách báo cáo của người dùng
+ * 2. Tạo báo cáo mới (vấn đề về trạm, ổ cắm, pin, khác)
+ * 3. Lọc báo cáo theo loại và trạng thái
+ * 4. Hiển thị thống kê tổng quan (tổng số, đang chờ, đã giải quyết)
+ * 5. Kiểm tra xác thực và điều hướng nếu chưa đăng nhập
+ */
 export default function Reports() {
+  // Lấy thông tin người dùng và trạng thái xác thực từ context
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  // State quản lý danh sách báo cáo
   const [reports, setReports] = useState([]);
+  // State quản lý trạng thái loading khi fetch dữ liệu
   const [loading, setLoading] = useState(true);
+  // State quản lý lỗi khi fetch dữ liệu
   const [error, setError] = useState(null);
+  // State quản lý hiển thị modal tạo báo cáo mới
   const [isModalVisible, setIsModalVisible] = useState(false);
+  // Form instance để quản lý form tạo báo cáo
   const [form] = Form.useForm();
+  // State quản lý trạng thái đang submit form
   const [submitting, setSubmitting] = useState(false);
+  // State quản lý danh sách báo cáo sau khi lọc
   const [filteredReports, setFilteredReports] = useState([]);
+  // State quản lý bộ lọc theo loại báo cáo
   const [typeFilter, setTypeFilter] = useState("all");
+  // State quản lý bộ lọc theo trạng thái báo cáo
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Thống kê tổng quan
+  // Tính toán thống kê tổng quan về báo cáo từ danh sách đã lọc
   const totalReports = filteredReports.length;
   const pendingReports = filteredReports.filter(
     (item) => item.status === 0
@@ -57,13 +79,15 @@ export default function Reports() {
     (item) => item.status === 2
   ).length;
 
+  // Kiểm tra xác thực và fetch danh sách báo cáo khi component mount
   useEffect(() => {
-    // Redirect to login if not authenticated
+    // Điều hướng đến trang login nếu chưa đăng nhập
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
 
+    // Hàm fetch danh sách báo cáo từ API
     const fetchReports = async () => {
       if (!user) return;
 
@@ -90,16 +114,16 @@ export default function Reports() {
     fetchReports();
   }, [isAuthenticated, user, navigate]);
 
-  // Filter reports based on type and status
+  // Tự động lọc danh sách báo cáo khi thay đổi bộ lọc hoặc danh sách báo cáo
   useEffect(() => {
     let filtered = [...reports];
 
-    // Filter by type
+    // Lọc theo loại báo cáo
     if (typeFilter !== "all") {
       filtered = filtered.filter((item) => item.type === parseInt(typeFilter));
     }
 
-    // Filter by status
+    // Lọc theo trạng thái báo cáo
     if (statusFilter !== "all") {
       filtered = filtered.filter(
         (item) => item.status === parseInt(statusFilter)
@@ -109,6 +133,7 @@ export default function Reports() {
     setFilteredReports(filtered);
   }, [reports, typeFilter, statusFilter]);
 
+  // Hàm tạo Tag hiển thị trạng thái báo cáo (Pending, Processing, Resolved, Rejected)
   const getStatusTag = (status, statusName) => {
     const statusConfig = {
       0: {
@@ -141,6 +166,7 @@ export default function Reports() {
     );
   };
 
+  // Hàm tạo Tag hiển thị loại báo cáo (Station, Service, Staff, Other)
   const getTypeTag = (type, typeName) => {
     const typeConfig = {
       1: { color: "blue", text: typeName || "Station" },
@@ -153,6 +179,7 @@ export default function Reports() {
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
+  // Hàm format ngày tháng theo định dạng Việt Nam
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString("vi-VN", {
       year: "numeric",
@@ -163,8 +190,10 @@ export default function Reports() {
     });
   };
 
+  // Định nghĩa các cột cho bảng danh sách báo cáo
   const columns = [
     {
+      // Cột hiển thị ID báo cáo
       title: (
         <div
           style={{
@@ -192,6 +221,7 @@ export default function Reports() {
       ),
     },
     {
+      // Cột hiển thị loại báo cáo với tag màu sắc
       title: (
         <div
           style={{
@@ -218,6 +248,7 @@ export default function Reports() {
       ),
     },
     {
+      // Cột hiển thị mô tả báo cáo
       title: (
         <div
           style={{
@@ -245,6 +276,7 @@ export default function Reports() {
       ),
     },
     {
+      // Cột hiển thị trạng thái báo cáo với tag màu sắc và icon
       title: (
         <div
           style={{
@@ -270,6 +302,7 @@ export default function Reports() {
       ),
     },
     {
+      // Cột hiển thị ngày tạo báo cáo (đã format)
       title: (
         <div
           style={{
@@ -299,19 +332,23 @@ export default function Reports() {
     },
   ];
 
+  // Hàm làm mới danh sách báo cáo
   const handleRefresh = () => {
     fetchReports();
   };
 
+  // Hàm mở modal tạo báo cáo mới
   const handleCreateReport = () => {
     setIsModalVisible(true);
   };
 
+  // Hàm đóng modal và reset form
   const handleModalCancel = () => {
     setIsModalVisible(false);
     form.resetFields();
   };
 
+  // Hàm xử lý submit form tạo báo cáo mới
   const handleSubmitReport = async (values) => {
     try {
       setSubmitting(true);
@@ -326,7 +363,8 @@ export default function Reports() {
         message.success("Báo cáo đã được gửi thành công!");
         setIsModalVisible(false);
         form.resetFields();
-        fetchReports(); // Refresh danh sách báo cáo
+        // Làm mới danh sách báo cáo sau khi tạo thành công
+        fetchReports();
       } else {
         message.error("Có lỗi xảy ra khi gửi báo cáo");
       }
@@ -338,6 +376,7 @@ export default function Reports() {
     }
   };
 
+  // Hàm gọi API để lấy danh sách báo cáo của người dùng
   const fetchReports = async () => {
     if (!user) return;
 
@@ -434,7 +473,7 @@ export default function Reports() {
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,8,59,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(0,8,59,0.02)_0%,transparent_50%)]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        {/* Header Section */}
+        {/* Header Section - Hiển thị tiêu đề trang */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)] mb-6 shadow-[0_8px_20px_rgba(0,8,59,0.15)]">
             <FileTextOutlined style={{ fontSize: "36px", color: "white" }} />
@@ -450,8 +489,9 @@ export default function Reports() {
           </Text>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Hiển thị thống kê tổng quan về báo cáo */}
         <Row gutter={[24, 24]} className="mb-8">
+          {/* Card hiển thị tổng số báo cáo */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -475,6 +515,7 @@ export default function Reports() {
               />
             </Card>
           </Col>
+          {/* Card hiển thị số báo cáo đang chờ xử lý (status = 0) */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -498,6 +539,7 @@ export default function Reports() {
               />
             </Card>
           </Col>
+          {/* Card hiển thị số báo cáo đã giải quyết (status = 2) */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -523,7 +565,7 @@ export default function Reports() {
           </Col>
         </Row>
 
-        {/* Action Bar */}
+        {/* Action Bar - Thanh công cụ với nút làm mới và tạo báo cáo mới */}
         <Card
           className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] mb-6"
           bodyStyle={{ padding: "20px 24px" }}
@@ -548,6 +590,7 @@ export default function Reports() {
                   </Text>
                 </div>
               </div>
+              {/* Badge hiển thị số lượng báo cáo đang hiển thị */}
               <Badge
                 count={filteredReports.length}
                 style={{
@@ -572,6 +615,7 @@ export default function Reports() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Nút làm mới danh sách báo cáo */}
               <Button
                 icon={<ReloadOutlined />}
                 onClick={handleRefresh}
@@ -580,6 +624,7 @@ export default function Reports() {
               >
                 <span className="text-sm font-medium">Làm mới</span>
               </Button>
+              {/* Nút mở modal tạo báo cáo mới */}
               <Button
                 icon={<PlusOutlined />}
                 onClick={handleCreateReport}
@@ -597,7 +642,7 @@ export default function Reports() {
           </div>
         </Card>
 
-        {/* Filter Controls */}
+        {/* Filter Controls - Bộ lọc báo cáo theo loại và trạng thái */}
         <Card
           className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)] mb-6"
           bodyStyle={{ padding: "20px 24px" }}
@@ -631,6 +676,7 @@ export default function Reports() {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Select lọc theo loại báo cáo */}
               <div className="flex items-center gap-2">
                 <Text
                   style={{
@@ -655,6 +701,7 @@ export default function Reports() {
                 </Select>
               </div>
 
+              {/* Select lọc theo trạng thái báo cáo */}
               <div className="flex items-center gap-2">
                 <Text
                   style={{
@@ -677,6 +724,7 @@ export default function Reports() {
                 </Select>
               </div>
 
+              {/* Nút xóa bộ lọc, reset về "Tất cả" */}
               <Button
                 onClick={() => {
                   setTypeFilter("all");
@@ -691,16 +739,18 @@ export default function Reports() {
           </div>
         </Card>
 
-        {/* Reports Table */}
+        {/* Reports Table - Hiển thị bảng danh sách báo cáo */}
         <Card
           className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
           bodyStyle={{ padding: "24px" }}
         >
+          {/* Hiển thị loading khi đang tải dữ liệu */}
           {loading ? (
             <div className="flex justify-center items-center py-16">
               <Spin size="large" />
             </div>
           ) : error ? (
+            // Hiển thị thông báo lỗi với nút thử lại
             <div className="p-8">
               <Alert
                 message="Lỗi"
@@ -715,6 +765,7 @@ export default function Reports() {
               />
             </div>
           ) : filteredReports.length === 0 ? (
+            // Hiển thị empty state khi không có báo cáo hoặc không tìm thấy sau khi lọc
             <Empty
               description={
                 reports.length === 0
@@ -723,6 +774,7 @@ export default function Reports() {
               }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             >
+              {/* Hiển thị nút tạo báo cáo đầu tiên nếu chưa có báo cáo nào */}
               {reports.length === 0 && (
                 <Button
                   type="primary"
@@ -742,6 +794,7 @@ export default function Reports() {
               )}
             </Empty>
           ) : (
+            // Hiển thị bảng danh sách báo cáo với phân trang
             <Table
               columns={columns}
               dataSource={filteredReports}
@@ -769,7 +822,7 @@ export default function Reports() {
           )}
         </Card>
 
-        {/* Modal tạo báo cáo mới */}
+        {/* Modal tạo báo cáo mới - Form nhập thông tin báo cáo */}
         <Modal
           title={null}
           open={isModalVisible}
@@ -782,7 +835,7 @@ export default function Reports() {
           zIndex={9999}
           maskClosable={false}
         >
-          {/* Custom Header */}
+          {/* Custom Header - Tiêu đề modal */}
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
               <FileTextOutlined style={{ color: "white", fontSize: "20px" }} />
@@ -800,6 +853,7 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* Form tạo báo cáo mới */}
           <Form
             form={form}
             layout="vertical"
@@ -807,6 +861,7 @@ export default function Reports() {
             className="report-form"
             size="large"
           >
+            {/* Trường chọn loại vấn đề (bắt buộc) */}
             <Form.Item
               label={
                 <div className="flex items-center gap-2">
@@ -905,6 +960,7 @@ export default function Reports() {
               </Select>
             </Form.Item>
 
+            {/* Trường nhập mô tả chi tiết vấn đề (bắt buộc, 10-500 ký tự) */}
             <Form.Item
               label={
                 <div className="flex items-center gap-2">
@@ -946,7 +1002,7 @@ export default function Reports() {
               />
             </Form.Item>
 
-            {/* Tips Section */}
+            {/* Tips Section - Hướng dẫn viết báo cáo hiệu quả */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -986,7 +1042,9 @@ export default function Reports() {
               </div>
             </div>
 
+            {/* Nút hành động: Hủy và Gửi báo cáo */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              {/* Nút hủy, đóng modal và reset form */}
               <Button
                 onClick={handleModalCancel}
                 size="large"
@@ -995,6 +1053,7 @@ export default function Reports() {
               >
                 Hủy bỏ
               </Button>
+              {/* Nút submit form, gửi báo cáo lên server */}
               <Button
                 type="primary"
                 htmlType="submit"

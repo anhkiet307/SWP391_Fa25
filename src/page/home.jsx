@@ -1,15 +1,25 @@
+// Component chính của trang chủ, hiển thị thông tin giới thiệu và các chức năng đặt lịch đổi pin
 import React from "react";
+// Component hiển thị bản đồ các trạm đổi pin
 import Map from "../components/Map";
+// Component form đặt lịch đổi pin
 import BookingSection from "../components/BookingSection";
 import { Typography, Space, Row, Col, Tag } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
 
 const { Title, Paragraph } = Typography;
 
+/**
+ * Component Home - Trang chủ của ứng dụng VoltSwap
+ * Bao gồm 3 phần chính:
+ * 1. Hero Section: Giới thiệu ứng dụng và nút điều hướng
+ * 2. Booking Section: Form đặt lịch đổi pin
+ * 3. Map Section: Bản đồ hiển thị các trạm đổi pin
+ */
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#00083B]">
-      {/* Hero Section */}
+      {/* Hero Section - Hiển thị thông tin giới thiệu ứng dụng và nút điều hướng đến phần bản đồ */}
       <section className="relative w-full overflow-hidden bg-[#00083B]">
         <div className="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center text-center py-20 sm:py-28 lg:py-36">
@@ -25,6 +35,7 @@ export default function Home() {
               chuyến đi trọn vẹn
             </p>
 
+            {/* Nút điều hướng đến phần bản đồ trạm đổi pin */}
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <a
                 href="#map-section"
@@ -42,14 +53,14 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(#ffffff14_1px,transparent_1px),linear-gradient(90deg,#ffffff14_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
       </section>
 
-      {/* Đặt lịch đổi pin */}
+      {/* Section đặt lịch đổi pin - Chứa component BookingSection để người dùng đặt lịch */}
       <section id="booking-section" className="bg-[#00083B]">
         <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-16">
           <BookingSection />
         </div>
       </section>
 
-      {/* Bản đồ trạm đổi pin */}
+      {/* Section bản đồ trạm đổi pin - Hiển thị bản đồ và thông tin các trạm đổi pin tại Hà Nội và TP.HCM */}
       <section id="map-section" className="py-16 bg-[#00083B]">
         <div
           id="map-colored-container"
@@ -81,6 +92,7 @@ export default function Home() {
                 trạm đổi pin thông minh, tiện lợi và nhanh chóng.
               </Paragraph>
             </Space>
+            {/* Hiển thị thống kê số lượng trạm theo từng thành phố */}
             <div className="mb-8 mt-8">
               <Row justify="center" gutter={[24, 16]}>
                 <Col>
@@ -102,6 +114,7 @@ export default function Home() {
                   </Space>
                 </Col>
               </Row>
+              {/* Hướng dẫn người dùng cách sử dụng bản đồ */}
               <div className="mt-4 text-center">
                 <Space>
                   <EnvironmentOutlined style={{ color: "#9ca3af" }} />
@@ -114,6 +127,7 @@ export default function Home() {
               </div>
             </div>
           </div>
+          {/* Component Map hiển thị bản đồ tương tác với các trạm đổi pin */}
           <Map />
         </div>
       </section>

@@ -1,3 +1,4 @@
+// Component hiển thị thông tin đặt lịch thành công sau khi người dùng đặt lịch
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
@@ -29,6 +30,10 @@ import dayjs from "dayjs";
 
 const { Title, Paragraph, Text } = Typography;
 
+/**
+ * ErrorBoundary - Bắt lỗi khi component render để tránh crash toàn bộ ứng dụng
+ * Hiển thị thông báo lỗi thân thiện thay vì crash
+ */
 class SimpleErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -65,11 +70,21 @@ class SimpleErrorBoundary extends React.Component {
   }
 }
 
+/**
+ * Component BookingSuccess - Trang hiển thị thông tin đặt lịch thành công
+ * Chức năng:
+ * 1. Hiển thị thông tin chi tiết đặt lịch (trạm, ngày, ổ pin, xe, phí dịch vụ)
+ * 2. Hiển thị thông tin thanh toán (phí dịch vụ, phương thức thanh toán, mã giao dịch)
+ * 3. Tích hợp Google Maps để chỉ đường đến trạm
+ * 4. Điều hướng đến các trang khác (lịch sử giao dịch, trang chủ)
+ * 5. Kiểm tra và xử lý trường hợp không có dữ liệu booking
+ */
 export default function BookingSuccess() {
   const location = useLocation();
+  // Lấy dữ liệu đặt lịch từ state của route (được truyền từ booking.jsx)
   const bookingData = location.state?.bookingData || null;
 
-  // Nếu không có dữ liệu booking, chuyển về trang booking
+  // Kiểm tra và hiển thị thông báo nếu không có dữ liệu booking (trường hợp truy cập trực tiếp URL)
   if (!bookingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
@@ -89,20 +104,22 @@ export default function BookingSuccess() {
     );
   }
 
+  // Hàm format số tiền theo định dạng VND
   const formatVND = (value) =>
     value.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
   const selectedSlotId = bookingData?.selectedSlot ?? null;
 
-  // Hàm mở Google Maps với địa chỉ trạm
+  // Hàm mở Google Maps với địa chỉ trạm để chỉ đường
   const handleOpenDirections = () => {
     const location = bookingData?.stationLocation;
     if (location) {
+      // Sử dụng địa chỉ trạm nếu có
       const encodedAddress = encodeURIComponent(location);
       const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
       window.open(googleMapsUrl, "_blank");
     } else {
-      // Fallback: nếu không có location thì dùng station name
+      // Fallback: sử dụng tên trạm nếu không có địa chỉ
       const stationName = bookingData?.station;
       if (stationName) {
         const encodedAddress = encodeURIComponent(stationName);
@@ -398,6 +415,7 @@ export default function BookingSuccess() {
                       {formatVND(bookingData.amount)}
                     </Text>
                   </div>
+                  {/* Hiển thị phương thức thanh toán: pack = 1 là dùng lượt subscription, khác là thanh toán tại trạm */}
                   {typeof bookingData?.pack === "number" && (
                     <div
                       style={{
@@ -420,6 +438,7 @@ export default function BookingSuccess() {
                       </Text>
                     </div>
                   )}
+                  {/* Hiển thị mã giao dịch từ transactionData nếu có */}
                   {bookingData?.transactionData?.transactionID && (
                     <div style={{ marginTop: "8px", color: "#64748b" }}>
                       <Text>Mã giao dịch: </Text>

@@ -1,3 +1,4 @@
+// Component form nhập thông tin đặt lịch - chọn trạm, thành phố, và xe
 import React from "react";
 import {
   Card,
@@ -17,11 +18,21 @@ import {
   AimOutlined,
   CarOutlined,
 } from "@ant-design/icons";
+// Utility function tính khoảng cách giữa 2 điểm
 import { calculateDistance } from "../../../../utils/locationUtils";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
+/**
+ * Component BookingForm - Form nhập thông tin đặt lịch
+ * Chức năng:
+ * 1. Hiển thị và quản lý form chọn trạm đổi pin (lọc theo thành phố)
+ * 2. Hiển thị trạm gần nhất và cho phép chọn nhanh
+ * 3. Tính toán và hiển thị khoảng cách từ vị trí người dùng đến các trạm
+ * 4. Quản lý chọn xe (disable các xe đã có lịch đặt)
+ * 5. Tự động fetch dữ liệu trạm khi chọn trạm
+ */
 const BookingForm = ({
   form,
   stationsList,
@@ -394,10 +405,10 @@ const BookingForm = ({
                     }
                     value={form.getFieldValue("station")}
                     onChange={(value) => {
-                      // Update both form value and formValues state
+                      // Cập nhật giá trị form khi chọn trạm
                       form.setFieldsValue({ station: value });
 
-                      // Tìm station từ availableStations để lấy stationID
+                      // Chuyển đổi stationsList thành format chuẩn để tìm stationID
                       const availableStations = stationsList.map((station) => ({
                         id: station.stationID,
                         name: station.stationName,
@@ -412,9 +423,9 @@ const BookingForm = ({
                         (s) => s.name === value
                       );
                       if (selectedStation) {
-                        // Fetch station detail và pinSlots khi chọn trạm
+                        // Tự động fetch thông tin chi tiết trạm và danh sách pin slots khi chọn trạm
                         fetchStationData(selectedStation.id);
-                        // Reset lựa chọn ổ pin nếu có
+                        // Reset lựa chọn ổ pin khi đổi trạm
                         form.setFieldsValue({ selectedSlot: null });
                         if (typeof onStationChange === "function") {
                           onStationChange();
@@ -423,7 +434,7 @@ const BookingForm = ({
                     }}
                   >
                     {(() => {
-                      // Sử dụng stationsList từ API
+                      // Chuyển đổi stationsList từ API thành format chuẩn
                       const availableStations = stationsList.map((station) => ({
                         id: station.stationID,
                         name: station.stationName,
@@ -435,6 +446,7 @@ const BookingForm = ({
                         status: station.status === 1 ? "active" : "inactive",
                       }));
 
+                      // Lọc trạm theo thành phố được chọn và tính khoảng cách từ vị trí người dùng
                       const items = availableStations
                         .filter((s) =>
                           selectedCity === "HN"
@@ -443,6 +455,7 @@ const BookingForm = ({
                         )
                         .map((s) => ({
                           ...s,
+                          // Tính khoảng cách từ vị trí người dùng đến trạm (nếu có vị trí)
                           distance: userLocation
                             ? calculateDistance(
                                 userLocation[0],
@@ -452,6 +465,7 @@ const BookingForm = ({
                               )
                             : Number.POSITIVE_INFINITY,
                         }))
+                        // Sắp xếp theo khoảng cách (gần nhất trước)
                         .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
                       const nearestId =
@@ -548,7 +562,7 @@ const BookingForm = ({
             </Col>
           </Row>
 
-          {/* Vehicle Selection */}
+          {/* Vehicle Selection - Chọn xe để đặt lịch đổi pin */}
           <Row gutter={16}>
             <Col xs={24}>
               <Form.Item
@@ -584,6 +598,7 @@ const BookingForm = ({
                   }
                   optionLabelProp="label"
                   onChange={(vehicleID) => {
+                    // Tìm và set xe được chọn từ danh sách xe của user
                     const vehicle = userVehicles.find(
                       (v) => v.vehicleID === vehicleID
                     );
@@ -594,6 +609,7 @@ const BookingForm = ({
                   className="rounded-lg"
                 >
                   {userVehicles.map((vehicle) => {
+                    // Kiểm tra xem xe có đang có lịch đặt không (để disable)
                     const isReserved = reservedVehicleIds.includes(
                       vehicle.vehicleID
                     );
@@ -603,6 +619,7 @@ const BookingForm = ({
                         key={vehicle.vehicleID}
                         value={vehicle.vehicleID}
                         label={optionLabel}
+                        // Disable các xe đã có lịch đặt để tránh trùng lịch
                         disabled={isReserved}
                       >
                         <div style={{ opacity: isReserved ? 0.5 : 1 }}>

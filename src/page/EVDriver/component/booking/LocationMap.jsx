@@ -1,3 +1,4 @@
+// Component bản đồ hiển thị vị trí người dùng và các trạm đổi pin
 import React from "react";
 import { Card, Typography, Button, Spin, Row, Col } from "antd";
 import {
@@ -12,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 
 const { Title } = Typography;
 
+// Fix lỗi icon mặc định của Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
@@ -19,7 +21,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
 
-// Tạo icon tùy chỉnh
+/**
+ * Component LocationMap - Bản đồ hiển thị vị trí và trạm đổi pin
+ * Chức năng:
+ * 1. Hiển thị bản đồ với vị trí người dùng và các trạm đổi pin
+ * 2. Đánh dấu trạm gần nhất với icon đặc biệt
+ * 3. Hiển thị popup thông tin chi tiết cho từng trạm
+ * 4. Tích hợp Google Maps để chỉ đường đến trạm
+ */
+// Hàm tạo icon tùy chỉnh cho trạm đổi pin
 const createBatteryIcon = (color) => {
   return L.divIcon({
     className: "custom-slottery-icon",
@@ -319,9 +329,9 @@ const LocationMap = ({
               </Popup>
             </Marker>
 
-            {/* Battery Stations */}
+            {/* Hiển thị các trạm đổi pin trên bản đồ */}
             {stationsList.map((station) => {
-              // Kiểm tra xem đây có phải trạm gần nhất không
+              // Kiểm tra xem trạm này có phải trạm gần nhất không để hiển thị icon đặc biệt
               const isNearest =
                 nearestStation &&
                 nearestStation.stationID === station.stationID;
@@ -623,23 +633,23 @@ const LocationMap = ({
                         </div>
                       </div>
 
-                      {/* Chỉ giữ nút Chỉ đường */}
+                      {/* Nút chỉ đường - mở Google Maps với chỉ đường từ vị trí người dùng đến trạm */}
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
-                            // Sử dụng địa chỉ văn bản thay vì tọa độ
+                            // Chuyển đổi địa chỉ văn bản thành format URL (thay space và dấu phẩy)
                             const stationAddress = station.location
                               .replace(/ /g, "+")
                               .replace(/,/g, "%2C");
 
                             if (userLocation) {
-                              // Nếu có vị trí người dùng, tạo chỉ đường từ vị trí hiện tại
+                              // Nếu có vị trí người dùng, tạo URL chỉ đường từ vị trí hiện tại đến trạm
                               const userLat = userLocation[0];
                               const userLng = userLocation[1];
                               const googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${stationAddress}`;
                               window.open(googleMapsUrl, "_blank");
                             } else {
-                              // Nếu chưa có vị trí, chỉ hiển thị vị trí trạm
+                              // Nếu chưa có vị trí, chỉ hiển thị vị trí trạm trên Google Maps
                               const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${stationAddress}`;
                               window.open(googleMapsUrl, "_blank");
                             }

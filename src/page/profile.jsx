@@ -1,6 +1,10 @@
+// Component quản lý thông tin cá nhân và phương tiện của người dùng
 import React, { useState, useEffect } from "react";
+// Context cung cấp thông tin xác thực người dùng
 import { useAuth } from "../contexts/AuthContext";
+// Hook điều hướng trang
 import { useNavigate } from "react-router-dom";
+// Service gọi API
 import apiService from "../services/apiService";
 import {
   Card,
@@ -33,10 +37,21 @@ import {
 
 const { Title, Text } = Typography;
 
+/**
+ * Component Profile - Trang quản lý thông tin cá nhân và phương tiện
+ * Chức năng chính:
+ * 1. Hiển thị và chỉnh sửa thông tin cá nhân (tên, email, số điện thoại)
+ * 2. Hiển thị danh sách phương tiện của người dùng
+ * 3. Hiển thị thống kê về phương tiện (tổng số, pin khỏe mạnh, pin yếu)
+ * 4. Kiểm tra xác thực và điều hướng nếu chưa đăng nhập
+ */
 export default function Profile() {
+  // Lấy thông tin người dùng và trạng thái xác thực từ context
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  // State quản lý chế độ chỉnh sửa thông tin cá nhân
   const [isEditing, setIsEditing] = useState(false);
+  // State lưu dữ liệu form khi chỉnh sửa
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -44,31 +59,31 @@ export default function Profile() {
     address: user?.address || "",
   });
 
-  // States cho thông tin xe
+  // States quản lý thông tin phương tiện
   const [vehicles, setVehicles] = useState([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [vehiclesError, setVehiclesError] = useState(null);
 
-  // Thống kê tổng quan
+  // Tính toán thống kê tổng quan về phương tiện
   const totalVehicles = vehicles.length;
   const healthyVehicles = vehicles.filter((v) => v.pinHealth >= 70).length;
   const lowBatteryVehicles = vehicles.filter((v) => v.pinPercent < 50).length;
 
-  // Kiểm tra authentication khi component mount
+  // Kiểm tra xác thực khi component mount, điều hướng đến trang login nếu chưa đăng nhập
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
 
-  // Fetch thông tin xe khi component mount
+  // Tự động fetch thông tin phương tiện khi component mount và người dùng đã xác thực
   useEffect(() => {
     if (isAuthenticated && user?.userID) {
       fetchUserVehicles();
     }
   }, [isAuthenticated, user?.userID]);
 
-  // Hàm fetch thông tin xe từ API
+  // Hàm gọi API để lấy danh sách phương tiện của người dùng
   const fetchUserVehicles = async () => {
     setIsLoadingVehicles(true);
     setVehiclesError(null);
@@ -96,7 +111,7 @@ export default function Profile() {
     }
   };
 
-  // Hiển thị loading nếu chưa xác thực
+  // Hiển thị cảnh báo nếu người dùng chưa đăng nhập
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#00083B] via-[#1a1a2e] to-[#16213e] flex items-center justify-center">
@@ -110,6 +125,7 @@ export default function Profile() {
     );
   }
 
+  // Hàm xử lý thay đổi giá trị trong form chỉnh sửa
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -117,12 +133,14 @@ export default function Profile() {
     });
   };
 
+  // Hàm xử lý submit form cập nhật thông tin cá nhân
   const handleSubmit = (e) => {
     e.preventDefault();
     // TODO: Implement update profile logic
     setIsEditing(false);
   };
 
+  // Hàm hủy chỉnh sửa, khôi phục dữ liệu ban đầu
   const handleCancel = () => {
     setFormData({
       name: user?.name || "",
@@ -139,7 +157,7 @@ export default function Profile() {
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,8,59,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(0,8,59,0.02)_0%,transparent_50%)]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        {/* Header Section */}
+        {/* Header Section - Hiển thị tiêu đề trang */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[linear-gradient(135deg,#00083B_0%,#1a1f5c_100%)] mb-6 shadow-[0_8px_20px_rgba(0,8,59,0.15)]">
             <UserOutlined style={{ fontSize: "36px", color: "white" }} />
@@ -155,8 +173,9 @@ export default function Profile() {
           </Text>
         </div>
 
-        {/* Statistics Cards */}
+        {/* Statistics Cards - Hiển thị thống kê tổng quan về phương tiện */}
         <Row gutter={[24, 24]} className="mb-8">
+          {/* Card hiển thị tổng số phương tiện */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -180,6 +199,7 @@ export default function Profile() {
               />
             </Card>
           </Col>
+          {/* Card hiển thị số phương tiện có pin khỏe mạnh (pinHealth >= 70%) */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -203,6 +223,7 @@ export default function Profile() {
               />
             </Card>
           </Col>
+          {/* Card hiển thị số phương tiện có pin yếu (pinPercent < 50%) */}
           <Col xs={24} sm={8}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -229,7 +250,7 @@ export default function Profile() {
         </Row>
 
         <Row gutter={[24, 24]}>
-          {/* Profile Information */}
+          {/* Profile Information - Card hiển thị và chỉnh sửa thông tin cá nhân */}
           <Col xs={24} lg={12}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -241,7 +262,7 @@ export default function Profile() {
                 </Title>
               </div>
 
-              {/* Profile Avatar */}
+              {/* Profile Avatar - Hiển thị avatar và thông tin cơ bản của người dùng */}
               <div className="text-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-white font-bold text-2xl">
@@ -252,6 +273,7 @@ export default function Profile() {
                   {user?.name || "Người dùng"}
                 </Title>
                 <Text style={{ color: "#64748b" }}>{user?.email}</Text>
+                {/* Hiển thị badge phân quyền người dùng */}
                 <div className="mt-2">
                   <Badge
                     color={
@@ -274,8 +296,10 @@ export default function Profile() {
 
               <Divider />
 
+              {/* Form hiển thị/chỉnh sửa thông tin cá nhân */}
               <Form layout="vertical">
                 <Row gutter={[16, 16]}>
+                  {/* Trường nhập họ và tên - chuyển đổi giữa chế độ xem và chỉnh sửa */}
                   <Col xs={24} sm={12}>
                     <Form.Item label="Họ và tên">
                       {isEditing ? (
@@ -293,6 +317,7 @@ export default function Profile() {
                       )}
                     </Form.Item>
                   </Col>
+                  {/* Trường nhập email - chuyển đổi giữa chế độ xem và chỉnh sửa */}
                   <Col xs={24} sm={12}>
                     <Form.Item label="Email">
                       {isEditing ? (
@@ -310,6 +335,7 @@ export default function Profile() {
                       )}
                     </Form.Item>
                   </Col>
+                  {/* Trường nhập số điện thoại - chuyển đổi giữa chế độ xem và chỉnh sửa */}
                   <Col xs={24} sm={12}>
                     <Form.Item label="Số điện thoại">
                       {isEditing ? (
@@ -332,7 +358,7 @@ export default function Profile() {
             </Card>
           </Col>
 
-          {/* Vehicles Section */}
+          {/* Vehicles Section - Card hiển thị danh sách phương tiện của người dùng */}
           <Col xs={24} lg={12}>
             <Card
               className="rounded-2xl shadow-[0_8px_24px_rgba(0,8,59,0.1)] bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_100%)] border border-[rgba(0,8,59,0.08)]"
@@ -342,6 +368,7 @@ export default function Profile() {
                 <Title level={3} style={{ color: "#00083B", margin: 0 }}>
                   Phương tiện của tôi
                 </Title>
+                {/* Nút làm mới danh sách phương tiện */}
                 <Button
                   icon={<ReloadOutlined />}
                   onClick={fetchUserVehicles}
@@ -351,14 +378,14 @@ export default function Profile() {
                 </Button>
               </div>
 
-              {/* Loading state */}
+              {/* Hiển thị loading khi đang tải dữ liệu phương tiện */}
               {isLoadingVehicles && (
                 <div className="flex items-center justify-center py-8">
                   <Spin size="large" />
                 </div>
               )}
 
-              {/* Error state */}
+              {/* Hiển thị thông báo lỗi nếu có lỗi khi tải dữ liệu */}
               {vehiclesError && (
                 <Alert
                   message="Lỗi"
@@ -368,17 +395,19 @@ export default function Profile() {
                 />
               )}
 
-              {/* Vehicles list */}
+              {/* Hiển thị danh sách phương tiện hoặc thông báo trống */}
               {!isLoadingVehicles && !vehiclesError && (
                 <>
                   {vehicles.length > 0 ? (
                     <div className="space-y-4">
+                      {/* Render từng phương tiện trong danh sách */}
                       {vehicles.map((vehicle) => (
                         <Card
                           key={vehicle.vehicleID}
                           size="small"
                           className="border border-gray-200"
                         >
+                          {/* Thông tin cơ bản của phương tiện */}
                           <div className="flex justify-between items-start mb-3">
                             <div>
                               <Title level={5} style={{ margin: 0 }}>
@@ -394,8 +423,9 @@ export default function Profile() {
                             />
                           </div>
 
-                          {/* Pin Status */}
+                          {/* Hiển thị trạng thái pin của phương tiện */}
                           <Row gutter={[16, 16]}>
+                            {/* Hiển thị phần trăm pin hiện tại với thanh progress bar */}
                             <Col span={12}>
                               <div className="text-center">
                                 <Text strong>Pin hiện tại</Text>
@@ -420,6 +450,7 @@ export default function Profile() {
                                 </div>
                               </div>
                             </Col>
+                            {/* Hiển thị sức khỏe pin với thanh progress bar */}
                             <Col span={12}>
                               <div className="text-center">
                                 <Text strong>Sức khỏe pin</Text>
@@ -446,7 +477,7 @@ export default function Profile() {
                             </Col>
                           </Row>
 
-                          {/* Status indicators */}
+                          {/* Badge hiển thị trạng thái pin (đủ/yếu, khỏe/cần kiểm tra) */}
                           <div className="mt-3 flex justify-center gap-2">
                             <Badge
                               color={vehicle.pinPercent >= 50 ? "green" : "red"}
@@ -469,6 +500,7 @@ export default function Profile() {
                       ))}
                     </div>
                   ) : (
+                    // Hiển thị thông báo khi chưa có phương tiện nào
                     <Empty
                       description="Chưa có phương tiện nào"
                       image={Empty.PRESENTED_IMAGE_SIMPLE}
