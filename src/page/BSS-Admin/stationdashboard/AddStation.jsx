@@ -8,7 +8,7 @@ const AdminAddStation = () => {
   const [formData, setFormData] = useState({
     stationName: "",
     location: "",
-    status: 1, // 0=inactive, 1=active, 2=maintenance
+    status: 0, // 0=inactive, 1=active, 2=maintenance
     x: "",
     y: "",
   });
